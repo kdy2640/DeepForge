@@ -248,7 +248,7 @@ public class AudioManager : MonoBehaviour
     private void ApplyToGameManagerPrefab()
     {
         const string gameManagerPrefabPath =
-            "Assets/Prefabs/GameManager.prefab";
+            "Assets/Content/Prefabs/Global/GameManager.prefab";
 
         GameObject gameManagerPrefab =
             UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(gameManagerPrefabPath);
