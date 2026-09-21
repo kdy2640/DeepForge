@@ -1,23 +1,89 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TerrainChunkManager
+// 청크 초기 생성·재생성을 진행하고 청크 저장소와 스트리머를 제공한다.
+[System.Serializable]
+public class TerrainChunkManager : System.IDisposable
 {
-    private readonly TerrainManager owner;
-    private readonly Dictionary<Vector3Int, ChunkData> chunks =
-        new Dictionary<Vector3Int, ChunkData>();
+    #region 필드 및 속성
 
-    public TerrainChunkManager(TerrainManager owner)
+    [Header("지형 격자")]
+    [SerializeField] private TerrainGridGeometry grid = new TerrainGridGeometry();
+
+    [Header("청크 스트리밍")]
+    [SerializeField] private TerrainChunkStreamer streamer = new TerrainChunkStreamer();
+
+    // 한 번에 생성할 청크 수와 실행 중인 지형·메시 생성기
+    private const int ChunkGenerationBatchSize = 64;
+    private TerrainManager owner;
+    private TerrainMeshGenerator meshGenerator;
+
+    public TerrainChunkRegistry Registry { get; private set; }
+    public TerrainGridGeometry Grid => grid;
+    public TerrainChunkStreamer Streamer => streamer;
+
+    #endregion
+
+    #region 초기화
+
+    // 지형을 연결하고 청크 저장소와 메시 생성기의 실행 자원을 준비한다.
+    public void Initialize(TerrainManager owner)
     {
         this.owner = owner;
-        RegisterExistingChunks();
+        Registry = new TerrainChunkRegistry(owner);
+        meshGenerator = new TerrainMeshGenerator();
     }
 
+    #endregion
+
+    #region 청크 생성 및 메시 갱신
+
+    // 초기 청크를 프레임에 나눠 생성하고 전체 준비가 끝나면 스트리밍을 시작한다.
+    public IEnumerator GenerateInitialChunks(Transform streamingTarget)
+    {
+        Vector3Int chunkCounts = GetChunkCounts();
+        List<Vector3Int> batch = new List<Vector3Int>(ChunkGenerationBatchSize);
+        for (int x = 0; x < chunkCounts.x; x++)
+        {
+            for (int y = 0; y < chunkCounts.y; y++)
+            {
+                for (int z = 0; z < chunkCounts.z; z++)
+                {
+                    batch.Add(new Vector3Int(x, y, z));
+                    if (batch.Count == ChunkGenerationBatchSize)
+                    {
+                        RegenerateChunks(batch);
+                        foreach (Vector3Int coordinate in batch)
+                        {
+                            Registry.SetChunkActive(coordinate, false);
+                        }
+                        batch.Clear();
+                        yield return null;
+                    }
+                }
+            }
+        }
+
+        if (batch.Count > 0)
+        {
+            RegenerateChunks(batch);
+            foreach (Vector3Int coordinate in batch)
+            {
+                Registry.SetChunkActive(coordinate, false);
+            }
+            yield return null;
+        }
+
+        streamer.Initialize(owner, Registry, grid, streamingTarget);
+    }
+
+    // 지형 범위 밖 청크를 제거한 뒤 전체 청크 메시를 다시 생성한다.
     public int RegenerateAllChunks()
     {
         Vector3Int chunkCounts = GetChunkCounts();
-        RemoveUnusedChunks(chunkCounts);
-        int regeneratedCount = 0;
+        Registry.RemoveUnusedChunks(chunkCounts);
+        List<Vector3Int> chunkCoords = new List<Vector3Int>();
 
         for (int x = 0; x < chunkCounts.x; x++)
         {
@@ -25,15 +91,15 @@ public class TerrainChunkManager
             {
                 for (int z = 0; z < chunkCounts.z; z++)
                 {
-                    RegenerateChunk(new Vector3Int(x, y, z));
-                    regeneratedCount++;
+                    chunkCoords.Add(new Vector3Int(x, y, z));
                 }
             }
         }
 
-        return regeneratedCount;
+        return RegenerateChunks(chunkCoords);
     }
 
+    // 수정된 밀도와 경계 노멀에 영향을 받는 청크만 골라 메시를 갱신한다.
     public int RegenerateChunksInBounds(Vector3Int minIndex, Vector3Int maxIndex)
     {
         TerrainData data = owner.Data;
@@ -42,19 +108,10 @@ public class TerrainChunkManager
             return 0;
         }
 
-        Vector3Int minCube = new Vector3Int(
-            Mathf.Clamp(minIndex.x - 1, 0, data.Width - 1),
-            Mathf.Clamp(minIndex.y - 1, 0, data.DensityFieldHeight - 1),
-            Mathf.Clamp(minIndex.z - 1, 0, data.Width - 1));
-
-        Vector3Int maxCube = new Vector3Int(
-            Mathf.Clamp(maxIndex.x, 0, data.Width - 1),
-            Mathf.Clamp(maxIndex.y, 0, data.DensityFieldHeight - 1),
-            Mathf.Clamp(maxIndex.z, 0, data.Width - 1));
-
-        Vector3Int minChunk = CubeIndexToChunkCoord(minCube);
-        Vector3Int maxChunk = CubeIndexToChunkCoord(maxCube);
-        int regeneratedCount = 0;
+        grid.GetAffectedChunkBounds(
+            minIndex, maxIndex, owner.IsSmoothShading,
+            out Vector3Int minChunk, out Vector3Int maxChunk);
+        List<Vector3Int> chunkCoords = new List<Vector3Int>();
 
         for (int x = minChunk.x; x <= maxChunk.x; x++)
         {
@@ -62,181 +119,55 @@ public class TerrainChunkManager
             {
                 for (int z = minChunk.z; z <= maxChunk.z; z++)
                 {
-                    RegenerateChunk(new Vector3Int(x, y, z));
-                    regeneratedCount++;
+                    chunkCoords.Add(new Vector3Int(x, y, z));
                 }
             }
         }
 
-        return regeneratedCount;
+        return RegenerateChunks(chunkCoords);
     }
 
-    private void RegenerateChunk(Vector3Int chunkCoord)
+    // 요청된 청크들을 배치 크기로 나눠 생성하고 메시와 충돌체에 적용한다.
+    private int RegenerateChunks(List<Vector3Int> chunkCoords)
     {
-        TerrainData data = owner.Data;
-        ChunkData chunk = GetOrCreateChunk(chunkCoord);
-        MarchingCubesMesher mesher = new MarchingCubesMesher(
-            data.Densities,
-            data.Width,
-            data.DensityFieldHeight,
-            data.Resolution,
-            owner.DensityThreshold,
-            owner.IsSmoothShading);
+        // Bound temporary mesh/job buffers even when regenerating the entire terrain.
+        for (int start = 0; start < chunkCoords.Count; start += ChunkGenerationBatchSize)
+        {
+            int count = Mathf.Min(ChunkGenerationBatchSize, chunkCoords.Count - start);
+            List<Vector3Int> batch = chunkCoords.GetRange(start, count);
+            Mesh[] meshes = meshGenerator.Generate(
+                owner.Data, batch, owner.DensityThreshold, owner.IsSmoothShading);
+            for (int i = 0; i < count; i++)
+            {
+                Registry.SetChunkMesh(Registry.GetOrCreateChunk(batch[i]), meshes[i]);
+            }
+        }
 
-        SetChunkMesh(chunk, mesher.BuildChunkMesh(chunkCoord, owner.ChunkSize));
+        return chunkCoords.Count;
     }
 
+    #endregion
+
+    #region 청크 좌표
+
+    // 현재 밀도 데이터의 축별 청크 개수를 반환한다.
     private Vector3Int GetChunkCounts()
     {
-        TerrainData data = owner.Data;
-        int chunkSize = owner.ChunkSize;
-
-        return new Vector3Int(
-            Mathf.CeilToInt((float)data.Width / chunkSize),
-            Mathf.CeilToInt((float)data.DensityFieldHeight / chunkSize),
-            Mathf.CeilToInt((float)data.Width / chunkSize));
+        return grid.ChunkCounts;
     }
 
-    private Vector3Int CubeIndexToChunkCoord(Vector3Int cubeIndex)
+    #endregion
+
+    #region 자원 해제
+
+    // 스트리밍을 중단하고 메시 생성기와 청크 저장소의 자원을 해제한다.
+    public void Dispose()
     {
-        int chunkSize = owner.ChunkSize;
-        return new Vector3Int(
-            cubeIndex.x / chunkSize,
-            cubeIndex.y / chunkSize,
-            cubeIndex.z / chunkSize);
+        streamer.Reset();
+        meshGenerator.Dispose();
+        Registry.Dispose();
+        Registry = null;
     }
 
-    private ChunkData GetOrCreateChunk(Vector3Int chunkCoord)
-    {
-        if (chunks.TryGetValue(chunkCoord, out ChunkData chunk))
-        {
-            return chunk;
-        }
-
-        GameObject chunkObject =
-            new GameObject($"Chunk_{chunkCoord.x}_{chunkCoord.y}_{chunkCoord.z}");
-        chunkObject.transform.SetParent(owner.transform, false);
-        chunkObject.layer = owner.gameObject.layer;
-        chunkObject.tag = owner.gameObject.tag;
-
-        chunk = new ChunkData
-        {
-            gameObject = chunkObject,
-            meshFilter = chunkObject.AddComponent<MeshFilter>(),
-            meshRenderer = chunkObject.AddComponent<MeshRenderer>(),
-            meshCollider = chunkObject.AddComponent<MeshCollider>()
-        };
-
-        chunk.meshRenderer.sharedMaterial = ResolveMaterial();
-        chunks[chunkCoord] = chunk;
-        return chunk;
-    }
-
-    private void RegisterExistingChunks()
-    {
-        foreach (Transform child in owner.transform)
-        {
-            if (!TryParseChunkCoord(child.name, out Vector3Int chunkCoord))
-            {
-                continue;
-            }
-
-            MeshFilter meshFilter = child.GetComponent<MeshFilter>();
-            MeshRenderer meshRenderer = child.GetComponent<MeshRenderer>();
-            MeshCollider meshCollider = child.GetComponent<MeshCollider>();
-
-            if (meshFilter == null || meshRenderer == null || meshCollider == null)
-            {
-                continue;
-            }
-
-            chunks[chunkCoord] = new ChunkData
-            {
-                gameObject = child.gameObject,
-                meshFilter = meshFilter,
-                meshRenderer = meshRenderer,
-                meshCollider = meshCollider
-            };
-        }
-    }
-
-    private static bool TryParseChunkCoord(string objectName, out Vector3Int chunkCoord)
-    {
-        chunkCoord = Vector3Int.zero;
-        string[] parts = objectName.Split('_');
-
-        if (parts.Length != 4 || parts[0] != "Chunk" ||
-            !int.TryParse(parts[1], out int x) ||
-            !int.TryParse(parts[2], out int y) ||
-            !int.TryParse(parts[3], out int z))
-        {
-            return false;
-        }
-
-        chunkCoord = new Vector3Int(x, y, z);
-        return true;
-    }
-
-    private Material ResolveMaterial()
-    {
-        if (owner.Material != null)
-        {
-            return owner.Material;
-        }
-
-        MeshRenderer parentRenderer = owner.GetComponent<MeshRenderer>();
-        return parentRenderer != null ? parentRenderer.sharedMaterial : null;
-    }
-
-    private static void SetChunkMesh(ChunkData chunk, Mesh mesh)
-    {
-        Mesh oldMesh = chunk.meshFilter.sharedMesh;
-        chunk.meshFilter.sharedMesh = mesh;
-        chunk.meshCollider.sharedMesh = null;
-        chunk.meshCollider.sharedMesh = mesh;
-
-        if (oldMesh == null)
-        {
-            return;
-        }
-
-        if (Application.isPlaying)
-        {
-            Object.Destroy(oldMesh);
-        }
-        else
-        {
-            Object.DestroyImmediate(oldMesh);
-        }
-    }
-
-    private void RemoveUnusedChunks(Vector3Int chunkCounts)
-    {
-        List<Vector3Int> unusedChunkCoords = new List<Vector3Int>();
-
-        foreach (Vector3Int chunkCoord in chunks.Keys)
-        {
-            if (chunkCoord.x >= chunkCounts.x ||
-                chunkCoord.y >= chunkCounts.y ||
-                chunkCoord.z >= chunkCounts.z)
-            {
-                unusedChunkCoords.Add(chunkCoord);
-            }
-        }
-
-        foreach (Vector3Int chunkCoord in unusedChunkCoords)
-        {
-            GameObject chunkObject = chunks[chunkCoord].gameObject;
-            chunks.Remove(chunkCoord);
-
-            if (Application.isPlaying)
-            {
-                Object.Destroy(chunkObject);
-            }
-            else
-            {
-                Object.DestroyImmediate(chunkObject);
-            }
-        }
-    }
+    #endregion
 }

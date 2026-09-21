@@ -1,0 +1,217 @@
+using System;
+using Unity.Collections;
+using UnityEngine;
+
+// 메시 생성 Job이 읽을 청크 정보와 이웃 밀도 배열의 참조를 보관한다.
+// TerrainData 접근은 메인 스레드의 생성자에서만 수행하며 배열을 직접 해제하지 않는다.
+internal struct ChunkMeshInput
+{
+    // 현재 청크 범위와 전체 지형 격자 정보
+    public Vector3Int Origin;
+    public Vector3Int CubeCount;
+    public int Width;
+    public int Height;
+    public float Resolution;
+
+    // 밀도 샘플을 소유한 청크를 찾기 위한 분할 정보
+    private Vector3Int chunkCoord;
+    private Vector3Int chunkCounts;
+    private int chunkSize;
+
+    // 종류는 표면을 만드는 큐브의 여덟 꼭짓점 소유 청크만 참조한다.
+    [ReadOnly] private NativeArray<byte> type000;
+    [ReadOnly] private NativeArray<byte> type001;
+    [ReadOnly] private NativeArray<byte> type010;
+    [ReadOnly] private NativeArray<byte> type011;
+    [ReadOnly] private NativeArray<byte> type100;
+    [ReadOnly] private NativeArray<byte> type101;
+    [ReadOnly] private NativeArray<byte> type110;
+    [ReadOnly] private NativeArray<byte> type111;
+
+    // Eight corner-owner combinations and single-axis gradient neighbors.
+    // A one-cell chunk can read two chunks ahead for the gradient at its upper corner.
+    [ReadOnly] private NativeArray<float> density000;
+    [ReadOnly] private NativeArray<float> density001;
+    [ReadOnly] private NativeArray<float> density010;
+    [ReadOnly] private NativeArray<float> density011;
+    [ReadOnly] private NativeArray<float> density100;
+    [ReadOnly] private NativeArray<float> density101;
+    [ReadOnly] private NativeArray<float> density110;
+    [ReadOnly] private NativeArray<float> density111;
+    [ReadOnly] private NativeArray<float> densityN00;
+    [ReadOnly] private NativeArray<float> densityN01;
+    [ReadOnly] private NativeArray<float> densityN10;
+    [ReadOnly] private NativeArray<float> densityN11;
+    [ReadOnly] private NativeArray<float> density200;
+    [ReadOnly] private NativeArray<float> density201;
+    [ReadOnly] private NativeArray<float> density210;
+    [ReadOnly] private NativeArray<float> density211;
+    [ReadOnly] private NativeArray<float> density0N0;
+    [ReadOnly] private NativeArray<float> density1N0;
+    [ReadOnly] private NativeArray<float> density0N1;
+    [ReadOnly] private NativeArray<float> density1N1;
+    [ReadOnly] private NativeArray<float> density020;
+    [ReadOnly] private NativeArray<float> density120;
+    [ReadOnly] private NativeArray<float> density021;
+    [ReadOnly] private NativeArray<float> density121;
+    [ReadOnly] private NativeArray<float> density00N;
+    [ReadOnly] private NativeArray<float> density01N;
+    [ReadOnly] private NativeArray<float> density10N;
+    [ReadOnly] private NativeArray<float> density11N;
+    [ReadOnly] private NativeArray<float> density002;
+    [ReadOnly] private NativeArray<float> density012;
+    [ReadOnly] private NativeArray<float> density102;
+    [ReadOnly] private NativeArray<float> density112;
+
+    // 현재 청크와 표면·노멀 계산에 필요한 이웃 청크의 밀도 배열을 연결한다.
+    public ChunkMeshInput(TerrainData data, Vector3Int chunkCoord)
+    {
+        ChunkDensityData chunk = data.GetChunkData(chunkCoord);
+        Origin = chunk.Origin;
+        CubeCount = chunk.CubeCount;
+        Width = data.Width;
+        Height = data.DensityFieldHeight;
+        Resolution = data.Resolution;
+        this.chunkCoord = chunkCoord;
+        chunkCounts = data.ChunkCounts;
+        chunkSize = data.ChunkSize;
+
+        int xN = Mathf.Max(chunkCoord.x - 1, 0);
+        int x0 = chunkCoord.x;
+        int x1 = Mathf.Min(chunkCoord.x + 1, chunkCounts.x - 1);
+        int x2 = Mathf.Min(chunkCoord.x + (chunkSize == 1 ? 2 : 1), chunkCounts.x - 1);
+        int yN = Mathf.Max(chunkCoord.y - 1, 0);
+        int y0 = chunkCoord.y;
+        int y1 = Mathf.Min(chunkCoord.y + 1, chunkCounts.y - 1);
+        int y2 = Mathf.Min(chunkCoord.y + (chunkSize == 1 ? 2 : 1), chunkCounts.y - 1);
+        int zN = Mathf.Max(chunkCoord.z - 1, 0);
+        int z0 = chunkCoord.z;
+        int z1 = Mathf.Min(chunkCoord.z + 1, chunkCounts.z - 1);
+        int z2 = Mathf.Min(chunkCoord.z + (chunkSize == 1 ? 2 : 1), chunkCounts.z - 1);
+        type000 = data.GetChunkData(new Vector3Int(x0, y0, z0)).TypeIds;
+        type001 = data.GetChunkData(new Vector3Int(x0, y0, z1)).TypeIds;
+        type010 = data.GetChunkData(new Vector3Int(x0, y1, z0)).TypeIds;
+        type011 = data.GetChunkData(new Vector3Int(x0, y1, z1)).TypeIds;
+        type100 = data.GetChunkData(new Vector3Int(x1, y0, z0)).TypeIds;
+        type101 = data.GetChunkData(new Vector3Int(x1, y0, z1)).TypeIds;
+        type110 = data.GetChunkData(new Vector3Int(x1, y1, z0)).TypeIds;
+        type111 = data.GetChunkData(new Vector3Int(x1, y1, z1)).TypeIds;
+        density000 = data.GetChunkData(new Vector3Int(x0, y0, z0)).Densities;
+        density001 = data.GetChunkData(new Vector3Int(x0, y0, z1)).Densities;
+        density010 = data.GetChunkData(new Vector3Int(x0, y1, z0)).Densities;
+        density011 = data.GetChunkData(new Vector3Int(x0, y1, z1)).Densities;
+        density100 = data.GetChunkData(new Vector3Int(x1, y0, z0)).Densities;
+        density101 = data.GetChunkData(new Vector3Int(x1, y0, z1)).Densities;
+        density110 = data.GetChunkData(new Vector3Int(x1, y1, z0)).Densities;
+        density111 = data.GetChunkData(new Vector3Int(x1, y1, z1)).Densities;
+        densityN00 = data.GetChunkData(new Vector3Int(xN, y0, z0)).Densities;
+        densityN01 = data.GetChunkData(new Vector3Int(xN, y0, z1)).Densities;
+        densityN10 = data.GetChunkData(new Vector3Int(xN, y1, z0)).Densities;
+        densityN11 = data.GetChunkData(new Vector3Int(xN, y1, z1)).Densities;
+        density200 = data.GetChunkData(new Vector3Int(x2, y0, z0)).Densities;
+        density201 = data.GetChunkData(new Vector3Int(x2, y0, z1)).Densities;
+        density210 = data.GetChunkData(new Vector3Int(x2, y1, z0)).Densities;
+        density211 = data.GetChunkData(new Vector3Int(x2, y1, z1)).Densities;
+        density0N0 = data.GetChunkData(new Vector3Int(x0, yN, z0)).Densities;
+        density1N0 = data.GetChunkData(new Vector3Int(x1, yN, z0)).Densities;
+        density0N1 = data.GetChunkData(new Vector3Int(x0, yN, z1)).Densities;
+        density1N1 = data.GetChunkData(new Vector3Int(x1, yN, z1)).Densities;
+        density020 = data.GetChunkData(new Vector3Int(x0, y2, z0)).Densities;
+        density120 = data.GetChunkData(new Vector3Int(x1, y2, z0)).Densities;
+        density021 = data.GetChunkData(new Vector3Int(x0, y2, z1)).Densities;
+        density121 = data.GetChunkData(new Vector3Int(x1, y2, z1)).Densities;
+        density00N = data.GetChunkData(new Vector3Int(x0, y0, zN)).Densities;
+        density01N = data.GetChunkData(new Vector3Int(x0, y1, zN)).Densities;
+        density10N = data.GetChunkData(new Vector3Int(x1, y0, zN)).Densities;
+        density11N = data.GetChunkData(new Vector3Int(x1, y1, zN)).Densities;
+        density002 = data.GetChunkData(new Vector3Int(x0, y0, z2)).Densities;
+        density012 = data.GetChunkData(new Vector3Int(x0, y1, z2)).Densities;
+        density102 = data.GetChunkData(new Vector3Int(x1, y0, z2)).Densities;
+        density112 = data.GetChunkData(new Vector3Int(x1, y1, z2)).Densities;
+    }
+
+    // 표면 꼭짓점의 종류를 밀도와 동일한 소유 청크에서 읽는다.
+    public readonly byte GetTerrainType(Vector3Int index)
+    {
+        Vector3Int owner = new Vector3Int(
+            Mathf.Min(index.x / chunkSize, chunkCounts.x - 1),
+            Mathf.Min(index.y / chunkSize, chunkCounts.y - 1),
+            Mathf.Min(index.z / chunkSize, chunkCounts.z - 1));
+        Vector3Int origin = owner * chunkSize;
+        Vector3Int localIndex = index - origin;
+        int sampleCountY = Mathf.Min(chunkSize, Height - origin.y) +
+            (owner.y == chunkCounts.y - 1 ? 1 : 0);
+        int sampleCountZ = Mathf.Min(chunkSize, Width - origin.z) +
+            (owner.z == chunkCounts.z - 1 ? 1 : 0);
+        int flatIndex = (localIndex.x * sampleCountY + localIndex.y) * sampleCountZ + localIndex.z;
+        Vector3Int offset = owner - chunkCoord;
+        int sourceIndex = offset.x * 4 + offset.y * 2 + offset.z;
+        switch (sourceIndex)
+        {
+            case 0: return type000[flatIndex];
+            case 1: return type001[flatIndex];
+            case 2: return type010[flatIndex];
+            case 3: return type011[flatIndex];
+            case 4: return type100[flatIndex];
+            case 5: return type101[flatIndex];
+            case 6: return type110[flatIndex];
+            case 7: return type111[flatIndex];
+            default: throw new ArgumentOutOfRangeException(nameof(index));
+        }
+    }
+
+    // 전체 격자 좌표를 소유한 청크의 배열을 골라 해당 샘플의 밀도를 읽는다.
+    public readonly float GetDensity(Vector3Int index)
+    {
+        Vector3Int owner = new Vector3Int(
+            Mathf.Min(index.x / chunkSize, chunkCounts.x - 1),
+            Mathf.Min(index.y / chunkSize, chunkCounts.y - 1),
+            Mathf.Min(index.z / chunkSize, chunkCounts.z - 1));
+        Vector3Int origin = owner * chunkSize;
+        Vector3Int localIndex = index - origin;
+        int sampleCountY = Mathf.Min(chunkSize, Height - origin.y) +
+            (owner.y == chunkCounts.y - 1 ? 1 : 0);
+        int sampleCountZ = Mathf.Min(chunkSize, Width - origin.z) +
+            (owner.z == chunkCounts.z - 1 ? 1 : 0);
+        int flatIndex = (localIndex.x * sampleCountY + localIndex.y) * sampleCountZ + localIndex.z;
+        Vector3Int offset = owner - chunkCoord;
+        int sourceIndex = (offset.x + 1) * 16 + (offset.y + 1) * 4 + offset.z + 1;
+
+        switch (sourceIndex)
+        {
+            case 21: return density000[flatIndex];
+            case 22: return density001[flatIndex];
+            case 25: return density010[flatIndex];
+            case 26: return density011[flatIndex];
+            case 37: return density100[flatIndex];
+            case 38: return density101[flatIndex];
+            case 41: return density110[flatIndex];
+            case 42: return density111[flatIndex];
+            case 5: return densityN00[flatIndex];
+            case 6: return densityN01[flatIndex];
+            case 9: return densityN10[flatIndex];
+            case 10: return densityN11[flatIndex];
+            case 53: return density200[flatIndex];
+            case 54: return density201[flatIndex];
+            case 57: return density210[flatIndex];
+            case 58: return density211[flatIndex];
+            case 17: return density0N0[flatIndex];
+            case 33: return density1N0[flatIndex];
+            case 18: return density0N1[flatIndex];
+            case 34: return density1N1[flatIndex];
+            case 29: return density020[flatIndex];
+            case 45: return density120[flatIndex];
+            case 30: return density021[flatIndex];
+            case 46: return density121[flatIndex];
+            case 20: return density00N[flatIndex];
+            case 24: return density01N[flatIndex];
+            case 36: return density10N[flatIndex];
+            case 40: return density11N[flatIndex];
+            case 23: return density002[flatIndex];
+            case 27: return density012[flatIndex];
+            case 39: return density102[flatIndex];
+            case 43: return density112[flatIndex];
+            default: throw new ArgumentOutOfRangeException(nameof(index));
+        }
+    }
+}

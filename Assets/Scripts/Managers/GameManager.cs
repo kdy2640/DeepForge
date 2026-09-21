@@ -5,12 +5,14 @@ public sealed class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [SerializeField] private TerrainManager terrainManager;
     [SerializeField] private InputManager inputManager;
     [SerializeField] private GameLoopManager gameLoopManager;
     [SerializeField] private SceneController sceneController;
 
-    public TerrainManager TerrainManager => terrainManager;
+    public StockManager StockManager { get; private set; }
+    public UpgradeManager Upgrade { get; private set; }
+    public UtilityManager Utility { get; private set; }
+
     public InputManager InputManager => inputManager;
     public GameLoopManager GameLoopManager => gameLoopManager;
     public SceneController SceneController => sceneController;
@@ -27,10 +29,9 @@ public sealed class GameManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        if (terrainManager == null)
-        {
-            terrainManager = FindFirstObjectByType<TerrainManager>();
-        }
+        StockManager = GetComponent<StockManager>();
+        Upgrade = GetComponent<UpgradeManager>();
+        Utility = GetComponentInChildren<UtilityManager>(true);
 
         if (inputManager == null)
         {
