@@ -168,6 +168,22 @@ MonoBehaviour:
   noiseScale: 0.08
   densityThreshold: 0.5
   use3DNoise: 0
+  generateCaves: 1
+  caveBounds:
+    m_Center: {x: 192, y: 23, z: 192}
+    m_Extent: {x: 184, y: 15, z: 184}
+  caveSeed: 15
+  caveRegionCounts: {x: 4, y: 1, z: 4}
+  caveNodesPerRegion: 6
+  caveExtraConnectionsPerRegion: 1
+  caveRadiusRange: {x: 1.75, y: 2.25}
+  caveBendDistance: 4
+  caveSegmentLength: 1
+  caveTransitionWidth: 0.75
+  caveNoiseScale: 0.12
+  caveNoiseAmplitude: 0.25
+  caveEntrancePosition: {x: 24, y: 24}
+  caveEntranceMaxSlope: 30
   mat: {fileID: 2100000, guid: d2672cbd58c6427a899b26bae3f9299a, type: 2}
   isSmoothShading: 1
   stoneSeed: 12345
