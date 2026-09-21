@@ -94,6 +94,7 @@ public class TerrainChunkRegistry : System.IDisposable
                 StoneActor stone = Object.Instantiate(owner.StonePrefab, chunkObject.transform);
                 stone.transform.localPosition = spawn.TerrainLocalPosition;
                 stone.SetData(spawn.StoneID);
+                stone.InitializeTerrainSupport(owner);
             }
             chunk.stonesSpawned = true;
         }

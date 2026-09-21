@@ -60,6 +60,9 @@ public class TerrainManager : MonoBehaviour
     private TerrainDensityFormer generator;
     private Coroutine generationRoutine;
 
+    // 밀도 수정과 메시 갱신이 끝난 실제 격자 범위를 전달한다.
+    public event System.Action<Vector3Int, Vector3Int> DensityChanged;
+
     // 청크 생성과 외부 조회에 사용하는 지형 상태
     public TerrainData Data => data;
     public int ChunkSize => chunkManager.Grid.ChunkSize;
@@ -118,6 +121,7 @@ public class TerrainManager : MonoBehaviour
         if (changed)
         {
             chunkManager.RegenerateChunksInBounds(minChangedIndex, maxChangedIndex);
+            DensityChanged?.Invoke(minChangedIndex, maxChangedIndex);
         }
         return changed;
     }
@@ -125,6 +129,8 @@ public class TerrainManager : MonoBehaviour
     // 현재 지형을 정리하고 설정값으로 밀도와 청크 메시를 다시 생성한다.
     public void GenerateTerrain()
     {
+        // 이전 지형의 돌은 Destroy 처리 시점까지 남을 수 있으므로 구독부터 정리한다.
+        DensityChanged = null;
         if (generationRoutine != null)
         {
             StopCoroutine(generationRoutine);
@@ -228,6 +234,7 @@ public class TerrainManager : MonoBehaviour
     // 생성 코루틴과 스트리밍을 중단하고 메시와 밀도 버퍼를 해제한다.
     private void ReleaseResources()
     {
+        DensityChanged = null;
         if (generationRoutine != null)
         {
             StopCoroutine(generationRoutine);

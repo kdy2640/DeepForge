@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -42,7 +41,6 @@ public sealed class PlayerMiner : MonoBehaviour
     private Vector3 erosionStartDirection;
     private float erosionElapsedTime;
     private bool hasErosionStart;
-    private readonly HashSet<StoneActor> damagedStones = new();
 
     private void OnChangeEditMode(InputAction.CallbackContext context)
     { 
@@ -260,7 +258,6 @@ public sealed class PlayerMiner : MonoBehaviour
                     // 실제 밀도가 바뀐 pass의 굴착 시간만 누적한다.
                     erosionElapsedTime = Mathf.Min(erosionElapsedTime + interval, erosionDirectionBlendTime);
                 }
-                DamageStones();
                 nextLeftEditTime = Time.time + interval;
             }
         }
@@ -283,17 +280,4 @@ public sealed class PlayerMiner : MonoBehaviour
         }
     }
 
-    private void DamageStones()
-    {
-        damagedStones.Clear();
-        Collider[] hits = Physics.OverlapSphere(
-            mouseHit, anchorRadius, LayerMask.GetMask("Stone"), QueryTriggerInteraction.Collide);
-
-        foreach (Collider hit in hits)
-        {
-            StoneActor stone = hit.GetComponentInParent<StoneActor>();
-            if (damagedStones.Add(stone))
-                stone.TakeDamage(100f);
-        }
-    }
 }

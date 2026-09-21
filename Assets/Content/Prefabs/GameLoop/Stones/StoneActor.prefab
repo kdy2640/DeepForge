@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2728648708446689857}
-  - component: {fileID: 6537608532491359118}
   - component: {fileID: 5071757074173821871}
   - component: {fileID: 109469624945369110}
   - component: {fileID: 7971657989837151028}
@@ -35,18 +34,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6537608532491359118
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2962405446754035269}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6087668337054df45a64cf76d7b47e9b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::HPHandler
 --- !u!114 &5071757074173821871
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -102,5 +89,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53ac1c521e86ad54dbf8c568f7f20f18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StoneActor
-  hpHandler: {fileID: 6537608532491359118}
   presenter: {fileID: 5071757074173821871}
