@@ -16,13 +16,7 @@ public class TerrainDensityFormer
     private const int NoiseSeed = 15;
 
     // 청크별 밀도 채우기를 예약하고 모든 Job이 완료된 뒤 반환한다.
-    public void Generate(
-        TerrainData data,
-        float baseSurfaceHeight,
-        float terrainAmplitude,
-        float noiseScale,
-        float densityThreshold,
-        bool use3DNoise)
+    public void Generate(TerrainData data, TerrainSurfaceSettings surface, TerrainDensitySettings density)
     {
         using var formScope = FormMarker.Auto();
         int surfaceWidth = data.Width + 1;
@@ -32,20 +26,20 @@ public class TerrainDensityFormer
         using (PrepareMarker.Auto())
         {
             surfaceHeights = new NativeArray<float>(
-                use3DNoise ? 0 : surfaceWidth * surfaceWidth,
+                density.Use3DNoise ? 0 : surfaceWidth * surfaceWidth,
                 Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             handles = new NativeArray<JobHandle>(
                 counts.x * counts.y * counts.z, Allocator.Temp);
-            if (!use3DNoise)
+            if (!density.Use3DNoise)
             {
                 for (int x = 0; x < surfaceWidth; x++)
                 {
                     for (int z = 0; z < surfaceWidth; z++)
                     {
-                        float heightNoise = terrainAmplitude == 0f
+                        float heightNoise = surface.Amplitude == 0f
                             ? 0f
-                            : Mathf.PerlinNoise(x * noiseScale, z * noiseScale) * 2f - 1f;
-                        surfaceHeights[x * surfaceWidth + z] = baseSurfaceHeight + heightNoise * terrainAmplitude;
+                            : Mathf.PerlinNoise(x * density.NoiseScale, z * density.NoiseScale) * 2f - 1f;
+                        surfaceHeights[x * surfaceWidth + z] = surface.BaseSurfaceHeight + heightNoise * surface.Amplitude;
                     }
                 }
             }
@@ -72,9 +66,9 @@ public class TerrainDensityFormer
                             SurfaceHeights = surfaceHeights,
                             SurfaceWidth = surfaceWidth,
                             NoiseSeed = NoiseSeed,
-                            NoiseScale = noiseScale,
-                            DensityThreshold = densityThreshold,
-                            Use3DNoise = use3DNoise
+                            NoiseScale = density.NoiseScale,
+                            DensityThreshold = density.DensityThreshold,
+                            Use3DNoise = density.Use3DNoise
                         };
                         handles[jobIndex++] = job.Schedule(chunk.Densities.Length, 64);
                     }

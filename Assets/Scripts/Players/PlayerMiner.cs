@@ -54,7 +54,7 @@ public sealed class PlayerMiner : MonoBehaviour
     {
         if (context.performed)
         {
-            terrainManager.IsSmoothShading = !terrainManager.IsSmoothShading;
+            terrainManager.Settings.Shading.IsSmoothShading = !terrainManager.Settings.Shading.IsSmoothShading;
             terrainManager.RegenerateAllChunks();
         }
     }

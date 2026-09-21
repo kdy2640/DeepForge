@@ -247,15 +247,52 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TerrainManager
   width: 256
   densityFieldHeight: 128
-  baseSurfaceHeight: 64
-  terrainAmplitude: 6
   resolution: 0.25
-  noiseScale: 0.08
-  densityThreshold: 0.5
-  use3DNoise: 0
-  mat: {fileID: 0}
   chunkSize: 16
-  isSmoothShading: 1
+  settings:
+    Surface:
+      BaseSurfaceHeight: 64
+      Amplitude: 6
+    Density:
+      NoiseScale: 0.08
+      DensityThreshold: 0.5
+      Use3DNoise: 0
+    Cave:
+      Enabled: 0
+      Bounds:
+        m_Center: {x: 192, y: 23, z: 192}
+        m_Extent: {x: 184, y: 15, z: 184}
+      Seed: 15
+      RegionCounts: {x: 4, y: 1, z: 4}
+      NodesPerRegion: 6
+      ExtraConnectionsPerRegion: 1
+      RadiusRange: {x: 1.75, y: 2.25}
+      BendDistance: 4
+      SegmentLength: 1
+      TransitionWidth: 0.75
+      NoiseScale: 0.12
+      NoiseAmplitude: 0.25
+      EntrancePosition: {x: 24, y: 24}
+      EntranceMaxSlope: 30
+    Material:
+      Material: {fileID: 0}
+    Shading:
+      IsSmoothShading: 1
+    Stones:
+      Seed: 12345
+      CountPerChunk: 1
+      StoneID: 1
+      Prefab: {fileID: 0}
+    Grid:
+      Width: 30
+      DensityFieldHeight: 20
+      Resolution: 1
+      ChunkSize: 16
+    Streaming:
+      Target: {fileID: 0}
+      LoadDistance: 110
+      UnloadDistance: 120
+      MaxChunkActivationsPerFrame: 64
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0

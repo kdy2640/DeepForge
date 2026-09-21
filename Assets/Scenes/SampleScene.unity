@@ -163,24 +163,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2fe6db9af8c80046851460dcdd53e08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TerrainManager
-  baseSurfaceHeight: 125
-  terrainAmplitude: 0
-  noiseScale: 0.08
-  densityThreshold: 0.5
-  use3DNoise: 0
-  mat: {fileID: 2100000, guid: d2672cbd58c6427a899b26bae3f9299a, type: 2}
-  isSmoothShading: 1
-  streamingTarget: {fileID: 1026908064}
-  chunkManager:
-    grid:
-      width: 1024
-      densityFieldHeight: 150
-      resolution: 0.25
-      chunkSize: 16
-    streamer:
-      loadDistance: 110
-      unloadDistance: 120
-      maxChunkActivationsPerFrame: 64
+  settings:
+    Surface:
+      BaseSurfaceHeight: 125
+      Amplitude: 0
+    Density:
+      NoiseScale: 0.08
+      DensityThreshold: 0.5
+      Use3DNoise: 0
+    Cave:
+      Enabled: 0
+      Bounds:
+        m_Center: {x: 192, y: 23, z: 192}
+        m_Extent: {x: 184, y: 15, z: 184}
+      Seed: 15
+      RegionCounts: {x: 4, y: 1, z: 4}
+      NodesPerRegion: 6
+      ExtraConnectionsPerRegion: 1
+      RadiusRange: {x: 1.75, y: 2.25}
+      BendDistance: 4
+      SegmentLength: 1
+      TransitionWidth: 0.75
+      NoiseScale: 0.12
+      NoiseAmplitude: 0.25
+      EntrancePosition: {x: 24, y: 24}
+      EntranceMaxSlope: 30
+    Material:
+      Material: {fileID: 2100000, guid: d2672cbd58c6427a899b26bae3f9299a, type: 2}
+    Shading:
+      IsSmoothShading: 1
+    Stones:
+      Seed: 12345
+      CountPerChunk: 1
+      StoneID: 1
+      Prefab: {fileID: 0}
+    Grid:
+      Width: 1024
+      DensityFieldHeight: 150
+      Resolution: 0.25
+      ChunkSize: 16
+    Streaming:
+      Target: {fileID: 1026908064}
+      LoadDistance: 110
+      UnloadDistance: 120
+      MaxChunkActivationsPerFrame: 64
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0

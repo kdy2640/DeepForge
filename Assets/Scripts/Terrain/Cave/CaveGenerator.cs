@@ -9,22 +9,15 @@ public class CaveGenerator
     // Carve 전 기본 밀도를 읽어 지하 통로와 지표 출입구를 만든다. 밀도는 수정하지 않는다.
     // bounds는 반지름·벽면 보정·밀도 전이를 포함할 지하 허용 영역이며 출입구는 이 영역 밖으로 이어진다.
     public CaveCarveSegment[] GenerateWithEntrance(
-        TerrainData data, int seed, Bounds bounds, Vector3Int regionCounts,
-        int nodeCountPerRegion, int extraConnectionsPerRegion, Vector2 radiusRange,
-        float bendDistance, float segmentLength, float densityThreshold,
-        float transitionWidth, float noiseAmplitude, Vector2 entrancePosition, float entranceMaxSlope)
+        TerrainData data, CaveSettings settings, float densityThreshold)
     {
-        float margin = radiusRange.y + noiseAmplitude + (1f - densityThreshold) * transitionWidth;
-        Bounds centerBounds = new Bounds(bounds.center, bounds.size - Vector3.one * (2f * margin));
-        CaveCarveSegment[] segments = Generate(
-            seed, centerBounds, regionCounts, nodeCountPerRegion, extraConnectionsPerRegion,
-            radiusRange.x, radiusRange.y, bendDistance, segmentLength);
+        float margin = settings.RadiusRange.y + settings.NoiseAmplitude + (1f - densityThreshold) * settings.TransitionWidth;
+        Bounds centerBounds = new Bounds(settings.Bounds.center, settings.Bounds.size - Vector3.one * (2f * margin));
+        CaveCarveSegment[] segments = Generate(centerBounds, settings);
 
-        CaveCarveSegment entrance = CreateCaveEntrance(
-            data, segments, densityThreshold, radiusRange, transitionWidth, noiseAmplitude,
-            entrancePosition, entranceMaxSlope);
+        CaveCarveSegment entrance = CreateCaveEntrance(data, segments, settings, densityThreshold);
         int entranceStart = segments.Length;
-        int entranceCount = Mathf.CeilToInt(Vector3.Distance(entrance.Start, entrance.End) / segmentLength);
+        int entranceCount = Mathf.CeilToInt(Vector3.Distance(entrance.Start, entrance.End) / settings.SegmentLength);
         System.Array.Resize(ref segments, entranceStart + entranceCount);
         Vector3 previous = entrance.Start;
         for (int i = 1; i <= entranceCount; i++)
@@ -45,11 +38,9 @@ public class CaveGenerator
 
     // 지표의 빈 공간에서 시작해 제한 경사로 연결 가능한 가장 가까운 동굴 구간 끝점에 붙인다.
     private CaveCarveSegment CreateCaveEntrance(
-        TerrainData data, CaveCarveSegment[] segments, float densityThreshold,
-        Vector2 radiusRange, float transitionWidth, float noiseAmplitude,
-        Vector2 entrancePosition, float entranceMaxSlope)
+        TerrainData data, CaveCarveSegment[] segments, CaveSettings settings, float densityThreshold)
     {
-        Vector3Int column = data.PositionToIndex(new Vector3(entrancePosition.x, 0f, entrancePosition.y));
+        Vector3Int column = data.PositionToIndex(new Vector3(settings.EntrancePosition.x, 0f, settings.EntrancePosition.y));
         float surfaceY = 0f;
         bool foundSurface = false;
         for (int y = data.DensityFieldHeight - 1; y >= 0; y--)
@@ -69,9 +60,9 @@ public class CaveGenerator
             throw new System.InvalidOperationException("동굴 출입구 위치에 지표 교차점이 없습니다. 출입구 X/Z와 기본 지형 설정을 확인하세요.");
         }
 
-        float margin = radiusRange.y + noiseAmplitude + (1f - densityThreshold) * transitionWidth;
+        float margin = settings.RadiusRange.y + settings.NoiseAmplitude + (1f - densityThreshold) * settings.TransitionWidth;
         Vector3 entrance = new Vector3(column.x * data.Resolution, surfaceY + margin, column.z * data.Resolution);
-        float maxSlope = Mathf.Tan(entranceMaxSlope * Mathf.Deg2Rad);
+        float maxSlope = Mathf.Tan(settings.EntranceMaxSlope * Mathf.Deg2Rad);
         var candidates = new HashSet<Vector3>();
         foreach (CaveCarveSegment segment in segments)
         {
@@ -96,13 +87,13 @@ public class CaveGenerator
         });
 
         // 도착부 이전에 다른 동굴을 관통하면 진입로 바닥이 꺼지므로 해당 후보를 제외한다.
-        float joinDistance = 2f * (radiusRange.y + noiseAmplitude);
+        float joinDistance = 2f * (settings.RadiusRange.y + settings.NoiseAmplitude);
         foreach (Vector3 connection in ordered)
         {
             float length = Vector3.Distance(entrance, connection);
             if (length <= joinDistance)
             {
-                return new CaveCarveSegment { Start = entrance, End = connection, Radius = radiusRange.y };
+                return new CaveCarveSegment { Start = entrance, End = connection, Radius = settings.RadiusRange.y };
             }
             Vector3 approach = (connection - entrance) * ((length - joinDistance) / length);
             float a = approach.sqrMagnitude;
@@ -138,7 +129,7 @@ public class CaveGenerator
                         s = Mathf.Clamp01((b - c) / a);
                     }
                 }
-                float clearance = radiusRange.y + segment.Radius + 2f * noiseAmplitude;
+                float clearance = settings.RadiusRange.y + segment.Radius + 2f * settings.NoiseAmplitude;
                 if ((offset + approach * s - direction * t).sqrMagnitude < clearance * clearance)
                 {
                     clear = false;
@@ -147,7 +138,7 @@ public class CaveGenerator
             }
             if (clear)
             {
-                return new CaveCarveSegment { Start = entrance, End = connection, Radius = radiusRange.y };
+                return new CaveCarveSegment { Start = entrance, End = connection, Radius = settings.RadiusRange.y };
             }
         }
 
@@ -155,42 +146,33 @@ public class CaveGenerator
     }
 
     // centerBounds는 지형 로컬 좌표의 통로 중심 허용 영역이다.
-    // 호출 조건: 양수인 영역 크기와 regionCounts, nodeCountPerRegion >= 2,
-    // extraConnectionsPerRegion >= 0, 0 < minRadius <= maxRadius, bendDistance >= 0, segmentLength > 0.
+    // 호출 조건: 양수인 영역 크기와 settings.RegionCounts, settings.NodesPerRegion >= 2,
+    // settings.ExtraConnectionsPerRegion >= 0, 0 < settings.RadiusRange.x <= settings.RadiusRange.y, settings.BendDistance >= 0, settings.SegmentLength > 0.
     // 벽면 보정과 밀도 전이를 포함한 외곽 여유, 지표 깊이는 호출 측에서 확보한다.
-    public CaveCarveSegment[] Generate(
-        int seed,
-        Bounds centerBounds,
-        Vector3Int regionCounts,
-        int nodeCountPerRegion,
-        int extraConnectionsPerRegion,
-        float minRadius,
-        float maxRadius,
-        float bendDistance,
-        float segmentLength)
+    public CaveCarveSegment[] Generate(Bounds centerBounds, CaveSettings settings)
     {
         Vector3 origin = centerBounds.min;
         Vector3 regionSize = new Vector3(
-            centerBounds.size.x / regionCounts.x,
-            centerBounds.size.y / regionCounts.y,
-            centerBounds.size.z / regionCounts.z);
+            centerBounds.size.x / settings.RegionCounts.x,
+            centerBounds.size.y / settings.RegionCounts.y,
+            centerBounds.size.z / settings.RegionCounts.z);
         var segments = new List<CaveCarveSegment>();
-        for (int x = 0; x < regionCounts.x; x++)
+        for (int x = 0; x < settings.RegionCounts.x; x++)
         {
-            for (int y = 0; y < regionCounts.y; y++)
+            for (int y = 0; y < settings.RegionCounts.y; y++)
             {
-                for (int z = 0; z < regionCounts.z; z++)
+                for (int z = 0; z < settings.RegionCounts.z; z++)
                 {
                     Vector3Int coordinate = new Vector3Int(x, y, z);
-                    uint regionSeed = math.hash(new int4(seed, x, y, z));
+                    uint regionSeed = math.hash(new int4(settings.Seed, x, y, z));
                     List<Vector3> nodes = PlaceNodes(
-                        seed, coordinate, regionCounts, origin, regionSize, nodeCountPerRegion);
+                        settings.Seed, coordinate, settings.RegionCounts, origin, regionSize, settings.NodesPerRegion);
                     List<Vector2Int> connections = BuildConnections(
-                        nodes, nodeCountPerRegion, extraConnectionsPerRegion);
+                        nodes, settings.NodesPerRegion, settings.ExtraConnectionsPerRegion);
                     Vector3 regionMin = origin + Vector3.Scale((Vector3)coordinate, regionSize);
                     Vector3 regionMax = origin + Vector3.Scale((Vector3)(coordinate + Vector3Int.one), regionSize);
                     BuildPaths(nodes, connections, regionSeed, regionMin, regionMax,
-                        minRadius, maxRadius, bendDistance, segmentLength, segments);
+                        settings.RadiusRange.x, settings.RadiusRange.y, settings.BendDistance, settings.SegmentLength, segments);
                 }
             }
         }

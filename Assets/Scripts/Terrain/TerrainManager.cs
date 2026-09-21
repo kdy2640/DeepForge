@@ -1,59 +1,12 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 // 지형 밀도 생성, 청크 메시 갱신과 대상 주변 스트리밍을 관리한다.
 [DisallowMultipleComponent]
 public class TerrainManager : MonoBehaviour
 {
-    [Header("표면 높이와 변화 폭")]
-    [SerializeField, Min(0f)] private float baseSurfaceHeight = 5f;
-    [SerializeField, Min(0f)] private float terrainAmplitude = 5f;
-
-    [Header("노이즈와 표면 판정")]
-    [SerializeField] private float noiseScale = 1f;
-    [FormerlySerializedAs("heightTresshold")]
-    [SerializeField] private float densityThreshold = 0.5f;
-    [SerializeField] private bool use3DNoise;
-
-    [Header("동굴 생성 영역과 구조")]
-    [SerializeField] private bool generateCaves;
-    [Tooltip("지형 로컬 좌표. 통로 반지름과 벽면 보정까지 포함할 지하 허용 영역입니다.")]
-    [SerializeField] private Bounds caveBounds = new Bounds(new Vector3(192f, 23f, 192f), new Vector3(368f, 30f, 368f));
-    [SerializeField] private int caveSeed = 15;
-    [SerializeField] private Vector3Int caveRegionCounts = new Vector3Int(4, 1, 4);
-    [SerializeField, Min(2)] private int caveNodesPerRegion = 6;
-    [SerializeField, Min(0)] private int caveExtraConnectionsPerRegion = 1;
-
-    [Header("동굴 통로와 벽면")]
-    [Tooltip("지형 로컬 거리 기준 최소·최대 반지름입니다. 최소 반지름은 벽면 변화량보다 커야 합니다.")]
-    [SerializeField] private Vector2 caveRadiusRange = new Vector2(1.75f, 2.25f);
-    [SerializeField, Min(0f)] private float caveBendDistance = 4f;
-    [SerializeField, Min(0.001f)] private float caveSegmentLength = 1f;
-    [SerializeField, Min(0.001f)] private float caveTransitionWidth = 0.75f;
-    [SerializeField, Min(0f)] private float caveNoiseScale = 0.12f;
-    [SerializeField, Min(0f)] private float caveNoiseAmplitude = 0.25f;
-
-    [Header("동굴 지표 출입구")]
-    [Tooltip("지형 로컬 X/Z 위치입니다. 높이는 Carve 전 기본 밀도의 지표에서 계산합니다.")]
-    [SerializeField] private Vector2 caveEntrancePosition = new Vector2(24f, 24f);
-    [SerializeField, Range(1f, 45f)] private float caveEntranceMaxSlope = 30f;
-
-    [Header("지형 재질")]
-    [SerializeField] private Material mat;
-
-    [Header("메시 셰이딩")]
-    [SerializeField] private bool isSmoothShading;
-
-    [Header("Stone Placement")]
-    [SerializeField] private int stoneSeed = 12345;
-    [SerializeField, Min(0)] private int stonesPerChunk = 1;
-    [SerializeField] private int stoneID = 1;
-    [SerializeField] private StoneActor stonePrefab;
-
-    [Header("청크 스트리밍")]
-    [SerializeField] private Transform streamingTarget;
-    [SerializeField] private TerrainChunkManager chunkManager = new TerrainChunkManager();
+    [SerializeField] private TerrainSettings settings = new TerrainSettings();
+    private TerrainChunkManager chunkManager;
 
     // 실행 중인 지형 데이터와 생성 작업
     private TerrainData data;
@@ -63,21 +16,10 @@ public class TerrainManager : MonoBehaviour
     // 밀도 수정과 메시 갱신이 끝난 실제 격자 범위를 전달한다.
     public event System.Action<Vector3Int, Vector3Int> DensityChanged;
 
-    // 청크 생성과 외부 조회에 사용하는 지형 상태
+    // 외부에서 사용하는 설정과 실행 상태
+    public TerrainSettings Settings => settings;
     public TerrainData Data => data;
-    public int ChunkSize => chunkManager.Grid.ChunkSize;
-    public float DensityThreshold => densityThreshold;
-    public Material Material => mat;
-    public int StoneSeed => stoneSeed;
-    public int StonesPerChunk => stonesPerChunk;
-    public int StoneID => stoneID;
-    public StoneActor StonePrefab => stonePrefab;
     public bool IsInitialLoadComplete => data != null && chunkManager.Streamer.IsInitialLoadComplete;
-    public bool IsSmoothShading
-    {
-        get => isSmoothShading;
-        set => isSmoothShading = value;
-    }
 
     // 초기 지형을 생성한다.
     protected virtual void Start()
@@ -88,7 +30,7 @@ public class TerrainManager : MonoBehaviour
     // 대상 위치에 따라 청크 활성화 대기열을 프레임 예산만큼 처리한다.
     private void Update()
     {
-        chunkManager.Streamer.Tick();
+        if (chunkManager != null) chunkManager.Streamer.Tick();
     }
 
     // 물리 갱신에 맞춰 대상 주변 청크와 충돌체를 먼저 활성화한다.
@@ -96,7 +38,7 @@ public class TerrainManager : MonoBehaviour
     {
         // Run before player physics so a newly entered neighborhood has colliders.
         // The normal activation budget is processed only by Update.
-        chunkManager.Streamer.UpdateTarget();
+        if (chunkManager != null) chunkManager.Streamer.UpdateTarget();
     }
 
     // 월드 좌표의 구 영역에 밀도를 더하고 영향을 받은 청크 메시만 갱신한다.
@@ -111,7 +53,7 @@ public class TerrainManager : MonoBehaviour
             localPosition,
             radius,
             power,
-            densityThreshold,
+            settings.Density.DensityThreshold,
             worldErosionDirection.normalized,
             transform.worldToLocalMatrix.transpose,
             erosionSideStrength,
@@ -129,6 +71,7 @@ public class TerrainManager : MonoBehaviour
     // 현재 지형을 정리하고 설정값으로 밀도와 청크 메시를 다시 생성한다.
     public void GenerateTerrain()
     {
+        chunkManager ??= new TerrainChunkManager(settings.Grid, settings.Streaming);
         // 이전 지형의 돌은 Destroy 처리 시점까지 남을 수 있으므로 구독부터 정리한다.
         DensityChanged = null;
         if (generationRoutine != null)
@@ -148,13 +91,7 @@ public class TerrainManager : MonoBehaviour
 
         data = CreateTerrainData();
         generator = generator ?? new TerrainDensityFormer();
-        generator.Generate(
-            data,
-            baseSurfaceHeight,
-            terrainAmplitude,
-            noiseScale,
-            densityThreshold,
-            use3DNoise);
+        generator.Generate(data, settings.Surface, settings.Density);
         GenerateCaves();
         if (chunkManager.Registry == null)
         {
@@ -167,7 +104,7 @@ public class TerrainManager : MonoBehaviour
     // 초기 청크를 여러 프레임에 나눠 생성한 뒤 스트리밍을 시작한다.
     private IEnumerator GenerateTerrainRoutine()
     {
-        yield return chunkManager.GenerateInitialChunks(streamingTarget);
+        yield return chunkManager.GenerateInitialChunks(settings.Streaming.Target);
         generationRoutine = null;
     }
 
@@ -181,17 +118,12 @@ public class TerrainManager : MonoBehaviour
     // 밀도 데이터와 청크 관리자가 아직 없으면 생성한다.
     private void EnsureInitialized()
     {
+        chunkManager ??= new TerrainChunkManager(settings.Grid, settings.Streaming);
         if (data == null)
         {
             data = CreateTerrainData();
             generator = generator ?? new TerrainDensityFormer();
-            generator.Generate(
-                data,
-                baseSurfaceHeight,
-                terrainAmplitude,
-                noiseScale,
-                densityThreshold,
-                use3DNoise);
+            generator.Generate(data, settings.Surface, settings.Density);
             GenerateCaves();
         }
 
@@ -204,16 +136,15 @@ public class TerrainManager : MonoBehaviour
     // 기본 밀도 위에 지하 동굴과 지표 진입로를 모두 반영한 뒤 메시 생성을 시작한다.
     private void GenerateCaves()
     {
-        if (!generateCaves) return;
+        CaveSettings cave = settings.Cave;
+        if (!cave.Enabled) return;
 
         CaveCarveSegment[] segments = new CaveGenerator().GenerateWithEntrance(
-            data, caveSeed, caveBounds, caveRegionCounts, caveNodesPerRegion, caveExtraConnectionsPerRegion,
-            caveRadiusRange, caveBendDistance, caveSegmentLength, densityThreshold,
-            caveTransitionWidth, caveNoiseAmplitude, caveEntrancePosition, caveEntranceMaxSlope);
+            data, cave, settings.Density.DensityThreshold);
 
         // 최초 메시 생성 전이므로 변경 bounds를 이용한 별도 메시 갱신은 필요 없다.
-        data.CarvePassages(segments, densityThreshold, caveTransitionWidth,
-            caveSeed, caveNoiseScale, caveNoiseAmplitude, out _, out _);
+        data.CarvePassages(segments, settings.Density.DensityThreshold, cave.TransitionWidth,
+            cave.Seed, cave.NoiseScale, cave.NoiseAmplitude, out _, out _);
     }
 
     // 현재 격자 설정으로 밀도 데이터를 생성한다.
@@ -240,10 +171,10 @@ public class TerrainManager : MonoBehaviour
             StopCoroutine(generationRoutine);
             generationRoutine = null;
         }
-        chunkManager.Streamer.Reset();
-        if (chunkManager.Registry != null)
+        if (chunkManager != null)
         {
-            chunkManager.Dispose();
+            chunkManager.Streamer.Reset();
+            if (chunkManager.Registry != null) chunkManager.Dispose();
         }
 
         if (data != null)

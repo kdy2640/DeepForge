@@ -119,7 +119,7 @@ public sealed class StoneActor : MonoBehaviour
             float x11 = Mathf.Lerp(terrainData.GetDensity(index + new Vector3Int(0, 1, 1)),
                 terrainData.GetDensity(index + new Vector3Int(1, 1, 1)), t.x);
             float density = Mathf.Lerp(Mathf.Lerp(x00, x10, t.y), Mathf.Lerp(x01, x11, t.y), t.z);
-            if (density > terrainManager.DensityThreshold) return true;
+            if (density > terrainManager.Settings.Density.DensityThreshold) return true;
         }
         return false;
     }

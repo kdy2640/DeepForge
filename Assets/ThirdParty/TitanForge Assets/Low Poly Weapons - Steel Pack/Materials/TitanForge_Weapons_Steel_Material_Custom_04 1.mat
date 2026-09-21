@@ -7,14 +7,14 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: TitanForge_Weapons_Steel_Material_03
+  m_Name: TitanForge_Weapons_Steel_Material_Custom_04 1
   m_Shader: {fileID: 4800000, guid: 53756ea42bccffc4faba276de02fdaf4, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords:
   - _SMALLTEXTURE_ON
-  m_LightmapFlags: 0
+  m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: -1
@@ -49,7 +49,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 2b178149c60b4aa40a5a87d61e784fb2, type: 3}
+        m_Texture: {fileID: 2800000, guid: 186b102ab62c0124abc519874d8043ce, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicEmissionMap:
@@ -73,7 +73,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TextureAlbedo:
-        m_Texture: {fileID: 2800000, guid: 2b178149c60b4aa40a5a87d61e784fb2, type: 3}
+        m_Texture: {fileID: 2800000, guid: 555a601682b35214ab727159c8b73f69, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _texcoord:
@@ -102,7 +102,7 @@ Material:
     - _Parallax: 0.02
     - _ReceiveShadows: 1
     - _SmallTexture: 1
-    - _Smoothness: 0.371
+    - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -111,25 +111,25 @@ Material:
     - __dirty: 0
     m_Colors:
     - _AlbedoColor: {r: 1, g: 1, b: 1, a: 0}
-    - _Cloth: {r: 0.49411768, g: 0.5294118, b: 0.63529414, a: 1}
+    - _Cloth: {r: 0.5921568, g: 0.4117647, b: 0.4078431, a: 1}
     - _ClothColor: {r: 0.5921569, g: 0.40784317, b: 0.40784317, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Color1: {r: 0.69803923, g: 0.6784314, b: 0.654902, a: 1}
+    - _Color1: {r: 0.62352943, g: 0.6392157, b: 0.6901961, a: 1}
     - _Color2: {r: 0.35294116, g: 0.36862746, b: 0.39999998, a: 1}
     - _Color3: {r: 0.39607847, g: 0.32941177, b: 0.3019608, a: 1}
     - _Color4: {r: 0.13725486, g: 0.36470586, b: 0.6784314, a: 1}
-    - _Color5: {r: 0.25490198, g: 0.28627452, b: 0.36862746, a: 1}
+    - _Color5: {r: 0.37647063, g: 0.18431373, b: 0.18039216, a: 1}
     - _Color6: {r: 0.5921569, g: 0.40784317, b: 0.40784317, a: 1}
-    - _EmissionColor: {r: 2.2122226, g: 0.32773668, b: 0.12290125, a: 1}
-    - _Gemstone: {r: 0.14117648, g: 0.3647059, b: 0.6784314, a: 1}
+    - _EmissionColor: {r: 2.212223, g: 0.3277367, b: 0.1229013, a: 1}
+    - _Gemstone: {r: 0.1411764, g: 0.3647059, b: 0.6784314, a: 1}
     - _GemstoneColor: {r: 0.13725486, g: 0.36470586, b: 0.6784314, a: 1}
-    - _Leather: {r: 0.25882354, g: 0.28627452, b: 0.3647059, a: 1}
-    - _LeatherColor: {r: 0.25511748, g: 0.2845296, b: 0.3679245, a: 1}
-    - _Metal: {r: 0.69803923, g: 0.6784314, b: 0.65882355, a: 1}
-    - _MetalColor: {r: 0.6981132, g: 0.6765268, b: 0.6553044, a: 1}
-    - _Stone: {r: 0.3529412, g: 0.36862746, b: 0.40000004, a: 1}
+    - _Leather: {r: 0.3764706, g: 0.1843137, b: 0.1803921, a: 1}
+    - _LeatherColor: {r: 0.37647063, g: 0.18431373, b: 0.18039216, a: 1}
+    - _Metal: {r: 0.6235294, g: 0.6392157, b: 0.6901961, a: 1}
+    - _MetalColor: {r: 0.62352943, g: 0.6392157, b: 0.6901961, a: 1}
+    - _Stone: {r: 0.3529412, g: 0.3686274, b: 0.4, a: 1}
     - _StoneColor: {r: 0.3529412, g: 0.36862746, b: 0.40000004, a: 1}
-    - _Wood: {r: 0.40000004, g: 0.33333334, b: 0.3019608, a: 1}
+    - _Wood: {r: 0.4, g: 0.3333333, b: 0.3019608, a: 1}
     - _WoodColor: {r: 0.39607847, g: 0.32941177, b: 0.3019608, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

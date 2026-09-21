@@ -91,7 +91,7 @@ public class TerrainChunkRegistry : System.IDisposable
         {
             foreach (StoneSpawnData spawn in chunk.stoneSpawns)
             {
-                StoneActor stone = Object.Instantiate(owner.StonePrefab, chunkObject.transform);
+                StoneActor stone = Object.Instantiate(owner.Settings.Stones.Prefab, chunkObject.transform);
                 stone.transform.localPosition = spawn.TerrainLocalPosition;
                 stone.SetData(spawn.StoneID);
                 stone.InitializeTerrainSupport(owner);
@@ -118,7 +118,7 @@ public class TerrainChunkRegistry : System.IDisposable
             if (chunk.stoneSpawns == null)
             {
                 chunk.stoneSpawns = owner.Data.GetChunkData(chunkCoord).CreateStoneSpawns(
-                    owner.StoneSeed, owner.StonesPerChunk, owner.StoneID, owner.Data.Resolution);
+                    owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Settings.Stones.StoneID, owner.Data.Resolution);
             }
             return chunk;
         }
@@ -137,10 +137,10 @@ public class TerrainChunkRegistry : System.IDisposable
             meshRenderer = chunkObject.AddComponent<MeshRenderer>(),
             meshCollider = chunkObject.AddComponent<MeshCollider>(),
             stoneSpawns = owner.Data.GetChunkData(chunkCoord).CreateStoneSpawns(
-                owner.StoneSeed, owner.StonesPerChunk, owner.StoneID, owner.Data.Resolution)
+                owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Settings.Stones.StoneID, owner.Data.Resolution)
         };
 
-        chunk.meshRenderer.sharedMaterial = owner.Material;
+        chunk.meshRenderer.sharedMaterial = owner.Settings.Material.Material;
         chunks[chunkCoord] = chunk;
         return chunk;
     }
