@@ -1,10 +1,10 @@
 using System.Collections;
 using UnityEngine;
 
-public class MainScene : SceneBase
+public class HubScene : SceneBase
 {
-    public override SceneType SceneType => SceneType.Main;
-    public override string SceneName => "MainScene";
+    public override SceneType SceneType => SceneType.Hub;
+    public override string SceneName => "HubScene";
 
     public override IEnumerator Enter()
     {

@@ -5,8 +5,7 @@ using UnityEngine.SceneManagement;
 
 public enum SceneType
 {
-    Main,
-    Upgrade,
+    Hub,
     GameLoop
 }
 
@@ -25,15 +24,13 @@ public class SceneController : MonoBehaviour
     {
         scenes = new Dictionary<SceneType, SceneBase>
         {
-            { SceneType.Main, new MainScene() },
-            { SceneType.Upgrade, new UpgradeScene() },
+            { SceneType.Hub, new HubScene() },
             { SceneType.GameLoop, new GameLoopScene() }
         };
         string sceneName = SceneManager.GetActiveScene().name;
         switch (sceneName)
         {
-            case "MainScene": currentScene = scenes[SceneType.Main]; break;
-            case "UpgradeScene": currentScene = scenes[SceneType.Upgrade]; break;
+            case "HubScene": currentScene = scenes[SceneType.Hub]; break;
             case "GameLoopScene": currentScene = scenes[SceneType.GameLoop]; break;
         }
         isChangingScene = true;

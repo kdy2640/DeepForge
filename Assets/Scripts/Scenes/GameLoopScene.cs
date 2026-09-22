@@ -39,6 +39,6 @@ public class GameLoopScene : SceneBase
     private void OnLoopEnded()
     {
         player.SetGameplayActive(false);
-        GameManager.Instance.SceneController.ChangeScene(SceneType.Upgrade);
+        GameManager.Instance.SceneController.ChangeScene(SceneType.Hub);
     }
 }

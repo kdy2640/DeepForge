@@ -6,11 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/InGame/MainScene.unity
+    path: Assets/Scenes/InGame/HubScene.unity
     guid: 0081928899dca584c90bdbf7d76f9640
-  - enabled: 1
-    path: Assets/Scenes/InGame/UpgradeScene.unity
-    guid: 233dcdcbd3f74284395b3ef5e8cb7803
   - enabled: 1
     path: Assets/Scenes/InGame/GameLoopScene.unity
     guid: ba661d3825b8006428ded134fbc7d3de
