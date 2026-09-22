@@ -15,5 +15,5 @@ MonoBehaviour:
   layer:
     YStart: 0
     TypeId: 1
-    Color: {r: 0.45, g: 0.22, b: 0.12, a: 1}
+    Color: {r: 0.3584906, g: 0.27178693, b: 0.23504807, a: 1}
     BlendWidth: 0

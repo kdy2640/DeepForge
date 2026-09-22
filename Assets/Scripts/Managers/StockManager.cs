@@ -216,6 +216,25 @@ public class StockManager : MonoBehaviour
 
     #endregion
 
+    #region Forged Gear
+
+    public void AddForgedGear(ForgedGear forgedGear)
+    {
+        stockData.forgedGears.Add(forgedGear);
+        NotifyStockDataChanged();
+    }
+
+    public bool RemoveForgedGear(ForgedGear forgedGear)
+    {
+        if (!stockData.forgedGears.Remove(forgedGear))
+            return false;
+
+        NotifyStockDataChanged();
+        return true;
+    }
+
+    #endregion
+
     #region Save Data
 
     public StockSaveData CreateStockSaveData()
@@ -233,6 +252,13 @@ public class StockManager : MonoBehaviour
             saveData.ores.Add(new OreAmount(
                 oreAmount.oreId,
                 oreAmount.amount));
+        }
+
+        foreach (ForgedGear forgedGear in stockData.forgedGears)
+        {
+            saveData.forgedGears.Add(new ForgedGear(
+                forgedGear.type,
+                forgedGear.data));
         }
 
         return saveData;
@@ -259,8 +285,16 @@ public class StockManager : MonoBehaviour
                         Mathf.Max(0, oreAmount.amount)));
                 }
             }
-
-
+            // 장비 목록이 없는 기존 저장 데이터도 불러온다.
+            if (saveData.forgedGears != null)
+            {
+                foreach (ForgedGear forgedGear in saveData.forgedGears)
+                {
+                    stockData.forgedGears.Add(new ForgedGear(
+                        forgedGear.type,
+                        forgedGear.data));
+                }
+            }
         }
 
         NotifyStockDataChanged();

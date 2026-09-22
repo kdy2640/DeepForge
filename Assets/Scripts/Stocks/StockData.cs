@@ -28,6 +28,8 @@ public interface IReadableStockData
     // 현재 광석 재고를 표시할 때 사용.
     IReadOnlyList<OreAmount> Ores { get; }
 
+    // 현재 보유 장비를 조회할 때 사용.
+    IReadOnlyList<ForgedGear> ForgedGears { get; }
 }
 
 [Serializable]
@@ -35,7 +37,9 @@ public class StockData : IReadableStockData
 {
     [Min(0)] public int currency;
     public List<OreAmount> ores = new();
+    public List<ForgedGear> forgedGears = new();
 
     public int Currency => currency;
     public IReadOnlyList<OreAmount> Ores => ores;
+    public IReadOnlyList<ForgedGear> ForgedGears => forgedGears;
 }
