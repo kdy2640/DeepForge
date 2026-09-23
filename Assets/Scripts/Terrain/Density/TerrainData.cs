@@ -174,17 +174,17 @@ public class TerrainData : IDisposable
     // 구 영역의 밀도 수정을 청크별 Job으로 실행하고 수정 영역의 최소·최대 좌표를 반환한다.
     public bool ModifyDensitySphere(
         Vector3 localPosition,
-        float radius,
-        float power,
+        MiningSetting mining,
+        bool isAdding,
         float densityThreshold,
         Vector3 worldErosionDirection,
         Matrix4x4 densityNormalToWorld,
-        float erosionSideStrength,
-        bool useErosionDistanceFalloff,
         out Vector3Int minChangedIndex,
         out Vector3Int maxChangedIndex)
     {
         using var modifyScope = ModifyMarker.Auto();
+        float radius = mining.AnchorRadius;
+        float power = isAdding ? mining.EditPower : -mining.EditPower;
         minChangedIndex = new Vector3Int(Width, DensityFieldHeight, Width);
         maxChangedIndex = Vector3Int.zero;
 
@@ -284,8 +284,8 @@ public class TerrainData : IDisposable
                 DensityThreshold = densityThreshold,
                 WorldErosionDirection = worldErosionDirection,
                 DensityNormalToWorld = densityNormalToWorld,
-                ErosionSideStrength = erosionSideStrength,
-                UseDistanceFalloff = useErosionDistanceFalloff,
+                ErosionSideStrength = isAdding ? 1f : mining.ErosionSideStrength,
+                UseDistanceFalloff = !isAdding && mining.UseErosionDistanceFalloff,
                 Weights = erosionWeights
             };
         }

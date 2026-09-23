@@ -43,21 +43,19 @@ public class TerrainManager : MonoBehaviour
 
     // 월드 좌표의 구 영역에 밀도를 더하고 영향을 받은 청크 메시만 갱신한다.
     public bool AddDensitySphere(
-        Vector3 worldPosition, float radius, float power,
-        Vector3 worldErosionDirection, float erosionSideStrength, bool useErosionDistanceFalloff)
+        Vector3 worldPosition, MiningSetting mining, bool isAdding,
+        Vector3 worldErosionDirection)
     {
         EnsureInitialized();
         Vector3 localPosition = transform.InverseTransformPoint(worldPosition);
 
         bool changed = data.ModifyDensitySphere(
             localPosition,
-            radius,
-            power,
+            mining,
+            isAdding,
             settings.Density.DensityThreshold,
             worldErosionDirection.normalized,
             transform.worldToLocalMatrix.transpose,
-            erosionSideStrength,
-            useErosionDistanceFalloff,
             out Vector3Int minChangedIndex,
             out Vector3Int maxChangedIndex);
         if (changed)

@@ -692,12 +692,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMiner
   anchor: {fileID: 1855205486}
-  anchorRadius: 2.5
-  editPower: 0.35
-  editInterval: 0.05
-  erosionDirectionBlendTime: 0.5
-  erosionSideStrength: 0.2
-  useErosionDistanceFalloff: 1
+  settings:
+    AnchorRadius: 2.5
+    EditPower: 0.35
+    EditInterval: 0.05
+    ErosionDirectionBlendTime: 0.5
+    ErosionSideStrength: 0.2
+    UseErosionDistanceFalloff: 1
   terrainManager: {fileID: 134620926}
 --- !u!54 &1026908060
 Rigidbody:

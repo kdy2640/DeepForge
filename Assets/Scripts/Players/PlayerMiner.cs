@@ -11,18 +11,7 @@ public sealed class PlayerMiner : MonoBehaviour
     [SerializeField]
     [FormerlySerializedAs("Anchor")]
     private GameObject anchor;
-    [SerializeField]
-    float anchorRadius = 1f;
-    [SerializeField]
-    float editPower = 0.3f;
-    [SerializeField, Min(0.01f)]
-    float editInterval = 0.1f;
-    [SerializeField, Min(0.01f)]
-    float erosionDirectionBlendTime = 0.5f;
-    [SerializeField, Range(0f, 1f)]
-    float erosionSideStrength = 0.2f;
-    [SerializeField, Tooltip("굴착 시 브러시 중심에서 멀어질수록 강도를 줄입니다. 끄면 반경 안의 거리 가중치를 1로 사용합니다.")]
-    bool useErosionDistanceFalloff = true;
+    [SerializeField] private MiningSetting settings = new MiningSetting();
 
     [SerializeField] private TerrainManager terrainManager;
     InputManager inputManager;
@@ -93,8 +82,8 @@ public sealed class PlayerMiner : MonoBehaviour
             UpdateMiningTarget();
             if (!anchor.activeSelf) return;
 
-            terrainManager.AddDensitySphere(mouseHit, anchorRadius, editPower, Vector3.zero, 1f, false);
-            nextRightEditTime = Time.time + Mathf.Max(0.01f, editInterval);
+            terrainManager.AddDensitySphere(mouseHit, settings, isAdding: true, worldErosionDirection: Vector3.zero);
+            nextRightEditTime = Time.time + Mathf.Max(0.01f, settings.EditInterval);
         }
         else if (context.canceled)
         {
@@ -144,7 +133,7 @@ public sealed class PlayerMiner : MonoBehaviour
 
             anchor.SetActive(true);
             anchor.transform.position = hit.point;
-            anchor.transform.localScale = Vector3.one * (anchorRadius * 2f);
+            anchor.transform.localScale = Vector3.one * (settings.AnchorRadius * 2f);
             mouseHit = hit.point;
             mouseHitNormal = hit.normal;
             viewDirection = ray.direction;
@@ -238,7 +227,7 @@ public sealed class PlayerMiner : MonoBehaviour
             return;
         }
 
-        float interval = Mathf.Max(0.01f, editInterval);
+        float interval = Mathf.Max(0.01f, settings.EditInterval);
 
         if (isLeftMouseHolding)
         {
@@ -250,13 +239,13 @@ public sealed class PlayerMiner : MonoBehaviour
                     hasErosionStart = true;
                 }
 
-                float blend = Mathf.SmoothStep(0f, 1f, erosionElapsedTime / erosionDirectionBlendTime);
+                float blend = Mathf.SmoothStep(0f, 1f, erosionElapsedTime / settings.ErosionDirectionBlendTime);
                 Vector3 erosionDirection = Vector3.Slerp(erosionStartDirection, viewDirection, blend);
                 if (terrainManager.AddDensitySphere(
-                    mouseHit, anchorRadius, -editPower, erosionDirection, erosionSideStrength, useErosionDistanceFalloff))
+                    mouseHit, settings, isAdding: false, worldErosionDirection: erosionDirection))
                 {
                     // 실제 밀도가 바뀐 pass의 굴착 시간만 누적한다.
-                    erosionElapsedTime = Mathf.Min(erosionElapsedTime + interval, erosionDirectionBlendTime);
+                    erosionElapsedTime = Mathf.Min(erosionElapsedTime + interval, settings.ErosionDirectionBlendTime);
                 }
                 nextLeftEditTime = Time.time + interval;
             }
@@ -270,7 +259,7 @@ public sealed class PlayerMiner : MonoBehaviour
         {
             if (Time.time >= nextRightEditTime)
             {
-                terrainManager.AddDensitySphere(mouseHit, anchorRadius, editPower, Vector3.zero, 1f, false);
+                terrainManager.AddDensitySphere(mouseHit, settings, isAdding: true, worldErosionDirection: Vector3.zero);
                 nextRightEditTime = Time.time + interval;
             }
         }
