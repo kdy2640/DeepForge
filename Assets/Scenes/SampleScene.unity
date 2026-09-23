@@ -195,8 +195,9 @@ MonoBehaviour:
     Stones:
       Seed: 12345
       CountPerChunk: 1
-      StoneID: 1
-      Prefab: {fileID: 0}
+      Prefab: {fileID: 7971657989837151028, guid: 60cd29e7a060f1a4080fb3af63739717, type: 3}
+      PrewarmCount: 256
+      PrewarmPerFrame: 16
     Grid:
       Width: 1024
       DensityFieldHeight: 150

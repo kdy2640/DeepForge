@@ -24,26 +24,11 @@ public class TerrainData : IDisposable
     public float Resolution { get; }
     public int ChunkSize { get; }
     public Vector3Int ChunkCounts { get; }
-    internal NativeArray<TerrainLayer> Layers { get; }
-    internal Color ArtificialColor { get; }
 
     // 지형 크기에 맞춰 청크를 나누고 각 청크의 밀도 배열을 할당한다.
     public TerrainData(TerrainGridGeometry grid)
     {
         TerrainLayer[] sourceLayers = TerrainTypeDB.GetLayers();
-        Color artificialColor = TerrainTypeDB.GetData(ArtificialTypeId).Layer.Color;
-
-        // SO를 수정하지 않고 생성 시점의 설정과 렌더링 색 공간을 네이티브 데이터에 복사한다.
-        NativeArray<TerrainLayer> layers = new NativeArray<TerrainLayer>(sourceLayers.Length, Allocator.Persistent);
-        bool linearColorSpace = QualitySettings.activeColorSpace == ColorSpace.Linear;
-        for (int i = 0; i < layers.Length; i++)
-        {
-            TerrainLayer layer = sourceLayers[i];
-            if (linearColorSpace) layer.Color = layer.Color.linear;
-            layers[i] = layer;
-        }
-        Layers = layers;
-        ArtificialColor = linearColorSpace ? artificialColor.linear : artificialColor;
 
         Width = grid.Width;
         DensityFieldHeight = grid.DensityFieldHeight;
@@ -72,7 +57,15 @@ public class TerrainData : IDisposable
                         x == ChunkCounts.x - 1 ? 1 : 0,
                         y == ChunkCounts.y - 1 ? 1 : 0,
                         z == ChunkCounts.z - 1 ? 1 : 0);
-                    chunks.Add(chunkCoord, new ChunkDensityData(origin, cubeCount, sampleCount));
+                    // 끝 청크의 실제 높이를 포함한 중심으로 자연 지층을 한 번 배정한다.
+                    float centerY = (origin.y + cubeCount.y * 0.5f) * Resolution;
+                    byte layerId = sourceLayers[0].TypeId;
+                    for (int i = 1; i < sourceLayers.Length; i++)
+                    {
+                        if (centerY < sourceLayers[i].YStart) break;
+                        layerId = sourceLayers[i].TypeId;
+                    }
+                    chunks.Add(chunkCoord, new ChunkDensityData(origin, cubeCount, sampleCount, layerId));
                 }
             }
         }
@@ -106,24 +99,10 @@ public class TerrainData : IDisposable
         foreach (ChunkDensityData chunk in chunks.Values)
         {
             chunk.Densities.Dispose();
-            chunk.TypeIds.Dispose();
+            chunk.ArtificialFlags.Dispose();
         }
 
         chunks.Clear();
-        Layers.Dispose();
-    }
-
-    // 유효한 격자 좌표의 종류를 읽는다. 고체 여부는 밀도로 판정한다.
-    public byte GetTerrainType(Vector3Int index)
-    {
-        Vector3Int chunkCoord = new Vector3Int(
-            Mathf.Min(index.x / ChunkSize, ChunkCounts.x - 1),
-            Mathf.Min(index.y / ChunkSize, ChunkCounts.y - 1),
-            Mathf.Min(index.z / ChunkSize, ChunkCounts.z - 1));
-        ChunkDensityData chunk = chunks[chunkCoord];
-        Vector3Int localIndex = index - chunk.Origin;
-        int flatIndex = (localIndex.x * chunk.SampleCount.y + localIndex.y) * chunk.SampleCount.z + localIndex.z;
-        return chunk.TypeIds[flatIndex];
     }
 
     // 전체 격자 좌표에 해당하는 밀도를 읽고 범위 밖이면 0을 반환한다.
@@ -309,7 +288,7 @@ public class TerrainData : IDisposable
                         ModifyDensitySphereJob job = new ModifyDensitySphereJob
                         {
                             Densities = chunk.Densities,
-                            TypeIds = chunk.TypeIds,
+                            ArtificialFlags = chunk.ArtificialFlags,
                             DensityThreshold = densityThreshold,
                             Origin = chunk.Origin,
                             SampleCount = chunk.SampleCount,
@@ -362,7 +341,7 @@ public class TerrainData : IDisposable
     // 통로들을 청크별로 배정하고 국소 Carve가 모두 끝난 뒤 실제 변경 범위를 반환한다.
     // 입력은 지형 로컬 단위다. 0 < threshold < 1, transitionWidth > 0,
     // noiseAmplitude >= 0, 각 Radius > noiseAmplitude를 호출 측에서 보장한다.
-    // TypeIds는 유지하며 메시 갱신은 호출 측에서 처리한다.
+    // 청크 소속과 인공 지형 표시는 유지하며 메시 갱신은 호출 측에서 처리한다.
     public bool CarvePassages(
         CaveCarveSegment[] segments,
         float densityThreshold,

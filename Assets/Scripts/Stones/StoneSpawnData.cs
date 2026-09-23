@@ -1,7 +1,8 @@
 using UnityEngine;
 
-public struct StoneSpawnData
+public class StoneSpawnData
 {
     public Vector3 TerrainLocalPosition;
     public int StoneID;
+    public bool IsCollected;
 }

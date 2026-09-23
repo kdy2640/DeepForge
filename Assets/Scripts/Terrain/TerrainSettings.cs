@@ -55,8 +55,9 @@ public sealed class StonePlacementSettings
 {
     public int Seed = 12345;
     [Min(0)] public int CountPerChunk = 1;
-    public int StoneID = 1;
     public StoneActor Prefab;
+    [Min(0)] public int PrewarmCount = 256;
+    [Min(1)] public int PrewarmPerFrame = 16;
 }
 
 [Serializable]

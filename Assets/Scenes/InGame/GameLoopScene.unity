@@ -195,8 +195,9 @@ MonoBehaviour:
     Stones:
       Seed: 12345
       CountPerChunk: 1
-      StoneID: 1
       Prefab: {fileID: 7971657989837151028, guid: 60cd29e7a060f1a4080fb3af63739717, type: 3}
+      PrewarmCount: 256
+      PrewarmPerFrame: 16
     Grid:
       Width: 1024
       DensityFieldHeight: 150
@@ -816,7 +817,7 @@ Transform:
   m_GameObject: {fileID: 1026908057}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 16, y: 125, z: 16}
+  m_LocalPosition: {x: 16, y: 50, z: 16}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

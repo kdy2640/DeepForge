@@ -8,9 +8,7 @@ using UnityEngine;
 internal struct FormTerrainDensityJob : IJobParallelFor
 {
     [WriteOnly] public NativeArray<float> Densities;
-    [WriteOnly] public NativeArray<byte> TypeIds;
-    [ReadOnly] public NativeArray<TerrainLayer> Layers;
-    public float Resolution;
+    [WriteOnly] public NativeArray<byte> ArtificialFlags;
     public Vector3Int Origin;
     public Vector3Int SampleCount;
     [ReadOnly] public NativeArray<float> SurfaceHeights;
@@ -41,13 +39,6 @@ internal struct FormTerrainDensityJob : IJobParallelFor
 
         Densities[index] = Mathf.Clamp01(density);
 
-        float localY = y * Resolution;
-        byte typeId = Layers[0].TypeId;
-        for (int i = 1; i < Layers.Length; i++)
-        {
-            if (localY < Layers[i].YStart) break;
-            typeId = Layers[i].TypeId;
-        }
-        TypeIds[index] = typeId;
+        ArtificialFlags[index] = 0;
     }
 }

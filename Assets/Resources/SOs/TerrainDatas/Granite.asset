@@ -10,10 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4c9278fe93274bb885f463f8a89fae49, type: 3}
-  m_Name: Chocolate
+  m_Name: Granite
   m_EditorClassIdentifier: Assembly-CSharp::TerrainTypeSO
   layer:
-    YStart: 0
-    TypeId: 1
-    Color: {r: 0.3584906, g: 0.27178693, b: 0.23504807, a: 1}
-    BlendWidth: 0
+    YStart: 25
+    TypeId: 2
+    Color: {r: 0.33775365, g: 0.39251858, b: 0.4339623, a: 1}
+    stondataIDs:
+    - 4
+    - 5
+    - 6

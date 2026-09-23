@@ -58,9 +58,7 @@ public class TerrainDensityFormer
                         FormTerrainDensityJob job = new FormTerrainDensityJob
                         {
                             Densities = chunk.Densities,
-                            TypeIds = chunk.TypeIds,
-                            Layers = data.Layers,
-                            Resolution = data.Resolution,
+                            ArtificialFlags = chunk.ArtificialFlags,
                             Origin = chunk.Origin,
                             SampleCount = chunk.SampleCount,
                             SurfaceHeights = surfaceHeights,

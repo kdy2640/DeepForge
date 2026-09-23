@@ -10,10 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4c9278fe93274bb885f463f8a89fae49, type: 3}
-  m_Name: Vanilla
+  m_Name: Basalt
   m_EditorClassIdentifier: Assembly-CSharp::TerrainTypeSO
   layer:
-    YStart: 30
-    TypeId: 3
-    Color: {r: 0.8018868, g: 0.8018868, b: 0.8018868, a: 1}
-    BlendWidth: 1
+    YStart: 0
+    TypeId: 1
+    Color: {r: 0.3584906, g: 0.27178693, b: 0.23504807, a: 1}
+    stondataIDs:
+    - 7
+    - 8

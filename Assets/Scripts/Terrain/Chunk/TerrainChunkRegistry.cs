@@ -9,6 +9,7 @@ public class TerrainChunkRegistry : System.IDisposable
 
     // 청크의 부모 지형과 충돌 메시 적용 시간 측정
     private readonly TerrainManager owner;
+    private readonly StonePooler stonePooler;
     private static readonly ProfilerMarker ColliderMarker = new ProfilerMarker("TerrainMesh.Collider");
     // 등록된 청크와 직접 생성하여 해제해야 하는 메시
     private readonly Dictionary<Vector3Int, ChunkObject> chunks =
@@ -22,9 +23,10 @@ public class TerrainChunkRegistry : System.IDisposable
     #region 초기화 및 기존 청크 등록
 
     // 부모 지형을 연결하고 기존 자식 청크를 등록한다.
-    public TerrainChunkRegistry(TerrainManager owner)
+    public TerrainChunkRegistry(TerrainManager owner, StonePooler stonePooler)
     {
         this.owner = owner;
+        this.stonePooler = stonePooler;
         RegisterExistingChunks();
     }
 
@@ -82,21 +84,26 @@ public class TerrainChunkRegistry : System.IDisposable
     // 해당 좌표의 청크 오브젝트가 활성화되어 있는지 확인한다.
     public bool IsChunkActive(Vector3Int coordinate) => chunks[coordinate].gameObject.activeSelf;
 
-    // 돌은 최초 활성화 때만 생성하고 이후에는 부모 청크의 활성 상태만 바꾼다.
+    // 활성 청크의 미채집 돌만 대여하고 비활성화할 때 모두 반환한다.
     public void SetChunkActive(Vector3Int coordinate, bool active)
     {
         ChunkObject chunk = chunks[coordinate];
         GameObject chunkObject = chunk.gameObject;
-        if (active && !chunk.stonesSpawned)
+        if (active && !chunk.stonesLoaded)
         {
             foreach (StoneSpawnData spawn in chunk.stoneSpawns)
             {
-                StoneActor stone = Object.Instantiate(owner.Settings.Stones.Prefab, chunkObject.transform);
-                stone.transform.localPosition = spawn.TerrainLocalPosition;
-                stone.SetData(spawn.StoneID);
-                stone.InitializeTerrainSupport(owner);
+                if (spawn.IsCollected) continue;
+                StoneActor stone = stonePooler.Get();
+                stone.Spawn(spawn, chunkObject.transform, owner);
             }
-            chunk.stonesSpawned = true;
+            chunk.stonesLoaded = true;
+        }
+        else if (!active && chunk.stonesLoaded)
+        {
+            foreach (StoneActor stone in chunkObject.GetComponentsInChildren<StoneActor>(true))
+                stone.RequestReturn();
+            chunk.stonesLoaded = false;
         }
 
         if (chunkObject.activeSelf != active)
@@ -118,7 +125,7 @@ public class TerrainChunkRegistry : System.IDisposable
             if (chunk.stoneSpawns == null)
             {
                 chunk.stoneSpawns = owner.Data.GetChunkData(chunkCoord).CreateStoneSpawns(
-                    owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Settings.Stones.StoneID, owner.Data.Resolution);
+                    owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Data.Resolution);
             }
             return chunk;
         }
@@ -137,7 +144,7 @@ public class TerrainChunkRegistry : System.IDisposable
             meshRenderer = chunkObject.AddComponent<MeshRenderer>(),
             meshCollider = chunkObject.AddComponent<MeshCollider>(),
             stoneSpawns = owner.Data.GetChunkData(chunkCoord).CreateStoneSpawns(
-                owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Settings.Stones.StoneID, owner.Data.Resolution)
+                owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Data.Resolution)
         };
 
         chunk.meshRenderer.sharedMaterial = owner.Settings.Material.Material;
@@ -213,6 +220,8 @@ public class TerrainChunkRegistry : System.IDisposable
     private void DestroyChunk(Vector3Int coordinate)
     {
         ChunkObject chunk = chunks[coordinate];
+        foreach (StoneActor stone in chunk.gameObject.GetComponentsInChildren<StoneActor>(true))
+            stone.RequestReturn();
         SetChunkMesh(chunk, null);
         chunk.gameObject.SetActive(false);
         if (Application.isPlaying) Object.Destroy(chunk.gameObject);

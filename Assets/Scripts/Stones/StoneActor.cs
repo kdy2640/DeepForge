@@ -2,12 +2,24 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(StonePresenter), typeof(Rigidbody))]
-public sealed class StoneActor : MonoBehaviour
+public sealed class StoneActor : Poolable
 {
+    [System.Serializable]
+    private sealed class StoneModel
+    {
+        public int StoneID;
+        public GameObject Model;
+        [System.NonSerialized] public BoxCollider[] Colliders;
+        [System.NonSerialized] public Vector3 LocalPosition;
+        [System.NonSerialized] public Vector3 LocalScale;
+    }
+
     [SerializeField] private StonePresenter presenter;
+    [SerializeField] private StoneModel[] models;
 
     private StoneDataSO dataSO;
-    private GameObject modelInstance;
+    private StoneSpawnData spawnData;
+    private StoneModel activeModel;
     private BoxCollider[] modelColliders;
     private TerrainManager terrainManager;
     // 원래 모델 크기에서 만든 밀도 격자 좌표. 등장·제거 연출에 따라 움직이지 않는다.
@@ -20,39 +32,87 @@ public sealed class StoneActor : MonoBehaviour
     public StoneDataSO DataSO => dataSO;
     public StonePresenter Presenter => presenter;
 
+    public override void InitializePoolItem()
+    {
+        foreach (StoneModel model in models)
+        {
+            model.LocalPosition = model.Model.transform.localPosition;
+            model.LocalScale = model.Model.transform.localScale;
+            model.Colliders = model.Model.GetComponentsInChildren<BoxCollider>(true);
+            foreach (BoxCollider modelCollider in model.Colliders)
+            {
+                modelCollider.gameObject.layer = gameObject.layer;
+                modelCollider.isTrigger = true;
+            }
+            model.Model.SetActive(false);
+        }
+    }
+
+    public void Spawn(StoneSpawnData spawn, Transform parent, TerrainManager owner)
+    {
+        transform.SetParent(parent, false);
+        transform.localPosition = spawn.TerrainLocalPosition;
+        transform.localRotation = Quaternion.identity;
+        SetData(spawn.StoneID);
+        spawnData = spawn;
+        if (!InitializeTerrainSupport(owner))
+        {
+            RequestReturn();
+            return;
+        }
+        gameObject.SetActive(true);
+        presenter.PlaySpawnTween();
+    }
+
     public void SetData(int stoneID)
     {
-        StoneDataSO data = StoneDataDB.GetData(stoneID);
-        presenter.StopCurrentTween();
+        ResetState();
+        dataSO = StoneDataDB.GetData(stoneID);
+        foreach (StoneModel model in models)
+        {
+            if (model.StoneID != stoneID) continue;
+            activeModel = model;
+            break;
+        }
+        activeModel.Model.transform.localPosition = activeModel.LocalPosition;
+        activeModel.Model.transform.localScale = activeModel.LocalScale;
+        activeModel.Model.SetActive(true);
+        modelColliders = activeModel.Colliders;
+        foreach (BoxCollider modelCollider in modelColliders)
+        {
+            modelCollider.enabled = true;
+        }
+        isBreaking = false;
+        presenter.Initialize(activeModel.Model.transform);
+    }
+
+    public override void ResetState()
+    {
         if (isListening)
         {
             terrainManager.DensityChanged -= OnDensityChanged;
             isListening = false;
         }
-
-        if (modelInstance != null)
+        if (activeModel != null)
         {
-            modelInstance.SetActive(false);
-            Destroy(modelInstance);
+            presenter.ResetState();
+            foreach (BoxCollider modelCollider in activeModel.Colliders)
+                modelCollider.enabled = false;
+            activeModel.Model.SetActive(false);
         }
-
-        dataSO = data;
-        modelInstance = Instantiate(data.ModelPrefab, transform);
-        modelInstance.transform.localPosition = Vector3.zero;
-        modelInstance.transform.localRotation = Quaternion.identity;
-        modelColliders = modelInstance.GetComponentsInChildren<BoxCollider>(true);
-        foreach (BoxCollider modelCollider in modelColliders)
-        {
-            modelCollider.gameObject.layer = gameObject.layer;
-            modelCollider.isTrigger = true;
-        }
-
-        isBreaking = false;
-        presenter.Initialize(modelInstance.transform);
+        isBreaking = true;
+        activeModel = null;
+        modelColliders = null;
+        dataSO = null;
+        spawnData = null;
+        terrainManager = null;
+        supportPoints = null;
+        minSupportIndex = Vector3Int.zero;
+        maxSupportIndex = Vector3Int.zero;
     }
 
     // SetData와 배치가 끝난 뒤 한 번 호출한다. 현재 자원 모델의 BoxCollider 부피를 사용한다.
-    public void InitializeTerrainSupport(TerrainManager owner)
+    private bool InitializeTerrainSupport(TerrainManager owner)
     {
         terrainManager = owner;
         float resolution = owner.Data.Resolution;
@@ -89,17 +149,11 @@ public sealed class StoneActor : MonoBehaviour
         minSupportIndex = Vector3Int.FloorToInt(min);
         maxSupportIndex = Vector3Int.FloorToInt(max) + Vector3Int.one;
 
-        if (!HasTerrainSupport())
-        {
-            isBreaking = true;
-            gameObject.SetActive(false);
-            Destroy(gameObject);
-            return;
-        }
+        if (!HasTerrainSupport()) return false;
 
         terrainManager.DensityChanged += OnDensityChanged;
         isListening = true;
-        presenter.PlaySpawnTween();
+        return true;
     }
 
     // 판정점의 밀도를 8개 격자 샘플로 보간한다. 한 곳이라도 고체이면 아직 묻혀 있다.
@@ -126,7 +180,7 @@ public sealed class StoneActor : MonoBehaviour
 
     private void OnDensityChanged(Vector3Int minChangedIndex, Vector3Int maxChangedIndex)
     {
-        if (isBreaking ||
+        if (!IsRented || isBreaking ||
             maxChangedIndex.x < minSupportIndex.x || minChangedIndex.x > maxSupportIndex.x ||
             maxChangedIndex.y < minSupportIndex.y || minChangedIndex.y > maxSupportIndex.y ||
             maxChangedIndex.z < minSupportIndex.z || minChangedIndex.z > maxSupportIndex.z)
@@ -137,10 +191,11 @@ public sealed class StoneActor : MonoBehaviour
 
     private void Collect()
     {
-        if (isBreaking)
+        if (!IsRented || isBreaking)
             return;
 
         isBreaking = true;
+        spawnData.IsCollected = true;
         terrainManager.DensityChanged -= OnDensityChanged;
         isListening = false;
         foreach (BoxCollider modelCollider in modelColliders)
@@ -148,9 +203,9 @@ public sealed class StoneActor : MonoBehaviour
 
         GameManager.Instance.StockManager.AddOre(new List<OreAmount>(dataSO.RewardList));
         if (gameObject.activeInHierarchy)
-            presenter.PlayBreakTween(() => Destroy(gameObject));
+            presenter.PlayBreakTween(RequestReturn);
         else
-            Destroy(gameObject);
+            RequestReturn();
     }
 
     private void OnDestroy()

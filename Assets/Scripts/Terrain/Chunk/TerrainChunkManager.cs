@@ -16,6 +16,7 @@ public class TerrainChunkManager : System.IDisposable
     private TerrainMeshGenerator meshGenerator;
 
     public TerrainChunkRegistry Registry { get; private set; }
+    public StonePooler StonePooler { get; private set; }
     public TerrainGridGeometry Grid => grid;
     public TerrainChunkStreamer Streamer => streamer;
 
@@ -33,7 +34,8 @@ public class TerrainChunkManager : System.IDisposable
     public void Initialize(TerrainManager owner)
     {
         this.owner = owner;
-        Registry = new TerrainChunkRegistry(owner);
+        StonePooler = new StonePooler(owner.Settings.Stones.Prefab, owner.transform);
+        Registry = new TerrainChunkRegistry(owner, StonePooler);
         meshGenerator = new TerrainMeshGenerator();
     }
 
@@ -77,6 +79,7 @@ public class TerrainChunkManager : System.IDisposable
             yield return null;
         }
 
+        yield return StonePooler.Prewarm(owner.Settings.Stones.PrewarmCount, owner.Settings.Stones.PrewarmPerFrame);
         streamer.Initialize(owner, Registry, grid, streamingTarget);
     }
 
@@ -168,6 +171,7 @@ public class TerrainChunkManager : System.IDisposable
         streamer.Reset();
         meshGenerator.Dispose();
         Registry.Dispose();
+        StonePooler.Dispose();
         Registry = null;
     }
 

@@ -9,5 +9,5 @@ public class ChunkObject
     public MeshRenderer meshRenderer;
     public MeshCollider meshCollider;
     public StoneSpawnData[] stoneSpawns;
-    public bool stonesSpawned;
+    public bool stonesLoaded;
 }

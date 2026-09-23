@@ -61,6 +61,11 @@ public class TerrainMeshGenerator : IDisposable
             return meshes;
         }
 
+        // 레이어 색은 메인 스레드에서 조회·변환하고 Job에는 확정된 색만 전달한다.
+        bool linearColorSpace = QualitySettings.activeColorSpace == ColorSpace.Linear;
+        Color artificialColor = TerrainTypeDB.GetData(TerrainData.ArtificialTypeId).Layer.Color;
+        if (linearColorSpace) artificialColor = artificialColor.linear;
+
         // Managed arrays own the per-chunk containers; Jobs receive only their own buffers.
         MeshBuilder[] builders = new MeshBuilder[meshes.Length];
         Mesh.MeshDataArray[] meshData = new Mesh.MeshDataArray[meshes.Length];
@@ -91,11 +96,14 @@ public class TerrainMeshGenerator : IDisposable
                 for (int i = 0; i < meshes.Length; i++)
                 {
                     ChunkMeshInput input = new ChunkMeshInput(data, chunkCoords[i]);
+                    byte layerId = data.GetChunkData(chunkCoords[i]).LayerId;
+                    Color layerColor = TerrainTypeDB.GetData(layerId).Layer.Color;
+                    if (linearColorSpace) layerColor = layerColor.linear;
                     BuildChunkMeshJob job = new BuildChunkMeshJob
                     {
                         Mesher = new MarchingCubesMesher(
                             input, corners, edgeCornerIndexes, triangleTable, threshold, isSmoothShading,
-                            data.Layers, data.ArtificialColor),
+                            layerColor, artificialColor),
                         Builder = builders[i],
                         MeshData = meshData[i][0],
                         VertexAttributes = vertexAttributes,
