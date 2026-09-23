@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dfbd3efdd5226874abdb09cbc8c3fbab, type: 3}
-  m_Name: CopperStone
+  m_Name: MalachiteStone
   m_EditorClassIdentifier: Assembly-CSharp::StoneDataSO
-  id: 1
-  tier: 1
+  id: 4
+  tier: 2
   maxHealth: 5
-  modelPrefab: {fileID: 1762093521381729978, guid: 451870d8d0296e247b5619509287a1bc, type: 3}
+  modelPrefab: {fileID: 6757035298541627506, guid: 3e3960c089e054e429f41dd2d75e9809, type: 3}
   rewardList:
-  - oreId: 1
+  - oreId: 4
     amount: 3

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &5820757414862677686
+--- !u!1001 &3332896276946523517
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -15,7 +15,7 @@ PrefabInstance:
     - target: {fileID: 3159908958214428819, guid: 56a65f59c9e526e4683f9c6edf01168e, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value:
-      objectReference: {fileID: 2100000, guid: a7c098048e19fc4469ac7a8fbe412720, type: 2}
+      objectReference: {fileID: 2100000, guid: 22b42bf79a8233a4982b3915bfb7cc8e, type: 2}
     - target: {fileID: 5238612978821127212, guid: 56a65f59c9e526e4683f9c6edf01168e, type: 3}
       propertyPath: m_LocalPosition.x
       value: -0
@@ -58,7 +58,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5238612978821349388, guid: 56a65f59c9e526e4683f9c6edf01168e, type: 3}
       propertyPath: m_Name
-      value: CopperStoneModel
+      value: IronStoneModel
       objectReference: {fileID: 0}
     - target: {fileID: 5238612978821349388, guid: 56a65f59c9e526e4683f9c6edf01168e, type: 3}
       propertyPath: m_Layer
@@ -71,20 +71,20 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 5238612978821349388, guid: 56a65f59c9e526e4683f9c6edf01168e, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 9009849909199394992}
+      addedObject: {fileID: 6760196191955101812}
   m_SourcePrefab: {fileID: 100100000, guid: 56a65f59c9e526e4683f9c6edf01168e, type: 3}
---- !u!1 &1762093521381729978 stripped
+--- !u!1 &7418441506316047729 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5238612978821349388, guid: 56a65f59c9e526e4683f9c6edf01168e, type: 3}
-  m_PrefabInstance: {fileID: 5820757414862677686}
+  m_PrefabInstance: {fileID: 3332896276946523517}
   m_PrefabAsset: {fileID: 0}
---- !u!65 &9009849909199394992
+--- !u!65 &6760196191955101812
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1762093521381729978}
+  m_GameObject: {fileID: 7418441506316047729}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2

@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dfbd3efdd5226874abdb09cbc8c3fbab, type: 3}
-  m_Name: CopperStone
+  m_Name: IronStone
   m_EditorClassIdentifier: Assembly-CSharp::StoneDataSO
-  id: 1
+  id: 2
   tier: 1
   maxHealth: 5
-  modelPrefab: {fileID: 1762093521381729978, guid: 451870d8d0296e247b5619509287a1bc, type: 3}
+  modelPrefab: {fileID: 7418441506316047729, guid: ea33cda947889ec4fab041a0fa9e55e7, type: 3}
   rewardList:
-  - oreId: 1
+  - oreId: 2
     amount: 3

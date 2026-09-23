@@ -1,18 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-7408934059517438892
-MonoBehaviour:
-  m_ObjectHideFlags: 11
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Editor::UnityEditor.Rendering.Universal.AssetVersion
-  version: 10
 --- !u!21 &2100000
 Material:
   serializedVersion: 8
@@ -20,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: CopperStone
+  m_Name: CinnabarStone
   m_Shader: {fileID: 4800000, guid: 1dc28e2d732ef944eb8944ebdf79c36a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -115,7 +102,7 @@ Material:
     m_Colors:
     - _AlbedoColor: {r: 1, g: 1, b: 1, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Color1: {r: 0.85, g: 0.43, b: 0.18, a: 1}
+    - _Color1: {r: 0.85, g: 0.12, b: 0.12, a: 1}
     - _Color2: {r: 0.35294116, g: 0.36862746, b: 0.39999998, a: 1}
     - _Color3: {r: 0.41960788, g: 0.39607847, b: 0.34509796, a: 1}
     - _Color4: {r: 0.13725486, g: 0.36470586, b: 0.6784314, a: 1}
