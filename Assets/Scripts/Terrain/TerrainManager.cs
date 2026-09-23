@@ -89,7 +89,7 @@ public class TerrainManager : MonoBehaviour
             data.Dispose();
         }
 
-        data = CreateTerrainData();
+        data = new TerrainData(chunkManager.Grid);
         generator = generator ?? new TerrainDensityFormer();
         generator.Generate(data, settings.Surface, settings.Density);
         GenerateCaves();
@@ -121,7 +121,7 @@ public class TerrainManager : MonoBehaviour
         chunkManager ??= new TerrainChunkManager(settings.Grid, settings.Streaming);
         if (data == null)
         {
-            data = CreateTerrainData();
+            data = new TerrainData(chunkManager.Grid);
             generator = generator ?? new TerrainDensityFormer();
             generator.Generate(data, settings.Surface, settings.Density);
             GenerateCaves();
@@ -145,15 +145,6 @@ public class TerrainManager : MonoBehaviour
         // 최초 메시 생성 전이므로 변경 bounds를 이용한 별도 메시 갱신은 필요 없다.
         data.CarvePassages(segments, settings.Density.DensityThreshold, cave.TransitionWidth,
             cave.Seed, cave.NoiseScale, cave.NoiseAmplitude, out _, out _);
-    }
-
-    // 현재 격자 설정으로 밀도 데이터를 생성한다.
-    private TerrainData CreateTerrainData()
-    {
-        return new TerrainData(
-            chunkManager.Grid,
-            TerrainTypeDB.GetLayers(),
-            TerrainTypeDB.GetData(TerrainData.ArtificialTypeId).Layer.Color);
     }
 
     // 오브젝트가 파괴될 때 지형이 소유한 자원을 해제한다.

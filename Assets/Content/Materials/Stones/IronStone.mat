@@ -8,6 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: IronStone
+  m_Shader: {fileID: 4800000, guid: 1dc28e2d732ef944eb8944ebdf79c36a, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []

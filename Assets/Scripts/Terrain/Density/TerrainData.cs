@@ -28,8 +28,11 @@ public class TerrainData : IDisposable
     internal Color ArtificialColor { get; }
 
     // 지형 크기에 맞춰 청크를 나누고 각 청크의 밀도 배열을 할당한다.
-    public TerrainData(TerrainGridGeometry grid, TerrainLayer[] sourceLayers, Color artificialColor)
+    public TerrainData(TerrainGridGeometry grid)
     {
+        TerrainLayer[] sourceLayers = TerrainTypeDB.GetLayers();
+        Color artificialColor = TerrainTypeDB.GetData(ArtificialTypeId).Layer.Color;
+
         // SO를 수정하지 않고 생성 시점의 설정과 렌더링 색 공간을 네이티브 데이터에 복사한다.
         NativeArray<TerrainLayer> layers = new NativeArray<TerrainLayer>(sourceLayers.Length, Allocator.Persistent);
         bool linearColorSpace = QualitySettings.activeColorSpace == ColorSpace.Linear;
