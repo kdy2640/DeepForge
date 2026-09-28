@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
 [DisallowMultipleComponent]
-[RequireComponent(typeof(PlayerController), typeof(Rigidbody), typeof(CapsuleCollider))]
+[RequireComponent(typeof(PlayerController), typeof(Rigidbody), typeof(SphereCollider))]
 public sealed class PlayerReturn : MonoBehaviour
 {
     [SerializeField] private LineRenderer cable;
@@ -13,15 +13,22 @@ public sealed class PlayerReturn : MonoBehaviour
     [SerializeField, Min(0.05f)] private float sampleDistance = 0.35f;
     [SerializeField, Range(1f, 90f)] private float turnSampleAngle = 10f;
     [SerializeField, Min(0.1f)] private float returnSpeed = 16f;
+    [SerializeField, Min(0.05f)] private float loosePointSpacing = 0.25f;
+    [SerializeField, Min(0f)] private float groundClearance = 0.01f;
+    [SerializeField, Min(0.01f)] private float cableDropDuration = 0.25f;
 
     private readonly List<Vector3> path = new();
+    private readonly List<Vector3> raisedCablePoints = new();
+    private readonly List<Vector3> looseCablePoints = new();
     private PlayerController player;
     private Rigidbody body;
-    private CapsuleCollider capsule;
+    private SphereCollider sphere;
     private InputManager input;
     private Vector3 previousPosition;
     private Vector3 previousDirection;
     private Vector3 lastSamplePosition;
+    private float nextGroundUpdateTime;
+    private float cableReleaseTime;
     private bool tracking;
     private bool returning;
     private bool stopRequested;
@@ -33,7 +40,7 @@ public sealed class PlayerReturn : MonoBehaviour
     {
         player = GetComponent<PlayerController>();
         body = GetComponent<Rigidbody>();
-        capsule = GetComponent<CapsuleCollider>();
+        sphere = GetComponent<SphereCollider>();
         cable.positionCount = 0;
     }
 
@@ -67,6 +74,8 @@ public sealed class PlayerReturn : MonoBehaviour
         previousPosition = body.position;
         previousDirection = Vector3.zero;
         lastSamplePosition = body.position;
+        nextGroundUpdateTime = 0f;
+        cableReleaseTime = Time.time - cableDropDuration;
     }
 
     public void ResetAtCamp()
@@ -77,6 +86,9 @@ public sealed class PlayerReturn : MonoBehaviour
 
         tracking = false;
         path.Clear();
+        raisedCablePoints.Clear();
+        looseCablePoints.Clear();
+        nextGroundUpdateTime = 0f;
         cable.positionCount = 0;
     }
 
@@ -151,10 +163,8 @@ public sealed class PlayerReturn : MonoBehaviour
     private bool CanShortcut(Vector3 from, Vector3 to)
     {
         Vector3 scale = transform.lossyScale;
-        float radius = capsule.radius * Mathf.Max(scale.x, scale.z);
-        float halfSegment = Mathf.Max(0f, capsule.height * scale.y * 0.5f - radius);
-        Vector3 center = from + transform.TransformVector(capsule.center);
-        Vector3 endOffset = transform.up * halfSegment;
+        float radius = sphere.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
+        Vector3 center = from + transform.TransformVector(sphere.center);
         const float skin = 0.02f;
 
         Vector3 delta = to - from;
@@ -162,8 +172,8 @@ public sealed class PlayerReturn : MonoBehaviour
         if (distance < 0.0001f)
             return true;
 
-        foreach (RaycastHit hit in Physics.CapsuleCastAll(
-            center + endOffset, center - endOffset, radius - skin, delta / distance,
+        foreach (RaycastHit hit in Physics.SphereCastAll(
+            center, radius - skin, delta / distance,
             distance + skin, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
         {
             if (hit.collider.attachedRigidbody != body &&
@@ -211,14 +221,12 @@ public sealed class PlayerReturn : MonoBehaviour
             float step = Mathf.Min(remainingDistance, distance);
             float allowedStep = step;
             Vector3 scale = transform.lossyScale;
-            float radius = capsule.radius * Mathf.Max(scale.x, scale.z);
-            float halfSegment = Mathf.Max(0f, capsule.height * scale.y * 0.5f - radius);
-            Vector3 center = position + transform.TransformVector(capsule.center);
-            Vector3 endOffset = transform.up * halfSegment;
+            float radius = sphere.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
+            Vector3 center = position + transform.TransformVector(sphere.center);
             const float skin = 0.02f;
 
-            foreach (RaycastHit hit in Physics.CapsuleCastAll(
-                center + endOffset, center - endOffset, radius - skin, direction,
+            foreach (RaycastHit hit in Physics.SphereCastAll(
+                center, radius - skin, direction,
                 step + skin, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
             {
                 if (hit.collider.attachedRigidbody == body ||
@@ -247,6 +255,8 @@ public sealed class PlayerReturn : MonoBehaviour
     {
         returning = false;
         stopRequested = false;
+        cableReleaseTime = Time.time;
+        nextGroundUpdateTime = 0f;
         body.isKinematic = false;
         body.linearVelocity = Vector3.zero;
         body.angularVelocity = Vector3.zero;
@@ -265,14 +275,67 @@ public sealed class PlayerReturn : MonoBehaviour
             (path.Count == 1 && (transform.position - path[0]).sqrMagnitude < 0.0025f))
         {
             cable.positionCount = 0;
+            nextGroundUpdateTime = 0f;
             return;
         }
 
-        // Store body positions for movement; draw the cable at the attachment's height.
-        Vector3 offset = Vector3.Project(cableAttachment.position - transform.position, transform.up);
-        cable.positionCount = path.Count + 1;
+        if (returning)
+        {
+            Vector3 offset = Vector3.Project(cableAttachment.position - transform.position, transform.up);
+            cable.positionCount = path.Count + 1;
+            for (int i = 0; i < path.Count; i++)
+                cable.SetPosition(i, path[i] + offset);
+            cable.SetPosition(path.Count, cableAttachment.position);
+            return;
+        }
+
+        if (Time.time >= nextGroundUpdateTime)
+        {
+            BuildLooseCablePoints();
+            nextGroundUpdateTime = Time.time + 0.1f;
+        }
+
+        float drop = Mathf.SmoothStep(0f, 1f, (Time.time - cableReleaseTime) / cableDropDuration);
+        cable.positionCount = looseCablePoints.Count + 1;
+        for (int i = 0; i < looseCablePoints.Count; i++)
+            cable.SetPosition(i, Vector3.Lerp(raisedCablePoints[i], looseCablePoints[i], drop));
+        cable.SetPosition(looseCablePoints.Count, cableAttachment.position);
+    }
+
+    private void BuildLooseCablePoints()
+    {
+        // These samples only change the rendered cable, never the player's return path.
+        raisedCablePoints.Clear();
+        looseCablePoints.Clear();
+        Vector3 up = transform.up;
+        Vector3 offset = Vector3.Project(cableAttachment.position - transform.position, up);
+        float clearance = cable.widthMultiplier * 0.5f + groundClearance;
+
         for (int i = 0; i < path.Count; i++)
-            cable.SetPosition(i, path[i] + offset);
-        cable.SetPosition(path.Count, cableAttachment.position);
+        {
+            Vector3 from = path[i] + offset;
+            Vector3 to = i + 1 < path.Count ? path[i + 1] + offset : cableAttachment.position;
+            int steps = Mathf.Max(1, Mathf.CeilToInt(Vector3.Distance(from, to) / loosePointSpacing));
+            for (int j = 0; j < steps; j++)
+            {
+                Vector3 point = Vector3.Lerp(from, to, (float)j / steps);
+                Vector3 groundPoint = point;
+                float nearestDistance = float.PositiveInfinity;
+                foreach (RaycastHit hit in Physics.RaycastAll(
+                    point, -up, 8f, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
+                {
+                    if (hit.collider.attachedRigidbody == body ||
+                        Physics.GetIgnoreLayerCollision(gameObject.layer, hit.collider.gameObject.layer) ||
+                        hit.distance >= nearestDistance)
+                        continue;
+
+                    nearestDistance = hit.distance;
+                    groundPoint = hit.point + hit.normal * clearance;
+                }
+
+                raisedCablePoints.Add(point);
+                looseCablePoints.Add(groundPoint);
+            }
+        }
     }
 }

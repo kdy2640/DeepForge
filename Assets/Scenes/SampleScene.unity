@@ -899,7 +899,7 @@ Transform:
   m_GameObject: {fileID: 727824361}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.25, z: -0.45}
+  m_LocalPosition: {x: 0, y: -0.25, z: -0.4330127}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -964,7 +964,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1026908064}
   - component: {fileID: 1026908063}
-  - component: {fileID: 1026908062}
   - component: {fileID: 1026908061}
   - component: {fileID: 1026908060}
   - component: {fileID: 1026908058}
@@ -972,6 +971,7 @@ GameObject:
   - component: {fileID: 1026908065}
   - component: {fileID: 1026908067}
   - component: {fileID: 1026908068}
+  - component: {fileID: 1026908069}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -1083,29 +1083,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &1026908062
-CapsuleCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1026908057}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.5
-  m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!33 &1026908063
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1113,7 +1090,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1026908057}
-  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!4 &1026908064
 Transform:
   m_ObjectHideFlags: 0
@@ -1196,11 +1173,30 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerReturn
   cable: {fileID: 1647017519}
   cableAttachment: {fileID: 727824362}
-  sampleInterval: 0.1
-  minimumSampleDistance: 0.05
-  maximumSampleDistance: 0.35
+  sampleDistance: 0.35
   turnSampleAngle: 10
   returnSpeed: 16
+--- !u!135 &1026908069
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026908057}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.5
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &1156439188
 GameObject:
   m_ObjectHideFlags: 0
@@ -1226,7 +1222,7 @@ Transform:
   m_GameObject: {fileID: 1156439188}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: 0}
+  m_LocalPosition: {x: 0, y: 1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
