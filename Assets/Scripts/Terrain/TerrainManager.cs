@@ -6,6 +6,7 @@ using UnityEngine;
 public class TerrainManager : MonoBehaviour
 {
     [SerializeField] private TerrainSettings settings = new TerrainSettings();
+    [SerializeField] private BaseCamp baseCamp;
     private TerrainChunkManager chunkManager;
 
     // 실행 중인 지형 데이터와 생성 작업
@@ -91,6 +92,7 @@ public class TerrainManager : MonoBehaviour
         generator = generator ?? new TerrainDensityFormer();
         generator.Generate(data, settings.Surface, settings.Density);
         GenerateCaves();
+        baseCamp.PlaceAndSpawn(this);
         if (chunkManager.Registry == null)
         {
             chunkManager.Initialize(this);

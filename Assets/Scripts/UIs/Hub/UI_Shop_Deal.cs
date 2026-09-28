@@ -18,7 +18,7 @@ public sealed class UI_Shop_Deal : UI_Base
         Bind<Button>(typeof(Buttons));
         Bind<PanelAnimator>(typeof(PanelAnimators));
         GetButton((int)Buttons.BackButton).onClick.AddListener(
-            () => Owner.RequestStateChange(HubCanvasController.HubCanvasState.HubView));
+            () => Owner.RequestStateChange(CanvasController.CanvasState.BaseView));
     }
 
     protected override IEnumerator OnShow()

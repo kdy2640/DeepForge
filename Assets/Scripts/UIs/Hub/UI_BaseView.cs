@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public sealed class UI_HubView : UI_Base
+public sealed class UI_BaseView : UI_Base
 {
     private enum Buttons
     {
@@ -22,15 +22,15 @@ public sealed class UI_HubView : UI_Base
         Bind<Button>(typeof(Buttons));
         Bind<PanelAnimator>(typeof(PanelAnimators));
         GetButton((int)Buttons.Shop_OrderButton).onClick.AddListener(
-            () => Owner.RequestStateChange(HubCanvasController.HubCanvasState.Shop_Order));
+            () => Owner.RequestStateChange(CanvasController.CanvasState.Shop_Order));
         GetButton((int)Buttons.Shop_DealButton).onClick.AddListener(
-            () => Owner.RequestStateChange(HubCanvasController.HubCanvasState.Shop_Deal));
+            () => Owner.RequestStateChange(CanvasController.CanvasState.Shop_Deal));
         GetButton((int)Buttons.Smith_ReinforceButton).onClick.AddListener(
-            () => Owner.RequestStateChange(HubCanvasController.HubCanvasState.Smith_Reinforce));
+            () => Owner.RequestStateChange(CanvasController.CanvasState.Smith_Reinforce));
         GetButton((int)Buttons.Smith_ForgeButton).onClick.AddListener(
-            () => Owner.RequestStateChange(HubCanvasController.HubCanvasState.Smith_Forge));
+            () => Owner.RequestStateChange(CanvasController.CanvasState.Smith_Forge));
         GetButton((int)Buttons.Mine_PrepareButton).onClick.AddListener(
-            () => Owner.RequestStateChange(HubCanvasController.HubCanvasState.Mine_Prepare));
+            () => Owner.RequestStateChange(CanvasController.CanvasState.Mine_Prepare));
     }
 
     protected override IEnumerator OnShow()

@@ -1039,7 +1039,7 @@ GameObject:
   - component: {fileID: 5171078572601035268}
   - component: {fileID: 4283710347361138490}
   m_Layer: 5
-  m_Name: UI_HubView
+  m_Name: UI_BaseView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

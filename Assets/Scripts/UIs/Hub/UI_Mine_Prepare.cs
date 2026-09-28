@@ -19,7 +19,7 @@ public sealed class UI_Mine_Prepare : UI_Base
         Bind<Button>(typeof(Buttons));
         Bind<PanelAnimator>(typeof(PanelAnimators));
         GetButton((int)Buttons.BackButton).onClick.AddListener(
-            () => Owner.RequestStateChange(HubCanvasController.HubCanvasState.HubView));
+            () => Owner.RequestStateChange(CanvasController.CanvasState.BaseView));
         GetButton((int)Buttons.StartButton).onClick.AddListener(
             () => GameManager.Instance.SceneController.ChangeScene(SceneType.GameLoop));
     }
