@@ -1,8 +1,10 @@
 using System.Collections;
+using UnityEngine;
 using UnityEngine.UI;
 
 public sealed class UI_BaseView : UI_Base
 {
+    [SerializeField] private UI_OreViewPanel oreViewPanel;
     private enum Buttons
     { 
     }
@@ -12,8 +14,8 @@ public sealed class UI_BaseView : UI_Base
     }
 
     protected override void OnInit()
-    { 
-
+    {
+        oreViewPanel.Init();
     }
 
     protected override IEnumerator OnShow()
