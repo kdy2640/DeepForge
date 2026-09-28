@@ -6,7 +6,6 @@ public sealed class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [SerializeField] private InputManager inputManager;
-    [SerializeField] private GameLoopManager gameLoopManager;
     [SerializeField] private SceneController sceneController;
 
     public StockManager StockManager { get; private set; }
@@ -14,7 +13,6 @@ public sealed class GameManager : MonoBehaviour
     public UtilityManager Utility { get; private set; }
 
     public InputManager InputManager => inputManager;
-    public GameLoopManager GameLoopManager => gameLoopManager;
     public SceneController SceneController => sceneController;
 
 
@@ -36,11 +34,6 @@ public sealed class GameManager : MonoBehaviour
         if (inputManager == null)
         {
             inputManager = GetComponent<InputManager>();
-        }
-
-        if (gameLoopManager == null)
-        {
-            gameLoopManager = GetComponent<GameLoopManager>();
         }
 
         if (sceneController == null)
