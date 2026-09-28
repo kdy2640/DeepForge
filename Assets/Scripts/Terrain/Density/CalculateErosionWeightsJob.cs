@@ -21,6 +21,7 @@ internal struct CalculateErosionWeightsJob : IJobParallelFor
     public Matrix4x4 DensityNormalToWorld;
     public float ErosionSideStrength;
     public bool UseDistanceFalloff;
+    public float EdgeWidth;
     [WriteOnly] public NativeArray<float> Weights;
 
     public void Execute(int flatIndex)
@@ -75,7 +76,8 @@ internal struct CalculateErosionWeightsJob : IJobParallelFor
                 float weight = 1f;
                 if (UseDistanceFalloff)
                 {
-                    float t = 1f - distance / Radius;
+                    // 중심은 고르게 깎고 가장자리에서만 주변 표면으로 이어진다.
+                    float t = Mathf.Clamp01((1f - distance / Radius) / EdgeWidth);
                     weight = t * t * (3f - 2f * t);
                 }
                 if (ErosionSideStrength < 1f)

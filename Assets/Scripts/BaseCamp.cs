@@ -6,6 +6,18 @@ public sealed class BaseCamp : MonoBehaviour
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private PlayerController player;
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.attachedRigidbody == player.GetComponent<Rigidbody>())
+            player.GetComponent<PlayerReturn>().ResetAtCamp();
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.attachedRigidbody == player.GetComponent<Rigidbody>())
+            player.GetComponent<PlayerReturn>().BeginTracking();
+    }
+
     public void PlaceAndSpawn(TerrainManager terrain)
     {
         TerrainData data = terrain.Data;

@@ -6,6 +6,7 @@ public sealed class PlayerController : MonoBehaviour
     [SerializeField] private PlayerMover playerMover;
     [SerializeField] private PlayerMiner playerMiner;
     [SerializeField] private CameraController cameraController;
+    [SerializeField] private PlayerReturn playerReturn;
 
     public PlayerMover PlayerMover => playerMover;
     public PlayerMiner PlayerMiner => playerMiner;
@@ -13,6 +14,7 @@ public sealed class PlayerController : MonoBehaviour
 
     public void SetGameplayActive(bool active)
     {
+        playerReturn.enabled = active;
         playerMover.enabled = active;
         playerMiner.enabled = active;
         cameraController.enabled = active;

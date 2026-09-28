@@ -163,7 +163,7 @@ public class TerrainData : IDisposable
     {
         using var modifyScope = ModifyMarker.Auto();
         float radius = mining.AnchorRadius;
-        float power = isAdding ? mining.EditPower : -mining.EditPower;
+        float power = isAdding ? mining.EditPower : -mining.HitPower / mining.HitPassCount;
         minChangedIndex = new Vector3Int(Width, DensityFieldHeight, Width);
         maxChangedIndex = Vector3Int.zero;
 
@@ -265,6 +265,7 @@ public class TerrainData : IDisposable
                 DensityNormalToWorld = densityNormalToWorld,
                 ErosionSideStrength = isAdding ? 1f : mining.ErosionSideStrength,
                 UseDistanceFalloff = !isAdding && mining.UseErosionDistanceFalloff,
+                EdgeWidth = mining.HitEdgeWidth,
                 Weights = erosionWeights
             };
         }

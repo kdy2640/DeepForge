@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "InputSystem_Actions",
     "maps": [
         {
@@ -72,6 +73,15 @@
                     "name": "ChangeShadingMode",
                     "type": "Button",
                     "id": "9c528376-dfbb-4713-9f94-7721a2b4bfb6",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ReturnToCamp",
+                    "type": "Button",
+                    "id": "891cbdb9-ef4f-4550-84eb-00973723e08c",
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": "",
@@ -263,6 +273,17 @@
                     "processors": "",
                     "groups": "PC",
                     "action": "ChangeShadingMode",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b79c1159-275b-4dfc-9e9f-749f9283e3a0",
+                    "path": "<Keyboard>/g",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "PC",
+                    "action": "ReturnToCamp",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

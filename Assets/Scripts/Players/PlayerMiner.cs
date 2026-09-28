@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
+using DG.Tweening;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(PlayerController))]
@@ -14,6 +15,10 @@ public sealed class PlayerMiner : MonoBehaviour
     [SerializeField] private MiningSetting settings = new MiningSetting();
 
     [SerializeField] private TerrainManager terrainManager;
+    [Header("채굴 타격 효과")]
+    [SerializeField] private ParticleSystem miningChips;
+    [SerializeField] private AudioSource miningAudio;
+    [SerializeField] private Transform miningTool;
     InputManager inputManager;
 
     float nextLeftEditTime;
@@ -94,6 +99,7 @@ public sealed class PlayerMiner : MonoBehaviour
     private void SetMiningMode(bool enabled)
     {
         cameraController?.SetMiningMode(enabled);
+        miningTool.gameObject.SetActive(enabled);
 
         if (enabled)
         { 
@@ -126,8 +132,14 @@ public sealed class PlayerMiner : MonoBehaviour
 
         Vector2 screenCenter = new(Screen.width * 0.5f, Screen.height * 0.5f);
         Ray ray = mainCamera.ScreenPointToRay(screenCenter);
+        // 중앙 레이는 near plane에서 시작하므로 카메라 기준 가시 거리에서 이를 뺀다.
+        float maxDistance = Mathf.Min(100f, mainCamera.farClipPlane - mainCamera.nearClipPlane);
+        if (RenderSettings.fog && RenderSettings.fogMode == FogMode.Linear)
+        {
+            maxDistance = Mathf.Min(maxDistance, RenderSettings.fogEndDistance - mainCamera.nearClipPlane);
+        }
 
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f,
+        if (Physics.Raycast(ray, out RaycastHit hit, maxDistance,
             LayerMask.GetMask("Plane", "Stone"), QueryTriggerInteraction.Collide))
         { 
 
@@ -164,6 +176,7 @@ public sealed class PlayerMiner : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeInputEvents();
+        miningTool.DOKill(complete: true);
         isLeftMouseHolding = false;
         isRightMouseHolding = false;
         hasErosionStart = false;
@@ -244,10 +257,11 @@ public sealed class PlayerMiner : MonoBehaviour
                 if (terrainManager.AddDensitySphere(
                     mouseHit, settings, isAdding: false, worldErosionDirection: erosionDirection))
                 {
-                    // 실제 밀도가 바뀐 pass의 굴착 시간만 누적한다.
-                    erosionElapsedTime = Mathf.Min(erosionElapsedTime + interval, settings.ErosionDirectionBlendTime);
+                    // 내부 계산 횟수 대신 실제 타격 간격으로 방향 전환을 진행한다.
+                    erosionElapsedTime = Mathf.Min(erosionElapsedTime + settings.HitInterval, settings.ErosionDirectionBlendTime);
+                    PlayMiningFeedback();
                 }
-                nextLeftEditTime = Time.time + interval;
+                nextLeftEditTime = Time.time + settings.HitInterval;
             }
         }
         else
@@ -267,6 +281,19 @@ public sealed class PlayerMiner : MonoBehaviour
         {
             nextRightEditTime = 0f;
         }
+    }
+
+    private void PlayMiningFeedback()
+    {
+        miningChips.transform.SetPositionAndRotation(
+            mouseHit + mouseHitNormal * 0.05f, Quaternion.LookRotation(mouseHitNormal));
+        miningChips.Emit(Random.Range(4, 8));
+
+        miningAudio.pitch = Random.Range(0.94f, 1.06f);
+        miningAudio.PlayOneShot(miningAudio.clip);
+
+        miningTool.DOKill(complete: true);
+        miningTool.DOPunchRotation(new Vector3(-12f, 0f, 5f), 0.13f, 1, 0.25f);
     }
 
 }

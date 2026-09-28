@@ -50,15 +50,33 @@ public class TerrainManager : MonoBehaviour
         EnsureInitialized();
         Vector3 localPosition = transform.InverseTransformPoint(worldPosition);
 
-        bool changed = data.ModifyDensitySphere(
-            localPosition,
-            mining,
-            isAdding,
-            settings.Density.DensityThreshold,
-            worldErosionDirection.normalized,
-            transform.worldToLocalMatrix.transpose,
-            out Vector3Int minChangedIndex,
-            out Vector3Int maxChangedIndex);
+        // 한 타 안에서는 위치와 방향을 고정하고, 새로 드러난 표면을 다시 계산한다.
+        // 중간 메시와 이벤트는 내보내지 않고 전체 변경 범위를 마지막에 한 번 갱신한다.
+        int passCount = isAdding ? 1 : mining.HitPassCount;
+        Vector3 erosionDirection = worldErosionDirection.normalized;
+        Matrix4x4 normalToWorld = transform.worldToLocalMatrix.transpose;
+        Vector3Int minChangedIndex = new Vector3Int(data.Width, data.DensityFieldHeight, data.Width);
+        Vector3Int maxChangedIndex = new Vector3Int(-1, -1, -1);
+        bool changed = false;
+        for (int pass = 0; pass < passCount; pass++)
+        {
+            if (!data.ModifyDensitySphere(
+                localPosition,
+                mining,
+                isAdding,
+                settings.Density.DensityThreshold,
+                erosionDirection,
+                normalToWorld,
+                out Vector3Int passMin,
+                out Vector3Int passMax))
+            {
+                break;
+            }
+
+            minChangedIndex = Vector3Int.Min(minChangedIndex, passMin);
+            maxChangedIndex = Vector3Int.Max(maxChangedIndex, passMax);
+            changed = true;
+        }
         if (changed)
         {
             chunkManager.RegenerateChunksInBounds(minChangedIndex, maxChangedIndex);
