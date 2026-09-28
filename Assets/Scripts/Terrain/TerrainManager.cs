@@ -1,57 +1,26 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 // 지형 밀도 생성, 청크 메시 갱신과 대상 주변 스트리밍을 관리한다.
 [DisallowMultipleComponent]
 public class TerrainManager : MonoBehaviour
 {
-    [Header("표면 높이와 변화 폭")]
-    [SerializeField, Min(0f)] private float baseSurfaceHeight = 5f;
-    [SerializeField, Min(0f)] private float terrainAmplitude = 5f;
-
-    [Header("노이즈와 표면 판정")]
-    [SerializeField] private float noiseScale = 1f;
-    [FormerlySerializedAs("heightTresshold")]
-    [SerializeField] private float densityThreshold = 0.5f;
-    [SerializeField] private bool use3DNoise;
-
-    [Header("지형 재질")]
-    [SerializeField] private Material mat;
-
-    [Header("메시 셰이딩")]
-    [SerializeField] private bool isSmoothShading;
-
-    [Header("Stone Placement")]
-    [SerializeField] private int stoneSeed = 12345;
-    [SerializeField, Min(0)] private int stonesPerChunk = 1;
-    [SerializeField] private int stoneID = 1;
-    [SerializeField] private StoneActor stonePrefab;
-
-    [Header("청크 스트리밍")]
-    [SerializeField] private Transform streamingTarget;
-    [SerializeField] private TerrainChunkManager chunkManager = new TerrainChunkManager();
+    [SerializeField] private TerrainSettings settings = new TerrainSettings();
+    [SerializeField] private BaseCamp baseCamp;
+    private TerrainChunkManager chunkManager;
 
     // 실행 중인 지형 데이터와 생성 작업
     private TerrainData data;
     private TerrainDensityFormer generator;
     private Coroutine generationRoutine;
 
-    // 청크 생성과 외부 조회에 사용하는 지형 상태
+    // 밀도 수정과 메시 갱신이 끝난 실제 격자 범위를 전달한다.
+    public event System.Action<Vector3Int, Vector3Int> DensityChanged;
+
+    // 외부에서 사용하는 설정과 실행 상태
+    public TerrainSettings Settings => settings;
     public TerrainData Data => data;
-    public int ChunkSize => chunkManager.Grid.ChunkSize;
-    public float DensityThreshold => densityThreshold;
-    public Material Material => mat;
-    public int StoneSeed => stoneSeed;
-    public int StonesPerChunk => stonesPerChunk;
-    public int StoneID => stoneID;
-    public StoneActor StonePrefab => stonePrefab;
     public bool IsInitialLoadComplete => data != null && chunkManager.Streamer.IsInitialLoadComplete;
-    public bool IsSmoothShading
-    {
-        get => isSmoothShading;
-        set => isSmoothShading = value;
-    }
 
     // 초기 지형을 생성한다.
     protected virtual void Start()
@@ -62,7 +31,7 @@ public class TerrainManager : MonoBehaviour
     // 대상 위치에 따라 청크 활성화 대기열을 프레임 예산만큼 처리한다.
     private void Update()
     {
-        chunkManager.Streamer.Tick();
+        if (chunkManager != null) chunkManager.Streamer.Tick();
     }
 
     // 물리 갱신에 맞춰 대상 주변 청크와 충돌체를 먼저 활성화한다.
@@ -70,31 +39,30 @@ public class TerrainManager : MonoBehaviour
     {
         // Run before player physics so a newly entered neighborhood has colliders.
         // The normal activation budget is processed only by Update.
-        chunkManager.Streamer.UpdateTarget();
+        if (chunkManager != null) chunkManager.Streamer.UpdateTarget();
     }
 
     // 월드 좌표의 구 영역에 밀도를 더하고 영향을 받은 청크 메시만 갱신한다.
     public bool AddDensitySphere(
-        Vector3 worldPosition, float radius, float power,
-        Vector3 worldErosionDirection, float erosionSideStrength, bool useErosionDistanceFalloff)
+        Vector3 worldPosition, MiningSetting mining, bool isAdding,
+        Vector3 worldErosionDirection)
     {
         EnsureInitialized();
         Vector3 localPosition = transform.InverseTransformPoint(worldPosition);
 
         bool changed = data.ModifyDensitySphere(
             localPosition,
-            radius,
-            power,
-            densityThreshold,
+            mining,
+            isAdding,
+            settings.Density.DensityThreshold,
             worldErosionDirection.normalized,
             transform.worldToLocalMatrix.transpose,
-            erosionSideStrength,
-            useErosionDistanceFalloff,
             out Vector3Int minChangedIndex,
             out Vector3Int maxChangedIndex);
         if (changed)
         {
             chunkManager.RegenerateChunksInBounds(minChangedIndex, maxChangedIndex);
+            DensityChanged?.Invoke(minChangedIndex, maxChangedIndex);
         }
         return changed;
     }
@@ -102,6 +70,9 @@ public class TerrainManager : MonoBehaviour
     // 현재 지형을 정리하고 설정값으로 밀도와 청크 메시를 다시 생성한다.
     public void GenerateTerrain()
     {
+        chunkManager ??= new TerrainChunkManager(settings.Grid, settings.Streaming);
+        // 이전 지형의 돌은 Destroy 처리 시점까지 남을 수 있으므로 구독부터 정리한다.
+        DensityChanged = null;
         if (generationRoutine != null)
         {
             StopCoroutine(generationRoutine);
@@ -117,15 +88,11 @@ public class TerrainManager : MonoBehaviour
             data.Dispose();
         }
 
-        data = CreateTerrainData();
+        data = new TerrainData(chunkManager.Grid);
         generator = generator ?? new TerrainDensityFormer();
-        generator.Generate(
-            data,
-            baseSurfaceHeight,
-            terrainAmplitude,
-            noiseScale,
-            densityThreshold,
-            use3DNoise);
+        generator.Generate(data, settings.Surface, settings.Density);
+        GenerateCaves();
+        baseCamp.PlaceAndSpawn(this);
         if (chunkManager.Registry == null)
         {
             chunkManager.Initialize(this);
@@ -137,7 +104,7 @@ public class TerrainManager : MonoBehaviour
     // 초기 청크를 여러 프레임에 나눠 생성한 뒤 스트리밍을 시작한다.
     private IEnumerator GenerateTerrainRoutine()
     {
-        yield return chunkManager.GenerateInitialChunks(streamingTarget);
+        yield return chunkManager.GenerateInitialChunks(settings.Streaming.Target);
         generationRoutine = null;
     }
 
@@ -151,17 +118,13 @@ public class TerrainManager : MonoBehaviour
     // 밀도 데이터와 청크 관리자가 아직 없으면 생성한다.
     private void EnsureInitialized()
     {
+        chunkManager ??= new TerrainChunkManager(settings.Grid, settings.Streaming);
         if (data == null)
         {
-            data = CreateTerrainData();
+            data = new TerrainData(chunkManager.Grid);
             generator = generator ?? new TerrainDensityFormer();
-            generator.Generate(
-                data,
-                baseSurfaceHeight,
-                terrainAmplitude,
-                noiseScale,
-                densityThreshold,
-                use3DNoise);
+            generator.Generate(data, settings.Surface, settings.Density);
+            GenerateCaves();
         }
 
         if (chunkManager.Registry == null)
@@ -170,13 +133,18 @@ public class TerrainManager : MonoBehaviour
         }
     }
 
-    // 현재 격자 설정으로 밀도 데이터를 생성한다.
-    private TerrainData CreateTerrainData()
+    // 기본 밀도 위에 지하 동굴과 지표 진입로를 모두 반영한 뒤 메시 생성을 시작한다.
+    private void GenerateCaves()
     {
-        return new TerrainData(
-            chunkManager.Grid,
-            TerrainTypeDB.GetLayers(),
-            TerrainTypeDB.GetData(TerrainData.ArtificialTypeId).Layer.Color);
+        CaveSettings cave = settings.Cave;
+        if (!cave.Enabled) return;
+
+        CaveCarveSegment[] segments = new CaveGenerator().GenerateWithEntrance(
+            data, cave, settings.Density.DensityThreshold);
+
+        // 최초 메시 생성 전이므로 변경 bounds를 이용한 별도 메시 갱신은 필요 없다.
+        data.CarvePassages(segments, settings.Density.DensityThreshold, cave.TransitionWidth,
+            cave.Seed, cave.NoiseScale, cave.NoiseAmplitude, out _, out _);
     }
 
     // 오브젝트가 파괴될 때 지형이 소유한 자원을 해제한다.
@@ -188,15 +156,16 @@ public class TerrainManager : MonoBehaviour
     // 생성 코루틴과 스트리밍을 중단하고 메시와 밀도 버퍼를 해제한다.
     private void ReleaseResources()
     {
+        DensityChanged = null;
         if (generationRoutine != null)
         {
             StopCoroutine(generationRoutine);
             generationRoutine = null;
         }
-        chunkManager.Streamer.Reset();
-        if (chunkManager.Registry != null)
+        if (chunkManager != null)
         {
-            chunkManager.Dispose();
+            chunkManager.Streamer.Reset();
+            if (chunkManager.Registry != null) chunkManager.Dispose();
         }
 
         if (data != null)

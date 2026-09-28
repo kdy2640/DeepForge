@@ -9,7 +9,7 @@ internal struct ModifyDensitySphereJob : IJob
 {
     // 수정 대상 청크의 밀도 배열과 격자 정보
     public NativeArray<float> Densities;
-    public NativeArray<byte> TypeIds;
+    public NativeArray<byte> ArtificialFlags;
     public float DensityThreshold;
     public Vector3Int Origin;
     public Vector3Int SampleCount;
@@ -76,7 +76,7 @@ internal struct ModifyDensitySphereJob : IJob
                     // 기존 고체는 유지하고, 빈 공간에 누적되는 밀도에만 인공 지형을 기록한다.
                     if (after > before && before <= DensityThreshold)
                     {
-                        TypeIds[flatIndex] = TerrainData.ArtificialTypeId;
+                        ArtificialFlags[flatIndex] = 1;
                     }
                     // 쌓기의 기존 bounds 처리는 유지하고, 굴착은 실제 변경만 기록한다.
                     minChanged = Vector3Int.Min(minChanged, index);

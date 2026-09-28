@@ -1,19 +1,10 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 // 대상 주변 청크를 거리순으로 활성화하고 멀어진 청크를 비활성화한다.
-[Serializable]
 public sealed class TerrainChunkStreamer
 {
-    [Header("청크 활성화·해제 거리")]
-    [SerializeField, Min(0f)] private float loadDistance = 110f;
-    [SerializeField, Min(0f)] private float unloadDistance = 120f;
-
-    [Header("프레임당 활성화 제한")]
-    [FormerlySerializedAs("maxChunkLoadsPerFrame")]
-    [SerializeField, Min(1)] private int maxChunkActivationsPerFrame = 64;
+    private readonly TerrainStreamingSettings settings;
 
     // 거리순 활성화 대기열과 좌표 작업 목록
     private readonly Queue<Vector3Int> pendingActivations = new Queue<Vector3Int>();
@@ -34,6 +25,11 @@ public sealed class TerrainChunkStreamer
     public bool IsInitialLoadComplete { get; private set; }
     public int PendingActivationCount => pendingActivations.Count;
 
+    public TerrainChunkStreamer(TerrainStreamingSettings settings)
+    {
+        this.settings = settings;
+    }
+
     // 대상과 청크 크기로 활성 범위를 계산하고 주변 청크와 초기 대기열을 준비한다.
     public void Initialize(TerrainManager terrain, TerrainChunkRegistry registry, TerrainGridGeometry grid, Transform player)
     {
@@ -44,7 +40,7 @@ public sealed class TerrainChunkStreamer
         target = player;
         chunkWorldSize = grid.GetChunkWorldSize(owner.transform.lossyScale);
         grid.GetStreamingRadii(
-            loadDistance, unloadDistance, chunkWorldSize, out loadRadius, out unloadRadius);
+            settings.LoadDistance, settings.UnloadDistance, chunkWorldSize, out loadRadius, out unloadRadius);
         initialized = true;
         targetCoordinate = GetTargetCoordinate();
         ActivateImmediateNeighbors();
@@ -61,7 +57,7 @@ public sealed class TerrainChunkStreamer
         }
 
         UpdateTarget();
-        int count = Mathf.Min(Mathf.Max(1, maxChunkActivationsPerFrame), pendingActivations.Count);
+        int count = Mathf.Min(Mathf.Max(1, settings.MaxChunkActivationsPerFrame), pendingActivations.Count);
         for (int i = 0; i < count; i++)
         {
             registry.SetChunkActive(pendingActivations.Dequeue(), true);

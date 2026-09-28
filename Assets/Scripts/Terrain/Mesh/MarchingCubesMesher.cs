@@ -11,7 +11,7 @@ internal struct MarchingCubesMesher
     private readonly float resolution;
     private readonly float threshold;
     private readonly bool isSmoothShading;
-    [ReadOnly] private NativeArray<TerrainLayer> layers;
+    private readonly Color layerColor;
     private readonly Color artificialColor;
 
     // 마칭 큐브 꼭짓점·모서리·삼각형 조회 테이블
@@ -27,7 +27,7 @@ internal struct MarchingCubesMesher
         NativeArray<int> triangleTable,
         float threshold,
         bool isSmoothShading,
-        NativeArray<TerrainLayer> layers,
+        Color layerColor,
         Color artificialColor)
     {
         this.input = input;
@@ -39,7 +39,7 @@ internal struct MarchingCubesMesher
         resolution = input.Resolution;
         this.threshold = threshold;
         this.isSmoothShading = isSmoothShading;
-        this.layers = layers;
+        this.layerColor = layerColor;
         this.artificialColor = artificialColor;
     }
 
@@ -153,35 +153,9 @@ internal struct MarchingCubesMesher
 
         Vector3 vertex = useMidpoint ? (edgeStart + edgeEnd) * 0.5f : Vector3.Lerp(edgeStart, edgeEnd, t);
         int solidCorner = startDensity > threshold ? startCornerIndex : endCornerIndex;
-        byte typeId = input.GetTerrainType(cubeIndex + corners[solidCorner]);
-        color = GetVertexColor(vertex.y, typeId);
+        // 자연 지형은 현재 청크의 색을 사용하고 인공 지형만 별도 색으로 표시한다.
+        color = input.IsArtificial(cubeIndex + corners[solidCorner]) ? artificialColor : layerColor;
         return vertex;
-    }
-
-    // 인공 지형은 고체 쪽 종류의 색, 자연 지형은 초기 지층의 높이별 색을 사용한다.
-    private Color GetVertexColor(float localY, byte typeId)
-    {
-        if (typeId == TerrainData.ArtificialTypeId)
-        {
-            return artificialColor;
-        }
-
-        Color color = layers[0].Color;
-        for (int i = 1; i < layers.Length; i++)
-        {
-            TerrainLayer layer = layers[i];
-            float halfWidth = layer.BlendWidth * 0.5f;
-            if (localY < layer.YStart - halfWidth) break;
-
-            Color nextColor = layer.Color;
-            if (layer.BlendWidth > 0f && localY < layer.YStart + halfWidth)
-            {
-                float t = (localY - layer.YStart + halfWidth) / layer.BlendWidth;
-                return Color.Lerp(color, nextColor, t * t * (3f - 2f * t));
-            }
-            color = nextColor;
-        }
-        return color;
     }
 
     // 주변 샘플의 밀도 차이로 기울기를 구하며 격자 끝에서는 한쪽 방향의 차이를 사용한다.

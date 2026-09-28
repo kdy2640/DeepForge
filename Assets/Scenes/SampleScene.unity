@@ -163,24 +163,140 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2fe6db9af8c80046851460dcdd53e08, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TerrainManager
-  baseSurfaceHeight: 125
-  terrainAmplitude: 0
-  noiseScale: 0.08
-  densityThreshold: 0.5
-  use3DNoise: 0
-  mat: {fileID: 2100000, guid: d2672cbd58c6427a899b26bae3f9299a, type: 2}
-  isSmoothShading: 1
-  streamingTarget: {fileID: 1026908064}
-  chunkManager:
-    grid:
-      width: 1024
-      densityFieldHeight: 150
-      resolution: 0.25
-      chunkSize: 16
-    streamer:
-      loadDistance: 110
-      unloadDistance: 120
-      maxChunkActivationsPerFrame: 64
+  settings:
+    Surface:
+      BaseSurfaceHeight: 125
+      Amplitude: 0
+    Density:
+      NoiseScale: 0.08
+      DensityThreshold: 0.5
+      Use3DNoise: 0
+    Cave:
+      Enabled: 0
+      Bounds:
+        m_Center: {x: 192, y: 23, z: 192}
+        m_Extent: {x: 184, y: 15, z: 184}
+      Seed: 15
+      RegionCounts: {x: 4, y: 1, z: 4}
+      NodesPerRegion: 6
+      ExtraConnectionsPerRegion: 1
+      RadiusRange: {x: 1.75, y: 2.25}
+      BendDistance: 4
+      SegmentLength: 1
+      TransitionWidth: 0.75
+      NoiseScale: 0.12
+      NoiseAmplitude: 0.25
+      EntrancePosition: {x: 24, y: 24}
+      EntranceMaxSlope: 30
+    Material:
+      Material: {fileID: 2100000, guid: d2672cbd58c6427a899b26bae3f9299a, type: 2}
+    Shading:
+      IsSmoothShading: 1
+    Stones:
+      Seed: 12345
+      CountPerChunk: 1
+      Prefab: {fileID: 7971657989837151028, guid: 60cd29e7a060f1a4080fb3af63739717, type: 3}
+      PrewarmCount: 256
+      PrewarmPerFrame: 16
+    Grid:
+      Width: 1024
+      DensityFieldHeight: 150
+      Resolution: 0.25
+      ChunkSize: 16
+    Streaming:
+      Target: {fileID: 1026908064}
+      LoadDistance: 110
+      UnloadDistance: 120
+      MaxChunkActivationsPerFrame: 64
+  baseCamp: {fileID: 259555976}
+--- !u!1001 &259555975
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 823577020096803561, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: canvasController
+      value: 
+      objectReference: {fileID: 414015262}
+    - target: {fileID: 1050403985177239694, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: canvasController
+      value: 
+      objectReference: {fileID: 414015262}
+    - target: {fileID: 1814415308916352964, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_Name
+      value: BaseCamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4913132809991850633, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 128
+      objectReference: {fileID: 0}
+    - target: {fileID: 4913132809991850633, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 31.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 4913132809991850633, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 264
+      objectReference: {fileID: 0}
+    - target: {fileID: 4913132809991850633, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4913132809991850633, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4913132809991850633, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4913132809991850633, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4913132809991850633, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4913132809991850633, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4913132809991850633, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5917380207297465015, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: canvasController
+      value: 
+      objectReference: {fileID: 414015262}
+    - target: {fileID: 7525098606990990558, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: player
+      value: 
+      objectReference: {fileID: 1026908067}
+    - target: {fileID: 8339060600273491447, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: canvasController
+      value: 
+      objectReference: {fileID: 414015262}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+--- !u!114 &259555976 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7525098606990990558, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+  m_PrefabInstance: {fileID: 259555975}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6135eb2d1d3697540b92f22eafe00351, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BaseCamp
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -445,6 +561,134 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
+--- !u!1 &414015261
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 414015266}
+  - component: {fileID: 414015265}
+  - component: {fileID: 414015264}
+  - component: {fileID: 414015263}
+  - component: {fileID: 414015262}
+  m_Layer: 0
+  m_Name: BaseCampCanvas
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &414015262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414015261}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3818ad0c79423814aadea06106f522ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CanvasController
+  initialState: 0
+  views:
+  - state: 0
+    prefab: {fileID: 4283710347361138490, guid: b1e65f69909a19340b57db31421cb113, type: 3}
+  - state: 1
+    prefab: {fileID: 729419947831221985, guid: 842f7deb81238b04ea3a7150101eb29b, type: 3}
+  - state: 2
+    prefab: {fileID: 6216406125776988237, guid: f007a70eaa2993f4a8cc70e6a7ccd1b3, type: 3}
+  - state: 3
+    prefab: {fileID: 6574288240843762882, guid: a3c6b000b6d8fc04ca505cbd06fcbd50, type: 3}
+  - state: 4
+    prefab: {fileID: 7213780530225399002, guid: bc1027373ec8c824eb971c0790e6ad8b, type: 3}
+  - state: 5
+    prefab: {fileID: 212512138778380994, guid: 07c553aa6669a4d4da189caede36534b, type: 3}
+--- !u!114 &414015263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414015261}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
+  m_IgnoreReversedGraphics: 1
+  m_BlockingObjects: 0
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &414015264
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414015261}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
+  m_UiScaleMode: 1
+  m_ReferencePixelsPerUnit: 100
+  m_ScaleFactor: 1
+  m_ReferenceResolution: {x: 1920, y: 1080}
+  m_ScreenMatchMode: 0
+  m_MatchWidthOrHeight: 0.5
+  m_PhysicalUnit: 3
+  m_FallbackScreenDPI: 96
+  m_DefaultSpriteDPI: 96
+  m_DynamicPixelsPerUnit: 1
+  m_PresetInfoIsWorld: 0
+--- !u!223 &414015265
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414015261}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 0
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 0
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_VertexColorAlwaysGammaSpace: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_UpdateRectTransformForStandalone: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 0
+  m_TargetDisplay: 0
+--- !u!224 &414015266
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414015261}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0}
 --- !u!1 &632424095
 GameObject:
   m_ObjectHideFlags: 0
@@ -565,9 +809,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMiner
   anchor: {fileID: 1855205486}
-  anchorRadius: 2.5
-  editPower: 0.35
-  editInterval: 0.05
+  settings:
+    AnchorRadius: 2.5
+    EditPower: 0.35
+    EditInterval: 0.05
+    ErosionDirectionBlendTime: 0.5
+    ErosionSideStrength: 0.2
+    UseErosionDistanceFalloff: 1
   terrainManager: {fileID: 134620926}
 --- !u!54 &1026908060
 Rigidbody:
@@ -784,7 +1032,6 @@ GameObject:
   - component: {fileID: 1203957818}
   - component: {fileID: 1203957821}
   - component: {fileID: 1203957820}
-  - component: {fileID: 1203957822}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -805,7 +1052,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   inputManager: {fileID: 1203957820}
-  gameLoopManager: {fileID: 0}
   sceneController: {fileID: 0}
 --- !u!4 &1203957819
 Transform:
@@ -864,18 +1110,6 @@ MonoBehaviour:
   m_DefaultActionMap: PlayerActions
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
---- !u!114 &1203957822
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1203957817}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fea70d9c473f4f458d314aecbd59ff4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameLoopManager
 --- !u!1 &1855205486
 GameObject:
   m_ObjectHideFlags: 0
@@ -974,3 +1208,5 @@ SceneRoots:
   - {fileID: 832575519}
   - {fileID: 632424096}
   - {fileID: 1203957819}
+  - {fileID: 259555975}
+  - {fileID: 414015266}

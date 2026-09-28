@@ -3,16 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // 청크 초기 생성·재생성을 진행하고 청크 저장소와 스트리머를 제공한다.
-[System.Serializable]
 public class TerrainChunkManager : System.IDisposable
 {
     #region 필드 및 속성
 
-    [Header("지형 격자")]
-    [SerializeField] private TerrainGridGeometry grid = new TerrainGridGeometry();
-
-    [Header("청크 스트리밍")]
-    [SerializeField] private TerrainChunkStreamer streamer = new TerrainChunkStreamer();
+    private readonly TerrainGridGeometry grid;
+    private readonly TerrainChunkStreamer streamer;
 
     // 한 번에 생성할 청크 수와 실행 중인 지형·메시 생성기
     private const int ChunkGenerationBatchSize = 64;
@@ -20,6 +16,7 @@ public class TerrainChunkManager : System.IDisposable
     private TerrainMeshGenerator meshGenerator;
 
     public TerrainChunkRegistry Registry { get; private set; }
+    public StonePooler StonePooler { get; private set; }
     public TerrainGridGeometry Grid => grid;
     public TerrainChunkStreamer Streamer => streamer;
 
@@ -27,11 +24,18 @@ public class TerrainChunkManager : System.IDisposable
 
     #region 초기화
 
+    public TerrainChunkManager(TerrainGridSettings gridSettings, TerrainStreamingSettings streamingSettings)
+    {
+        grid = new TerrainGridGeometry(gridSettings);
+        streamer = new TerrainChunkStreamer(streamingSettings);
+    }
+
     // 지형을 연결하고 청크 저장소와 메시 생성기의 실행 자원을 준비한다.
     public void Initialize(TerrainManager owner)
     {
         this.owner = owner;
-        Registry = new TerrainChunkRegistry(owner);
+        StonePooler = new StonePooler(owner.Settings.Stones.Prefab, owner.transform);
+        Registry = new TerrainChunkRegistry(owner, StonePooler);
         meshGenerator = new TerrainMeshGenerator();
     }
 
@@ -75,6 +79,7 @@ public class TerrainChunkManager : System.IDisposable
             yield return null;
         }
 
+        yield return StonePooler.Prewarm(owner.Settings.Stones.PrewarmCount, owner.Settings.Stones.PrewarmPerFrame);
         streamer.Initialize(owner, Registry, grid, streamingTarget);
     }
 
@@ -109,7 +114,7 @@ public class TerrainChunkManager : System.IDisposable
         }
 
         grid.GetAffectedChunkBounds(
-            minIndex, maxIndex, owner.IsSmoothShading,
+            minIndex, maxIndex, owner.Settings.Shading.IsSmoothShading,
             out Vector3Int minChunk, out Vector3Int maxChunk);
         List<Vector3Int> chunkCoords = new List<Vector3Int>();
 
@@ -136,7 +141,7 @@ public class TerrainChunkManager : System.IDisposable
             int count = Mathf.Min(ChunkGenerationBatchSize, chunkCoords.Count - start);
             List<Vector3Int> batch = chunkCoords.GetRange(start, count);
             Mesh[] meshes = meshGenerator.Generate(
-                owner.Data, batch, owner.DensityThreshold, owner.IsSmoothShading);
+                owner.Data, batch, owner.Settings.Density.DensityThreshold, owner.Settings.Shading.IsSmoothShading);
             for (int i = 0; i < count; i++)
             {
                 Registry.SetChunkMesh(Registry.GetOrCreateChunk(batch[i]), meshes[i]);
@@ -166,6 +171,7 @@ public class TerrainChunkManager : System.IDisposable
         streamer.Reset();
         meshGenerator.Dispose();
         Registry.Dispose();
+        StonePooler.Dispose();
         Registry = null;
     }
 

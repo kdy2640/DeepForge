@@ -16,4 +16,4 @@ MonoBehaviour:
     YStart: 0
     TypeId: 0
     Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-    BlendWidth: 0
+    stondataIDs: []

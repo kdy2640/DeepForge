@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
@@ -9,24 +10,31 @@ public struct ChunkDensityData
     public Vector3Int Origin;
     public Vector3Int CubeCount;
     public Vector3Int SampleCount;
+    // 자연 지층 소속은 청크마다 하나이며 밀도 수정으로 바뀌지 않는다.
+    public byte LayerId { get; }
     // 청크 내부 좌표를 일차원으로 펼친 밀도 배열
     public NativeArray<float> Densities;
-    public NativeArray<byte> TypeIds;
+    // 0은 자연 지형, 1은 빈 공간에 쌓은 인공 지형이다.
+    public NativeArray<byte> ArtificialFlags;
 
     // 청크의 시작 좌표와 크기를 저장하고 샘플 수만큼 밀도 배열을 할당한다.
-    public ChunkDensityData(Vector3Int origin, Vector3Int cubeCount, Vector3Int sampleCount)
+    public ChunkDensityData(Vector3Int origin, Vector3Int cubeCount, Vector3Int sampleCount, byte layerId)
     {
         Origin = origin;
         CubeCount = cubeCount;
         SampleCount = sampleCount;
+        LayerId = layerId;
         Densities = new NativeArray<float>(
             sampleCount.x * sampleCount.y * sampleCount.z, Allocator.Persistent);
-        TypeIds = new NativeArray<byte>(Densities.Length, Allocator.Persistent);
+        ArtificialFlags = new NativeArray<byte>(Densities.Length, Allocator.Persistent);
     }
 
-    // 전역 난수 상태와 무관하게 청크 범위 안의 지형 로컬 위치를 계산한다.
-    public StoneSpawnData[] CreateStoneSpawns(int seed, int count, int stoneID, float resolution)
+    // 청크의 LayerId로 돌 목록을 조회하고 고정 시드로 위치와 종류를 결정한다.
+    public StoneSpawnData[] CreateStoneSpawns(int seed, int count, float resolution)
     {
+        List<int> stoneIDs = TerrainTypeDB.GetData(LayerId).Layer.stondataIDs;
+        if (stoneIDs.Count == 0) return System.Array.Empty<StoneSpawnData>();
+
         uint chunkSeed = math.hash(new int4(seed, Origin.x, Origin.y, Origin.z));
         // Unity.Mathematics.Random의 시드는 0이 될 수 없다.
         var random = new Unity.Mathematics.Random(chunkSeed | 1u);
@@ -41,9 +49,14 @@ public struct ChunkDensityData
                 Origin.z + offset.z * CubeCount.z);
             spawns[i] = new StoneSpawnData
             {
-                TerrainLocalPosition = position * resolution,
-                StoneID = stoneID
+                TerrainLocalPosition = position * resolution
             };
+        }
+
+        // 종류 선택이 기존 위치 난수 순서에 영향을 주지 않도록 위치 계산 후 선택한다.
+        for (int i = 0; i < spawns.Length; i++)
+        {
+            spawns[i].StoneID = stoneIDs[random.NextInt(stoneIDs.Count)];
         }
 
         return spawns;

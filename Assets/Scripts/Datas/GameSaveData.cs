@@ -61,5 +61,6 @@ public class StockSaveData
 {
     public int currency;
     public List<OreAmount> ores = new();
+    public List<ForgedGear> forgedGears = new();
 }
 

@@ -24,23 +24,11 @@ public class TerrainData : IDisposable
     public float Resolution { get; }
     public int ChunkSize { get; }
     public Vector3Int ChunkCounts { get; }
-    internal NativeArray<TerrainLayer> Layers { get; }
-    internal Color ArtificialColor { get; }
 
     // 지형 크기에 맞춰 청크를 나누고 각 청크의 밀도 배열을 할당한다.
-    public TerrainData(TerrainGridGeometry grid, TerrainLayer[] sourceLayers, Color artificialColor)
+    public TerrainData(TerrainGridGeometry grid)
     {
-        // SO를 수정하지 않고 생성 시점의 설정과 렌더링 색 공간을 네이티브 데이터에 복사한다.
-        NativeArray<TerrainLayer> layers = new NativeArray<TerrainLayer>(sourceLayers.Length, Allocator.Persistent);
-        bool linearColorSpace = QualitySettings.activeColorSpace == ColorSpace.Linear;
-        for (int i = 0; i < layers.Length; i++)
-        {
-            TerrainLayer layer = sourceLayers[i];
-            if (linearColorSpace) layer.Color = layer.Color.linear;
-            layers[i] = layer;
-        }
-        Layers = layers;
-        ArtificialColor = linearColorSpace ? artificialColor.linear : artificialColor;
+        TerrainLayer[] sourceLayers = TerrainTypeDB.GetLayers();
 
         Width = grid.Width;
         DensityFieldHeight = grid.DensityFieldHeight;
@@ -69,7 +57,15 @@ public class TerrainData : IDisposable
                         x == ChunkCounts.x - 1 ? 1 : 0,
                         y == ChunkCounts.y - 1 ? 1 : 0,
                         z == ChunkCounts.z - 1 ? 1 : 0);
-                    chunks.Add(chunkCoord, new ChunkDensityData(origin, cubeCount, sampleCount));
+                    // 끝 청크의 실제 높이를 포함한 중심으로 자연 지층을 한 번 배정한다.
+                    float centerY = (origin.y + cubeCount.y * 0.5f) * Resolution;
+                    byte layerId = sourceLayers[0].TypeId;
+                    for (int i = 1; i < sourceLayers.Length; i++)
+                    {
+                        if (centerY < sourceLayers[i].YStart) break;
+                        layerId = sourceLayers[i].TypeId;
+                    }
+                    chunks.Add(chunkCoord, new ChunkDensityData(origin, cubeCount, sampleCount, layerId));
                 }
             }
         }
@@ -103,24 +99,10 @@ public class TerrainData : IDisposable
         foreach (ChunkDensityData chunk in chunks.Values)
         {
             chunk.Densities.Dispose();
-            chunk.TypeIds.Dispose();
+            chunk.ArtificialFlags.Dispose();
         }
 
         chunks.Clear();
-        Layers.Dispose();
-    }
-
-    // 유효한 격자 좌표의 종류를 읽는다. 고체 여부는 밀도로 판정한다.
-    public byte GetTerrainType(Vector3Int index)
-    {
-        Vector3Int chunkCoord = new Vector3Int(
-            Mathf.Min(index.x / ChunkSize, ChunkCounts.x - 1),
-            Mathf.Min(index.y / ChunkSize, ChunkCounts.y - 1),
-            Mathf.Min(index.z / ChunkSize, ChunkCounts.z - 1));
-        ChunkDensityData chunk = chunks[chunkCoord];
-        Vector3Int localIndex = index - chunk.Origin;
-        int flatIndex = (localIndex.x * chunk.SampleCount.y + localIndex.y) * chunk.SampleCount.z + localIndex.z;
-        return chunk.TypeIds[flatIndex];
     }
 
     // 전체 격자 좌표에 해당하는 밀도를 읽고 범위 밖이면 0을 반환한다.
@@ -171,17 +153,17 @@ public class TerrainData : IDisposable
     // 구 영역의 밀도 수정을 청크별 Job으로 실행하고 수정 영역의 최소·최대 좌표를 반환한다.
     public bool ModifyDensitySphere(
         Vector3 localPosition,
-        float radius,
-        float power,
+        MiningSetting mining,
+        bool isAdding,
         float densityThreshold,
         Vector3 worldErosionDirection,
         Matrix4x4 densityNormalToWorld,
-        float erosionSideStrength,
-        bool useErosionDistanceFalloff,
         out Vector3Int minChangedIndex,
         out Vector3Int maxChangedIndex)
     {
         using var modifyScope = ModifyMarker.Auto();
+        float radius = mining.AnchorRadius;
+        float power = isAdding ? mining.EditPower : -mining.EditPower;
         minChangedIndex = new Vector3Int(Width, DensityFieldHeight, Width);
         maxChangedIndex = Vector3Int.zero;
 
@@ -281,8 +263,8 @@ public class TerrainData : IDisposable
                 DensityThreshold = densityThreshold,
                 WorldErosionDirection = worldErosionDirection,
                 DensityNormalToWorld = densityNormalToWorld,
-                ErosionSideStrength = erosionSideStrength,
-                UseDistanceFalloff = useErosionDistanceFalloff,
+                ErosionSideStrength = isAdding ? 1f : mining.ErosionSideStrength,
+                UseDistanceFalloff = !isAdding && mining.UseErosionDistanceFalloff,
                 Weights = erosionWeights
             };
         }
@@ -306,7 +288,7 @@ public class TerrainData : IDisposable
                         ModifyDensitySphereJob job = new ModifyDensitySphereJob
                         {
                             Densities = chunk.Densities,
-                            TypeIds = chunk.TypeIds,
+                            ArtificialFlags = chunk.ArtificialFlags,
                             DensityThreshold = densityThreshold,
                             Origin = chunk.Origin,
                             SampleCount = chunk.SampleCount,
@@ -350,6 +332,119 @@ public class TerrainData : IDisposable
                 maxChangedIndex = Vector3Int.Max(maxChangedIndex, max);
                 changed = true;
             }
+            changedBounds[i].Dispose();
+        }
+
+        return changed;
+    }
+
+    // 통로들을 청크별로 배정하고 국소 Carve가 모두 끝난 뒤 실제 변경 범위를 반환한다.
+    // 입력은 지형 로컬 단위다. 0 < threshold < 1, transitionWidth > 0,
+    // noiseAmplitude >= 0, 각 Radius > noiseAmplitude를 호출 측에서 보장한다.
+    // 청크 소속과 인공 지형 표시는 유지하며 메시 갱신은 호출 측에서 처리한다.
+    public bool CarvePassages(
+        CaveCarveSegment[] segments,
+        float densityThreshold,
+        float transitionWidth,
+        int noiseSeed,
+        float noiseScale,
+        float noiseAmplitude,
+        out Vector3Int minChangedIndex,
+        out Vector3Int maxChangedIndex)
+    {
+        Vector3Int terrainMax = new Vector3Int(Width, DensityFieldHeight, Width);
+        minChangedIndex = terrainMax;
+        maxChangedIndex = new Vector3Int(-1, -1, -1);
+        var segmentsByChunk = new Dictionary<Vector3Int, List<CaveCarveSegment>>();
+        float outerTransition = (1f - densityThreshold) * transitionWidth;
+
+        foreach (CaveCarveSegment segment in segments)
+        {
+            float extent = segment.Radius + noiseAmplitude + outerTransition;
+            Vector3 boundsMin = (Vector3.Min(segment.Start, segment.End) - Vector3.one * extent) / Resolution;
+            Vector3 boundsMax = (Vector3.Max(segment.Start, segment.End) + Vector3.one * extent) / Resolution;
+            Vector3Int minIndex = Vector3Int.Max(Vector3Int.zero, new Vector3Int(
+                Mathf.FloorToInt(boundsMin.x), Mathf.FloorToInt(boundsMin.y), Mathf.FloorToInt(boundsMin.z)));
+            Vector3Int maxIndex = Vector3Int.Min(terrainMax, new Vector3Int(
+                Mathf.CeilToInt(boundsMax.x), Mathf.CeilToInt(boundsMax.y), Mathf.CeilToInt(boundsMax.z)));
+            if (minIndex.x > maxIndex.x || minIndex.y > maxIndex.y || minIndex.z > maxIndex.z)
+            {
+                continue;
+            }
+
+            Vector3Int minChunk = new Vector3Int(
+                Mathf.Min(minIndex.x / ChunkSize, ChunkCounts.x - 1),
+                Mathf.Min(minIndex.y / ChunkSize, ChunkCounts.y - 1),
+                Mathf.Min(minIndex.z / ChunkSize, ChunkCounts.z - 1));
+            Vector3Int maxChunk = new Vector3Int(
+                Mathf.Min(maxIndex.x / ChunkSize, ChunkCounts.x - 1),
+                Mathf.Min(maxIndex.y / ChunkSize, ChunkCounts.y - 1),
+                Mathf.Min(maxIndex.z / ChunkSize, ChunkCounts.z - 1));
+            for (int x = minChunk.x; x <= maxChunk.x; x++)
+            {
+                for (int y = minChunk.y; y <= maxChunk.y; y++)
+                {
+                    for (int z = minChunk.z; z <= maxChunk.z; z++)
+                    {
+                        Vector3Int coordinate = new Vector3Int(x, y, z);
+                        if (!segmentsByChunk.TryGetValue(coordinate, out List<CaveCarveSegment> chunkSegments))
+                        {
+                            chunkSegments = new List<CaveCarveSegment>();
+                            segmentsByChunk.Add(coordinate, chunkSegments);
+                        }
+                        chunkSegments.Add(segment);
+                    }
+                }
+            }
+        }
+
+        int jobCount = segmentsByChunk.Count;
+        if (jobCount == 0)
+        {
+            return false;
+        }
+
+        NativeArray<JobHandle> handles = new NativeArray<JobHandle>(jobCount, Allocator.Temp);
+        NativeArray<CaveCarveSegment>[] segmentBuffers = new NativeArray<CaveCarveSegment>[jobCount];
+        NativeArray<Vector3Int>[] changedBounds = new NativeArray<Vector3Int>[jobCount];
+        int jobIndex = 0;
+        foreach (var entry in segmentsByChunk)
+        {
+            ChunkDensityData chunk = chunks[entry.Key];
+            segmentBuffers[jobIndex] = new NativeArray<CaveCarveSegment>(entry.Value.ToArray(), Allocator.TempJob);
+            changedBounds[jobIndex] = new NativeArray<Vector3Int>(2, Allocator.TempJob);
+            CarveJob job = new CarveJob
+            {
+                Densities = chunk.Densities,
+                Origin = chunk.Origin,
+                SampleCount = chunk.SampleCount,
+                Resolution = Resolution,
+                Segments = segmentBuffers[jobIndex],
+                DensityThreshold = densityThreshold,
+                TransitionWidth = transitionWidth,
+                NoiseSeed = noiseSeed,
+                NoiseScale = noiseScale,
+                NoiseAmplitude = noiseAmplitude,
+                ChangedBounds = changedBounds[jobIndex]
+            };
+            handles[jobIndex] = job.Schedule();
+            jobIndex++;
+        }
+
+        JobHandle.CompleteAll(handles);
+        handles.Dispose();
+        bool changed = false;
+        for (int i = 0; i < jobCount; i++)
+        {
+            Vector3Int min = changedBounds[i][0];
+            Vector3Int max = changedBounds[i][1];
+            if (min.x <= max.x)
+            {
+                minChangedIndex = Vector3Int.Min(minChangedIndex, min);
+                maxChangedIndex = Vector3Int.Max(maxChangedIndex, max);
+                changed = true;
+            }
+            segmentBuffers[i].Dispose();
             changedBounds[i].Dispose();
         }
 

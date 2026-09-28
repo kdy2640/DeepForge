@@ -1,33 +1,29 @@
 using UnityEngine;
 
-// 지형 격자 설정을 보관하고 현재 생성된 데이터의 좌표·범위·거리를 계산한다.
-[System.Serializable]
+// 지형 격자 설정을 참조하고 현재 생성된 데이터의 좌표·범위·거리를 계산한다.
 public class TerrainGridGeometry
 {
     #region 격자 설정 및 생성된 데이터
 
-    [Header("밀도 격자 크기")]
-    [SerializeField, Min(1)] private int width = 30;
-    [SerializeField, Min(1)] private int densityFieldHeight = 20;
-
-    [Header("밀도 샘플 간격")]
-    [SerializeField, Min(0.001f)] private float resolution = 1f;
-
-    [Header("청크 크기")]
-    [SerializeField, Min(1)] private int chunkSize = 16;
+    private readonly TerrainGridSettings settings;
 
     // 계산에 사용할 현재 밀도 데이터 참조. 생성과 해제는 TerrainManager가 맡는다.
     private TerrainData data;
 
     // 다음 지형 생성에 적용할 설정값
-    public int Width => Mathf.Max(1, width);
-    public int DensityFieldHeight => Mathf.Max(1, densityFieldHeight);
-    public float Resolution => Mathf.Max(0.001f, resolution);
-    public int ChunkSize => Mathf.Max(1, chunkSize);
+    public int Width => Mathf.Max(1, settings.Width);
+    public int DensityFieldHeight => Mathf.Max(1, settings.DensityFieldHeight);
+    public float Resolution => Mathf.Max(0.001f, settings.Resolution);
+    public int ChunkSize => Mathf.Max(1, settings.ChunkSize);
 
     // 현재 생성된 지형을 기준으로 하는 청크 분할 정보
     public Vector3Int ChunkCounts => data.ChunkCounts;
     public float ChunkLocalSize => data.ChunkSize * data.Resolution;
+
+    public TerrainGridGeometry(TerrainGridSettings settings)
+    {
+        this.settings = settings;
+    }
 
     // 새 밀도 데이터가 생성되면 계산 기준을 함께 교체한다.
     internal void Initialize(TerrainData data)

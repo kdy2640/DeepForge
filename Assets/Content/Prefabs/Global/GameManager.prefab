@@ -592,7 +592,6 @@ GameObject:
   - component: {fileID: 7846559304178540431}
   - component: {fileID: 4333153579382366257}
   - component: {fileID: 4089345812707885993}
-  - component: {fileID: 2126651613746418697}
   - component: {fileID: 3789120573396719141}
   - component: {fileID: 5688776977071623477}
   - component: {fileID: 6817583298313445971}
@@ -632,7 +631,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   inputManager: {fileID: 4089345812707885993}
-  gameLoopManager: {fileID: 2126651613746418697}
   sceneController: {fileID: 3789120573396719141}
 --- !u!114 &4333153579382366257
 MonoBehaviour:
@@ -676,18 +674,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c443da17395845488c5af5e5080432a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InputManager
---- !u!114 &2126651613746418697
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8079829943673494859}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0fea70d9c473f4f458d314aecbd59ff4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GameLoopManager
 --- !u!114 &3789120573396719141
 MonoBehaviour:
   m_ObjectHideFlags: 0

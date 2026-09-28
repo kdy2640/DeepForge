@@ -53,6 +53,13 @@ public sealed class StonePresenter : MonoBehaviour
             .OnComplete(() => onComplete());
     }
 
+    public void ResetState()
+    {
+        StopCurrentTween();
+        solidObject.localPosition = defaultLocalPosition;
+        solidObject.localScale = defaultLocalScale;
+    }
+
     public void StopCurrentTween()
     {
         if (currentTween != null)

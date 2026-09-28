@@ -15,7 +15,7 @@ MonoBehaviour:
   id: 1
   tier: 1
   maxHealth: 5
-  modelPrefab: {fileID: 262150283930371997, guid: 451870d8d0296e247b5619509287a1bc, type: 3}
+  modelPrefab: {fileID: 1762093521381729978, guid: 451870d8d0296e247b5619509287a1bc, type: 3}
   rewardList:
   - oreId: 1
     amount: 3

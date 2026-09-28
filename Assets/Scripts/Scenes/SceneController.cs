@@ -6,7 +6,6 @@ using UnityEngine.SceneManagement;
 public enum SceneType
 {
     Main,
-    Upgrade,
     GameLoop
 }
 
@@ -20,32 +19,22 @@ public class SceneController : MonoBehaviour
 
     private bool isChangingScene;
     private UI_Loading loading;
+    public bool IsChangingScene => isChangingScene;
 
     private void Awake()
     {
         scenes = new Dictionary<SceneType, SceneBase>
         {
             { SceneType.Main, new MainScene() },
-            { SceneType.Upgrade, new UpgradeScene() },
             { SceneType.GameLoop, new GameLoopScene() }
         };
-        string sceneName = SceneManager.GetActiveScene().name;
-        switch (sceneName)
-        {
-            case "MainScene": currentScene = scenes[SceneType.Main]; break;
-            case "UpgradeScene": currentScene = scenes[SceneType.Upgrade]; break;
-            case "GameLoopScene": currentScene = scenes[SceneType.GameLoop]; break;
-        }
+        currentScene = scenes[SceneType.Main];
         isChangingScene = true;
     }
 
-    private IEnumerator Start()
+    private void Start()
     {
         loading = Instantiate(loadingPrefab);
-        yield return loading.OpenLoading();
-        yield return currentScene.PrepareBeforeReveal();
-        yield return loading.CloseLoading();
-        yield return currentScene.Enter();
         isChangingScene = false;
     }
 
@@ -56,14 +45,6 @@ public class SceneController : MonoBehaviour
         if (currentScene.SceneType == nextSceneType && !isForced)
             return;
         StartCoroutine(ChangeSceneRoutine(nextSceneType));
-    }
-
-    public void RestartScene(SceneType nextSceneType)
-    {
-        if (isChangingScene)
-            return;
-        if (currentScene.SceneType == SceneType.GameLoop && nextSceneType == SceneType.GameLoop)
-            StartCoroutine(ChangeSceneRoutine(nextSceneType));
     }
 
     private IEnumerator ChangeSceneRoutine(SceneType nextSceneType)
