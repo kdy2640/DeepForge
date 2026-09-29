@@ -9,6 +9,7 @@ public sealed class OreDataSO : ScriptableObject
     [SerializeField] private Sprite icon;
     [SerializeField] private int tier;
     [SerializeField] private Color color;
+    [SerializeField, Min(1)] private int sellPrice;
 
     public int Id => id;
     public string DisplayName => displayName;
@@ -16,4 +17,5 @@ public sealed class OreDataSO : ScriptableObject
     public Sprite Icon => icon;
     public int Tier => tier;
     public Color Color => color;
+    public int SellPrice => sellPrice;
 }

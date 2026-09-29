@@ -13,6 +13,9 @@ public sealed class PlayerMiner : MonoBehaviour
     [FormerlySerializedAs("Anchor")]
     private GameObject anchor;
     [SerializeField] private MiningSetting settings = new MiningSetting();
+    [Header("강화 적용 채굴 설정")]
+    [SerializeField] private MiningSetting appliedMiningSettings = new MiningSetting();
+    private UpgradeManager upgradeManager;
 
     [SerializeField] private TerrainManager terrainManager;
     [Header("채굴 타격 효과")]
@@ -25,9 +28,9 @@ public sealed class PlayerMiner : MonoBehaviour
     float nextRightEditTime;
     bool isLeftMouseHolding;
     bool isRightMouseHolding;
-    PlayerController playerController;
     CameraController cameraController;
     bool isInputSubscribed;
+    bool isUIInputBlocked;
 
     private Vector3 mouseHit = Vector3.zero;
     private Vector3 mouseHitNormal;
@@ -36,9 +39,14 @@ public sealed class PlayerMiner : MonoBehaviour
     private float erosionElapsedTime;
     private bool hasErosionStart;
 
+    private void Awake()
+    {
+        cameraController = GetComponent<CameraController>();
+    }
+
     private void OnChangeEditMode(InputAction.CallbackContext context)
     { 
-        if (context.performed)
+        if (!isUIInputBlocked && context.performed)
         { 
             isMiningMode = !isMiningMode;
             SetMiningMode(isMiningMode);
@@ -46,7 +54,7 @@ public sealed class PlayerMiner : MonoBehaviour
     }
     private void OnChangeShadingMode(InputAction.CallbackContext context)
     {
-        if (context.performed)
+        if (!isUIInputBlocked && context.performed)
         {
             terrainManager.Settings.Shading.IsSmoothShading = !terrainManager.Settings.Shading.IsSmoothShading;
             terrainManager.RegenerateAllChunks();
@@ -55,6 +63,8 @@ public sealed class PlayerMiner : MonoBehaviour
 
     private void OnLeftMouse(InputAction.CallbackContext context)
     {
+        if (isUIInputBlocked) return;
+
         if (context.started)
         {
             isLeftMouseHolding = true;
@@ -78,6 +88,8 @@ public sealed class PlayerMiner : MonoBehaviour
 
     private void OnRightMouse(InputAction.CallbackContext context)
     {
+        if (isUIInputBlocked) return;
+
         if (context.started)
         {
             isRightMouseHolding = true;
@@ -98,13 +110,12 @@ public sealed class PlayerMiner : MonoBehaviour
 
     private void SetMiningMode(bool enabled)
     {
-        cameraController?.SetMiningMode(enabled);
+        cameraController.SetMiningMode(enabled);
         miningTool.gameObject.SetActive(enabled);
+        RefreshCursor();
 
-        if (enabled)
+        if (enabled && !isUIInputBlocked)
         { 
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
             UpdateMiningTarget();
         }
         else
@@ -113,10 +124,30 @@ public sealed class PlayerMiner : MonoBehaviour
             isRightMouseHolding = false;
             hasErosionStart = false;
             erosionElapsedTime = 0f;
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
             anchor.SetActive(false);
         }
+    }
+
+    public void SetViewCursorMode(CanvasController.ViewCursorMode mode)
+    {
+        isUIInputBlocked = mode == CanvasController.ViewCursorMode.Free;
+        cameraController.SetUIInputBlocked(isUIInputBlocked);
+        if (isUIInputBlocked)
+        {
+            isLeftMouseHolding = false;
+            isRightMouseHolding = false;
+            hasErosionStart = false;
+            erosionElapsedTime = 0f;
+            anchor.SetActive(false);
+        }
+        RefreshCursor();
+    }
+
+    private void RefreshCursor()
+    {
+        bool locked = isMiningMode && !isUIInputBlocked;
+        Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
+        Cursor.visible = !locked;
     }
 
     private void UpdateMiningTarget()
@@ -145,7 +176,8 @@ public sealed class PlayerMiner : MonoBehaviour
 
             anchor.SetActive(true);
             anchor.transform.position = hit.point;
-            anchor.transform.localScale = Vector3.one * (settings.AnchorRadius * 2f);
+            float anchorRadius = isRightMouseHolding ? settings.AnchorRadius : appliedMiningSettings.AnchorRadius;
+            anchor.transform.localScale = Vector3.one * (anchorRadius * 2f);
             mouseHit = hit.point;
             mouseHitNormal = hit.normal;
             viewDirection = ray.direction;
@@ -162,8 +194,6 @@ public sealed class PlayerMiner : MonoBehaviour
     {
         inputManager = GameManager.Instance.InputManager;
 
-        playerController = GetComponent<PlayerController>();
-        cameraController = playerController.CameraController;
         SubscribeInputEvents();
         SetMiningMode(isMiningMode);
     }
@@ -204,6 +234,9 @@ public sealed class PlayerMiner : MonoBehaviour
         inputManager.Subscribe(InputEvent.ChangeShadingMode, OnChangeShadingMode);
         inputManager.Subscribe(InputEvent.LeftMouseClick, OnLeftMouse);
         inputManager.Subscribe(InputEvent.RightMouseClick, OnRightMouse);
+        upgradeManager = GameManager.Instance.Upgrade;
+        upgradeManager.SubscribeUpgradeChanged(RefreshMiningStats);
+        RefreshMiningStats();
         isInputSubscribed = true;
     }
 
@@ -218,11 +251,33 @@ public sealed class PlayerMiner : MonoBehaviour
         inputManager.Unsubscribe(InputEvent.ChangeShadingMode, OnChangeShadingMode);
         inputManager.Unsubscribe(InputEvent.LeftMouseClick, OnLeftMouse);
         inputManager.Unsubscribe(InputEvent.RightMouseClick, OnRightMouse);
+        upgradeManager.UnsubscribeUpgradeChanged(RefreshMiningStats);
         inputManager = null;
         isInputSubscribed = false;
     }
+
+    private void RefreshMiningStats()
+    {
+        bool isUpgraded = upgradeManager.RuntimeLevel.Get(EquipmentUpgradeType.Pickaxe) > 0;
+        // 기본 설정은 유지하고, 매번 기본값으로부터 계산하여 중복 갱신에도 배율이 누적되지 않는다.
+        appliedMiningSettings = new MiningSetting
+        {
+            AnchorRadius = settings.AnchorRadius * (isUpgraded ? 2f : 1f),
+            HitPower = settings.HitPower * (isUpgraded ? 3f : 1f),
+            EditPower = settings.EditPower,
+            EditInterval = settings.EditInterval,
+            HitInterval = settings.HitInterval,
+            HitPassCount = settings.HitPassCount,
+            HitEdgeWidth = settings.HitEdgeWidth,
+            ErosionDirectionBlendTime = settings.ErosionDirectionBlendTime,
+            ErosionSideStrength = settings.ErosionSideStrength,
+            UseErosionDistanceFalloff = settings.UseErosionDistanceFalloff
+        };
+    }
     private void Update()
     {
+        if (isUIInputBlocked) return;
+
         if (isMiningMode)
         {
             UpdateMiningTarget();
@@ -233,7 +288,7 @@ public sealed class PlayerMiner : MonoBehaviour
 
     private void UpdateTerrainEditing()
     {
-        if (!isMiningMode || terrainManager == null || cameraController == null || !anchor.activeSelf)
+        if (isUIInputBlocked || !isMiningMode || terrainManager == null || cameraController == null || !anchor.activeSelf)
         {
             hasErosionStart = false;
             erosionElapsedTime = 0f;
@@ -255,7 +310,7 @@ public sealed class PlayerMiner : MonoBehaviour
                 float blend = Mathf.SmoothStep(0f, 1f, erosionElapsedTime / settings.ErosionDirectionBlendTime);
                 Vector3 erosionDirection = Vector3.Slerp(erosionStartDirection, viewDirection, blend);
                 if (terrainManager.AddDensitySphere(
-                    mouseHit, settings, isAdding: false, worldErosionDirection: erosionDirection))
+                    mouseHit, appliedMiningSettings, isAdding: false, worldErosionDirection: erosionDirection))
                 {
                     // 내부 계산 횟수 대신 실제 타격 간격으로 방향 전환을 진행한다.
                     erosionElapsedTime = Mathf.Min(erosionElapsedTime + settings.HitInterval, settings.ErosionDirectionBlendTime);

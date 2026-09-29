@@ -218,6 +218,51 @@ public class StockManager : MonoBehaviour
 
     #region Forged Gear
 
+    public bool TrySellOre(OreAmount oreAmount)
+    {
+        if (oreAmount.amount <= 0 || !CanConsumeOre(oreAmount))
+            return false;
+
+        OreDataSO oreData = OreDataDB.GetData(oreAmount.oreId);
+        stockData.currency = (int)Math.Min(
+            (long)stockData.currency + (long)oreAmount.amount * oreData.SellPrice,
+            int.MaxValue);
+        // 이미 수량을 확인했으므로, 차감 알림에서 판매금까지 함께 읽을 수 있다.
+        TryConsumeOre(oreAmount);
+        return true;
+    }
+
+    public bool TryForgeGear(ForgedGearType type, ForgedGearData data)
+    {
+        ForgedGearSO gearData = ForgedGearDB.GetData(type);
+        List<OreAmount> costs = new()
+        {
+            new OreAmount(data.handleOreId, gearData.HandleOreCost),
+            new OreAmount(data.metalOreId, gearData.MetalOreCost)
+        };
+        if (data.hasGem)
+            costs.Add(new OreAmount(data.gemOreId, gearData.GemOreCost));
+
+        if (!CanConsumeOre(costs))
+            return false;
+
+        stockData.forgedGears.Add(new ForgedGear(type, data));
+        TryConsumeOre(costs);
+        return true;
+    }
+
+    public bool TrySellForgedGear(ForgedGear forgedGear)
+    {
+        ForgedGearSO gearData = ForgedGearDB.GetData(forgedGear.type);
+        if (!stockData.forgedGears.Remove(forgedGear))
+            return false;
+
+        stockData.currency = (int)Math.Min(
+            (long)stockData.currency + gearData.SellPrice, int.MaxValue);
+        NotifyStockDataChanged();
+        return true;
+    }
+
     public void AddForgedGear(ForgedGear forgedGear)
     {
         stockData.forgedGears.Add(forgedGear);

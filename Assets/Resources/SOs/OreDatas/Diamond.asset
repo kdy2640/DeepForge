@@ -18,3 +18,4 @@ MonoBehaviour:
   icon: {fileID: 0}
   tier: 4
   color: {r: 0.4, g: 0.9, b: 1, a: 1}
+  sellPrice: 10

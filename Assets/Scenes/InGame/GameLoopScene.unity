@@ -857,6 +857,17 @@ MonoBehaviour:
     ErosionDirectionBlendTime: 0.5
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1
+  appliedMiningSettings:
+    AnchorRadius: 1
+    EditPower: 0.3
+    EditInterval: 0.1
+    HitInterval: 0.25
+    HitPower: 0.4
+    HitPassCount: 5
+    HitEdgeWidth: 0.35
+    ErosionDirectionBlendTime: 0.5
+    ErosionSideStrength: 0.2
+    UseErosionDistanceFalloff: 1
   terrainManager: {fileID: 134620926}
   miningChips: {fileID: 666992551}
   miningAudio: {fileID: 666992550}
@@ -1030,6 +1041,9 @@ MonoBehaviour:
   sampleDistance: 0.35
   turnSampleAngle: 10
   returnSpeed: 16
+  loosePointSpacing: 0.25
+  groundClearance: 0.01
+  cableDropDuration: 0.25
 --- !u!135 &1026908069
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1087,16 +1101,23 @@ MonoBehaviour:
   views:
   - state: 0
     prefab: {fileID: 4283710347361138490, guid: b1e65f69909a19340b57db31421cb113, type: 3}
+    cursorMode: 0
   - state: 1
     prefab: {fileID: 729419947831221985, guid: 842f7deb81238b04ea3a7150101eb29b, type: 3}
+    cursorMode: 1
   - state: 2
     prefab: {fileID: 6216406125776988237, guid: f007a70eaa2993f4a8cc70e6a7ccd1b3, type: 3}
+    cursorMode: 1
   - state: 3
     prefab: {fileID: 6574288240843762882, guid: a3c6b000b6d8fc04ca505cbd06fcbd50, type: 3}
+    cursorMode: 1
   - state: 4
     prefab: {fileID: 7213780530225399002, guid: bc1027373ec8c824eb971c0790e6ad8b, type: 3}
+    cursorMode: 1
   - state: 5
     prefab: {fileID: 212512138778380994, guid: 07c553aa6669a4d4da189caede36534b, type: 3}
+    cursorMode: 1
+  playerMiner: {fileID: 1026908058}
 --- !u!114 &1113099161
 MonoBehaviour:
   m_ObjectHideFlags: 0

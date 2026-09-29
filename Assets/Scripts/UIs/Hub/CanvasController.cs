@@ -8,6 +8,12 @@ using UnityEngine;
 /// </summary>
 public sealed class CanvasController : MonoBehaviour
 {
+    public enum ViewCursorMode
+    {
+        Player,
+        Free
+    }
+
     public enum CanvasState
     {
         BaseView,
@@ -23,8 +29,10 @@ public sealed class CanvasController : MonoBehaviour
     {
         [SerializeField] private CanvasState state;
         [SerializeField] private UI_Base prefab;
+        [SerializeField] private ViewCursorMode cursorMode;
 
         public CanvasState State => state;
+        public ViewCursorMode CursorMode => cursorMode;
         public UI_Base Instance { get; private set; }
 
         public void Initialize(CanvasController owner)
@@ -38,6 +46,7 @@ public sealed class CanvasController : MonoBehaviour
 
     [SerializeField] private CanvasState initialState = CanvasState.BaseView;
     [SerializeField] private List<ViewEntry> views = new();
+    [SerializeField] private PlayerMiner playerMiner;
 
     private readonly Dictionary<CanvasState, ViewEntry> viewByState = new();
     private ViewEntry currentEntry;
@@ -46,6 +55,7 @@ public sealed class CanvasController : MonoBehaviour
 
     public CanvasState? CurrentState { get; private set; }
     public CanvasState? PreviousState { get; private set; }
+    public ViewCursorMode CurrentCursorMode { get; private set; }
 
     private void Awake()
     {
@@ -89,6 +99,8 @@ public sealed class CanvasController : MonoBehaviour
         currentEntry = nextEntry;
         PreviousState = CurrentState;
         CurrentState = nextState;
+        CurrentCursorMode = nextEntry.CursorMode;
+        playerMiner.SetViewCursorMode(CurrentCursorMode);
         yield return currentEntry.Instance.Show();
     }
 

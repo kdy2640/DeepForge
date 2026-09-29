@@ -11,6 +11,7 @@ public sealed class GameManager : MonoBehaviour
     public StockManager StockManager { get; private set; }
     public UpgradeManager Upgrade { get; private set; }
     public UtilityManager Utility { get; private set; }
+    public BaseCampManager BaseCamp { get; private set; }
 
     public InputManager InputManager => inputManager;
     public SceneController SceneController => sceneController;
@@ -30,15 +31,16 @@ public sealed class GameManager : MonoBehaviour
         StockManager = GetComponent<StockManager>();
         Upgrade = GetComponent<UpgradeManager>();
         Utility = GetComponentInChildren<UtilityManager>(true);
+        BaseCamp = GetComponentInChildren<BaseCampManager>(true);
 
         if (inputManager == null)
         {
-            inputManager = GetComponent<InputManager>();
+            inputManager = GetComponentInChildren<InputManager>(true);
         }
 
         if (sceneController == null)
         {
-            sceneController = GetComponent<SceneController>();
+            sceneController = GetComponentInChildren<SceneController>(true);
         }
     }
 

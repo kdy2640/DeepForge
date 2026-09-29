@@ -11,29 +11,21 @@ public class UpgradeDataSO : ScriptableObject
     [SerializeField] private string displayName;
     [SerializeField] private Sprite displayIcon;
 
-    [SerializeField] private List<int> requiredCosts = new() { 0, 0, 0, 0, 0 };
+    [SerializeField] private EquipmentUpgradeType targetEquipment;
+    [SerializeField, Min(1)] private int blueprintPrice = 30;
+    [SerializeField] private List<OreAmount> requiredOres = new()
+    {
+        new OreAmount(1, 10),
+        new OreAmount(2, 1)
+    };
     [SerializeField] private int maxLevel = 1;
 
     public string Id => id;
     public string DisplayName => displayName;
     public Sprite DisplayIcon => displayIcon;
-    public IReadOnlyList<int> RequiredCosts => requiredCosts;
+    public EquipmentUpgradeType TargetEquipment => targetEquipment;
+    public int BlueprintPrice => blueprintPrice;
+    public List<OreAmount> RequiredOres => requiredOres;
     public int MaxLevel => maxLevel;
 
-    /// <summary>
-    /// 목표 업그레이드 레벨에 필요한 재화량을 조회합니다.
-    /// </summary>
-    public bool TryGetRequiredCost(int targetUpgradeLevel, out int requiredCost)
-    {
-        int index = targetUpgradeLevel - 1;
-
-        if (index < 0 || index >= requiredCosts.Count)
-        {
-            requiredCost = 0;
-            return false;
-        }
-
-        requiredCost = Mathf.Max(0, requiredCosts[index]);
-        return true;
-    }
 }

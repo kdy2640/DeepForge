@@ -7,14 +7,6 @@ public class UpgradeState
     public UpgradeDataSO data;
     public int level;
 
-    public bool TryGetCurrentCost(out int requiredCost)
-    {
-        if (data == null)
-        {
-            requiredCost = 0;
-            return false;
-        }
-
-        return data.TryGetRequiredCost(level + 1, out requiredCost);
-    }
+    // 시연용 1장 보유 여부. UpgradeSaveData에는 저장하지 않는다.
+    public bool hasBlueprint;
 }
