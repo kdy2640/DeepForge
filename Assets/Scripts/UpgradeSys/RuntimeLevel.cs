@@ -4,26 +4,20 @@ using UnityEngine;
 [Serializable]
 public sealed class RuntimeLevel
 {
-    [SerializeField] private int pickaxeLevel;
+    [SerializeField] private int[] equipmentLevels = new int[(int)EquipmentType.Count];
 
-    public int Get(EquipmentUpgradeType type)
+    public int Get(EquipmentType type)
     {
-        return type switch
-        {
-            EquipmentUpgradeType.Pickaxe => pickaxeLevel,
-            _ => throw new ArgumentOutOfRangeException(nameof(type))
-        };
+        return equipmentLevels[(int)type];
     }
 
-    internal void Set(EquipmentUpgradeType type, int level)
+    internal void Set(EquipmentType type, int level)
     {
-        switch (type)
-        {
-            case EquipmentUpgradeType.Pickaxe:
-                pickaxeLevel = level;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(type));
-        }
+        equipmentLevels[(int)type] = level;
+    }
+
+    internal void Clear()
+    {
+        equipmentLevels = new int[(int)EquipmentType.Count];
     }
 }

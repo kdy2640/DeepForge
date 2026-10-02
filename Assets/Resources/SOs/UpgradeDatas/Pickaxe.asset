@@ -9,13 +9,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1c0f9bf4439b42f89d5a490f2c3e67ee, type: 3}
+  m_Script: {fileID: 11500000, guid: cb0bd8adbeedffc46a1a468453bf62b0, type: 3}
   m_Name: Pickaxe
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeDataSO
   id: Pickaxe
   displayName: Pickaxe
   displayIcon: {fileID: 0}
-  targetEquipment: 0
   blueprintPrice: 30
   requiredOres:
   - oreId: 1
@@ -23,3 +22,4 @@ MonoBehaviour:
   - oreId: 2
     amount: 1
   maxLevel: 1
+  targetEquipment: 0

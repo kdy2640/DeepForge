@@ -142,9 +142,12 @@ public class UpgradeManager : MonoBehaviour
 
     private void RefreshRuntimeData()
     {
-        runtimeLevel.Set(EquipmentUpgradeType.Pickaxe, 0);
+        runtimeLevel.Clear();
         foreach (UpgradeState state in upgradeStates)
-            runtimeLevel.Set(state.data.TargetEquipment, state.level);
+        {
+            if (state.data is EquipmentUpgradeDataSO equipmentUpgrade)
+                runtimeLevel.Set(equipmentUpgrade.TargetEquipment, state.level);
+        }
     }
 
     public void SubscribeUpgradeChanged(Action callback)
