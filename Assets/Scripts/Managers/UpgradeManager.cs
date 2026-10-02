@@ -80,7 +80,7 @@ public class UpgradeManager : MonoBehaviour
         if (level >= data.MaxLevel)
             return UpgradeAvailability.MaxLevel;
 
-        if (state == null || !state.hasBlueprint)
+        if (state == null || state.level >= state.unlockedLevel)
             return UpgradeAvailability.MissingBlueprint;
 
         return GameManager.Instance.StockManager.CanConsumeOre(data.RequiredOres)
@@ -99,7 +99,7 @@ public class UpgradeManager : MonoBehaviour
                 return UpgradeAvailability.InvalidData;
             if (IsMaxLevel(state))
                 return UpgradeAvailability.MaxLevel;
-            if (state.hasBlueprint)
+            if (state.unlockedLevel >= data.MaxLevel)
                 return UpgradeAvailability.BlueprintAlreadyOwned;
         }
 
@@ -114,7 +114,7 @@ public class UpgradeManager : MonoBehaviour
             return false;
 
         // 비용 검사 이후, 재고 변경 알림 전에 보유 상태를 반영한다.
-        GetState(data).hasBlueprint = true;
+        GetState(data).unlockedLevel++;
         GameManager.Instance.StockManager.TryConsumeCurrency(data.BlueprintPrice);
         onUpgradeChanged?.Invoke();
         return true;
@@ -132,7 +132,6 @@ public class UpgradeManager : MonoBehaviour
 
         UpgradeState state = GetState(data);
         state.level++;
-        state.hasBlueprint = false;
         RefreshRuntimeData();
         GameManager.Instance.StockManager.TryConsumeOre(data.RequiredOres);
         GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Upgrade);
@@ -166,7 +165,7 @@ public class UpgradeManager : MonoBehaviour
     {
         List<UpgradeSaveData> saveData = new();
         foreach (UpgradeState state in upgradeStates)
-            saveData.Add(new UpgradeSaveData(state.data.Id, state.level));
+            saveData.Add(new UpgradeSaveData(state.data.Id, state.level, state.unlockedLevel));
 
         return saveData;
     }
@@ -187,7 +186,9 @@ public class UpgradeManager : MonoBehaviour
                 if (data == null)
                     continue;
 
-                GetState(data).level = Mathf.Clamp(savedState.level, 0, data.MaxLevel);
+                UpgradeState state = GetState(data);
+                state.level = Mathf.Clamp(savedState.level, 0, data.MaxLevel);
+                state.unlockedLevel = Mathf.Clamp(savedState.unlockedLevel, state.level, data.MaxLevel);
             }
         }
 

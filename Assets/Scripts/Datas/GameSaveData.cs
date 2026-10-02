@@ -16,11 +16,13 @@ public class UpgradeSaveData
 {
     public string id;
     public int level;
+    public int unlockedLevel;
 
-    public UpgradeSaveData(string id, int level)
+    public UpgradeSaveData(string id, int level, int unlockedLevel)
     {
         this.id = id;
         this.level = level;
+        this.unlockedLevel = unlockedLevel;
     }
 }
 

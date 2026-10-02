@@ -7,6 +7,6 @@ public class UpgradeState
     public UpgradeDataSO data;
     public int level;
 
-    // 시연용 1장 보유 여부. UpgradeSaveData에는 저장하지 않는다.
-    public bool hasBlueprint;
+    // 설계도 구매로 해금한 최대 강화 레벨.
+    public int unlockedLevel;
 }
