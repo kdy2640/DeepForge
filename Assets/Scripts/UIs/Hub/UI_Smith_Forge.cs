@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public sealed class UI_Smith_Forge : UI_Base
@@ -11,7 +12,8 @@ public sealed class UI_Smith_Forge : UI_Base
     }
 
     [Header("시연 버튼 대상")]
-    [SerializeField] private ForgedGearType gearType = ForgedGearType.Sword;
+    [FormerlySerializedAs("gearType")]
+    [SerializeField] private int gearId = 17;
     [SerializeField] private ForgedGearData gearData = new()
     {
         handleOreId = 1,
@@ -35,7 +37,7 @@ public sealed class UI_Smith_Forge : UI_Base
 
     private void Forge()
     {
-        lastResult = GameManager.Instance.StockManager.TryForgeGear(gearType, gearData)
+        lastResult = GameManager.Instance.StockManager.TryForgeGear(gearId, gearData)
             ? "제품 제작 성공" : "제작 자원 부족";
     }
 

@@ -16,6 +16,7 @@ public sealed class PlayerMiner : MonoBehaviour
     [Header("강화 적용 채굴 설정")]
     [SerializeField] private MiningSetting appliedMiningSettings = new MiningSetting();
     private UpgradeManager upgradeManager;
+    [SerializeField] private int equipmentId;
 
     [SerializeField] private TerrainManager terrainManager;
     [Header("채굴 타격 효과")]
@@ -258,7 +259,7 @@ public sealed class PlayerMiner : MonoBehaviour
 
     private void RefreshMiningStats()
     {
-        bool isUpgraded = upgradeManager.RuntimeLevel.Get(EquipmentType.Pickaxe) > 0;
+        bool isUpgraded = upgradeManager.RuntimeLevel.GetEquipment(equipmentId) > 0;
         // 기본 설정은 유지하고, 매번 기본값으로부터 계산하여 중복 갱신에도 배율이 누적되지 않는다.
         appliedMiningSettings = new MiningSetting
         {

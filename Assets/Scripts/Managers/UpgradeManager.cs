@@ -146,7 +146,9 @@ public class UpgradeManager : MonoBehaviour
         foreach (UpgradeState state in upgradeStates)
         {
             if (state.data is EquipmentUpgradeDataSO equipmentUpgrade)
-                runtimeLevel.Set(equipmentUpgrade.TargetEquipment, state.level);
+                runtimeLevel.SetEquipment(equipmentUpgrade.EquipmentId, state.level);
+            else if (state.data is ForgedGearUpgradeDataSO forgedGearUpgrade)
+                runtimeLevel.SetForgedGear(forgedGearUpgrade.ForgedGearId, state.level);
         }
     }
 

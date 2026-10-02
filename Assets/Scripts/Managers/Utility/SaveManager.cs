@@ -42,7 +42,8 @@ public class SaveManager : MonoBehaviour
         }
 
         string json = File.ReadAllText(SavePath);
-        GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(json);
+        // 기존 제작품 저장의 type 숫자는 현재 id와 같다.
+        GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(json.Replace("\"type\":", "\"id\":"));
 
         if (saveData == null)
         {

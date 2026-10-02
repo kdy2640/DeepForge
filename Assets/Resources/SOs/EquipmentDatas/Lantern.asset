@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e218ded0d108da45bed20b19976e67e, type: 3}
   m_Name: Lantern
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentDataSO
-  id: 4
+  id: 3
   type: 3

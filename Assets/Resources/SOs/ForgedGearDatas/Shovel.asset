@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 221b27f4609fff348a1c1aca79acd5d7, type: 3}
   m_Name: Shovel
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearSO
+  id: 15
   type: 15
   sellPrice: 50
   handleOreCost: 2

@@ -328,7 +328,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59ff9abd63401cc449cd1792b0fc94bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_Smith_Forge
-  gearType: 17
+  gearId: 17
   gearData:
     handleOreId: 1
     metalOreId: 2

@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Serialization;
 
 public enum ForgedGearType
 {
@@ -35,12 +36,13 @@ public struct ForgedGearData
 [Serializable]
 public class ForgedGear
 {
-    public ForgedGearType type;
+    [FormerlySerializedAs("type")]
+    public int id;
     public ForgedGearData data;
 
-    public ForgedGear(ForgedGearType type, ForgedGearData data)
+    public ForgedGear(int id, ForgedGearData data)
     {
-        this.type = type;
+        this.id = id;
         this.data = data;
     }
 }

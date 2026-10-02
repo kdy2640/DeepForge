@@ -4,20 +4,32 @@ using UnityEngine;
 [Serializable]
 public sealed class RuntimeLevel
 {
-    [SerializeField] private int[] equipmentLevels = new int[(int)EquipmentType.Count];
+    [SerializeField] private int[] equipmentLevels = Array.Empty<int>();
+    [SerializeField] private int[] forgedGearLevels = Array.Empty<int>();
 
-    public int Get(EquipmentType type)
+    public int GetEquipment(int id)
     {
-        return equipmentLevels[(int)type];
+        return equipmentLevels[id];
     }
 
-    internal void Set(EquipmentType type, int level)
+    internal void SetEquipment(int id, int level)
     {
-        equipmentLevels[(int)type] = level;
+        equipmentLevels[id] = level;
+    }
+
+    public int GetForgedGear(int id)
+    {
+        return forgedGearLevels[id];
+    }
+
+    internal void SetForgedGear(int id, int level)
+    {
+        forgedGearLevels[id] = level;
     }
 
     internal void Clear()
     {
-        equipmentLevels = new int[(int)EquipmentType.Count];
+        equipmentLevels = new int[EquipmentDataDB.MaxId + 1];
+        forgedGearLevels = new int[ForgedGearDB.MaxId + 1];
     }
 }

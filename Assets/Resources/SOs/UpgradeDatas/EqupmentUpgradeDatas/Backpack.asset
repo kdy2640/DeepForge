@@ -22,4 +22,4 @@ MonoBehaviour:
   - oreId: 2
     amount: 1
   maxLevel: 1
-  targetEquipment: 1
+  equipmentId: 1

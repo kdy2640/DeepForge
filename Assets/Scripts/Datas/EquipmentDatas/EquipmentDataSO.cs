@@ -16,5 +16,4 @@ public sealed class EquipmentDataSO : ScriptableObject
     [SerializeField] private EquipmentType type;
 
     public int Id => id;
-    public EquipmentType Type => type;
 }

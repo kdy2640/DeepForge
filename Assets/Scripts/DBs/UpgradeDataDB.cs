@@ -4,7 +4,8 @@ using UnityEngine;
 public static class UpgradeDataDB
 {
     private static readonly Dictionary<string, UpgradeDataSO> upgradeDataMap = new();
-    private static readonly Dictionary<EquipmentType, EquipmentUpgradeDataSO> equipmentUpgradeDataMap = new();
+    private static readonly Dictionary<int, EquipmentUpgradeDataSO> equipmentUpgradeDataMap = new();
+    private static readonly Dictionary<int, ForgedGearUpgradeDataSO> forgedGearUpgradeDataMap = new();
 
     static UpgradeDataDB()
     {
@@ -12,7 +13,9 @@ public static class UpgradeDataDB
         {
             upgradeDataMap.Add(data.Id, data);
             if (data is EquipmentUpgradeDataSO equipmentUpgrade)
-                equipmentUpgradeDataMap.Add(equipmentUpgrade.TargetEquipment, equipmentUpgrade);
+                equipmentUpgradeDataMap.Add(equipmentUpgrade.EquipmentId, equipmentUpgrade);
+            else if (data is ForgedGearUpgradeDataSO forgedGearUpgrade)
+                forgedGearUpgradeDataMap.Add(forgedGearUpgrade.ForgedGearId, forgedGearUpgrade);
         }
     }
 
@@ -26,8 +29,13 @@ public static class UpgradeDataDB
         return null;
     }
 
-    public static EquipmentUpgradeDataSO GetEquipmentUpgrade(EquipmentType type)
+    public static EquipmentUpgradeDataSO GetEquipmentUpgrade(int equipmentId)
     {
-        return equipmentUpgradeDataMap[type];
+        return equipmentUpgradeDataMap[equipmentId];
+    }
+
+    public static ForgedGearUpgradeDataSO GetForgedGearUpgrade(int forgedGearId)
+    {
+        return forgedGearUpgradeDataMap[forgedGearId];
     }
 }

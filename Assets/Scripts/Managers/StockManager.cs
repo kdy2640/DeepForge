@@ -232,9 +232,9 @@ public class StockManager : MonoBehaviour
         return true;
     }
 
-    public bool TryForgeGear(ForgedGearType type, ForgedGearData data)
+    public bool TryForgeGear(int id, ForgedGearData data)
     {
-        ForgedGearSO gearData = ForgedGearDB.GetData(type);
+        ForgedGearSO gearData = ForgedGearDB.GetData(id);
         List<OreAmount> costs = new()
         {
             new OreAmount(data.handleOreId, gearData.HandleOreCost),
@@ -246,14 +246,14 @@ public class StockManager : MonoBehaviour
         if (!CanConsumeOre(costs))
             return false;
 
-        stockData.forgedGears.Add(new ForgedGear(type, data));
+        stockData.forgedGears.Add(new ForgedGear(id, data));
         TryConsumeOre(costs);
         return true;
     }
 
     public bool TrySellForgedGear(ForgedGear forgedGear)
     {
-        ForgedGearSO gearData = ForgedGearDB.GetData(forgedGear.type);
+        ForgedGearSO gearData = ForgedGearDB.GetData(forgedGear.id);
         if (!stockData.forgedGears.Remove(forgedGear))
             return false;
 
@@ -302,7 +302,7 @@ public class StockManager : MonoBehaviour
         foreach (ForgedGear forgedGear in stockData.forgedGears)
         {
             saveData.forgedGears.Add(new ForgedGear(
-                forgedGear.type,
+                forgedGear.id,
                 forgedGear.data));
         }
 
@@ -336,7 +336,7 @@ public class StockManager : MonoBehaviour
                 foreach (ForgedGear forgedGear in saveData.forgedGears)
                 {
                     stockData.forgedGears.Add(new ForgedGear(
-                        forgedGear.type,
+                        forgedGear.id,
                         forgedGear.data));
                 }
             }

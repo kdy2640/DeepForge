@@ -1,9 +1,11 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 [CreateAssetMenu(menuName = "Upgrade/Equipment Upgrade Data")]
 public sealed class EquipmentUpgradeDataSO : UpgradeDataSO
 {
-    [SerializeField] private EquipmentType targetEquipment = EquipmentType.Count;
+    [FormerlySerializedAs("targetEquipment")]
+    [SerializeField] private int equipmentId;
 
-    public EquipmentType TargetEquipment => targetEquipment;
+    public int EquipmentId => equipmentId;
 }
