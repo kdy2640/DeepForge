@@ -19,7 +19,7 @@ public sealed class CanvasController : MonoBehaviour
         BaseView,
         Shop_Order,
         Shop_Deal,
-        Smith_Reinforce,
+        Smith_Equipment,
         Smith_Forge,
         Mine_Prepare
     }

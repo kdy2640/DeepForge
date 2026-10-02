@@ -331,7 +331,7 @@ GameObject:
   - component: {fileID: 8766777142890532545}
   - component: {fileID: 5917380207297465015}
   m_Layer: 0
-  m_Name: InteractZone_Smith_Reinforce
+  m_Name: InteractZone_Smith_Equipment
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

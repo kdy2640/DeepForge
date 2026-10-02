@@ -1,17 +1,14 @@
 using System.Collections;
-using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UI_Smith_Reinforce : UI_Base
+public sealed class UI_Smith_Equipment : UI_Base
 {
     private enum Buttons
     {
         BackButton,
-        ReinforceButton
+        ForgeCategoryButton,
+        EquipmentCategoryButton
     }
-
-    [SerializeField] private UpgradeDataSO upgradeData;
-    [SerializeField] private string lastResult;
 
     private enum PanelAnimators
     {
@@ -24,16 +21,10 @@ public sealed class UI_Smith_Reinforce : UI_Base
         Bind<PanelAnimator>(typeof(PanelAnimators));
         GetButton((int)Buttons.BackButton).onClick.AddListener(
             () => Owner.RequestStateChange(CanvasController.CanvasState.BaseView));
-        GetButton((int)Buttons.ReinforceButton).onClick.AddListener(Reinforce);
-        GameManager.Instance.Upgrade.GetState(upgradeData);
-    }
-
-    private void Reinforce()
-    {
-        UpgradeManager upgrade = GameManager.Instance.Upgrade;
-        UpgradeAvailability availability = upgrade.GetUpgradeAvailability(upgradeData);
-        lastResult = upgrade.TryUpgrade(upgradeData)
-            ? "강화 성공" : availability.ToString();
+        GetButton((int)Buttons.ForgeCategoryButton).onClick.AddListener(
+            () => Owner.RequestStateChange(CanvasController.CanvasState.Smith_Forge));
+        GetButton((int)Buttons.EquipmentCategoryButton).onClick.AddListener(
+            () => Owner.RequestStateChange(CanvasController.CanvasState.Smith_Equipment));
     }
 
     protected override IEnumerator OnShow()
