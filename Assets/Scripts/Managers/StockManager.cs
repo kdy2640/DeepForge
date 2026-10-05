@@ -234,6 +234,11 @@ public class StockManager : MonoBehaviour
 
     public bool TryForgeGear(int id, ForgedGearData data)
     {
+        ForgedGearUpgradeDataSO blueprint = UpgradeDataDB.GetForgedGearUpgrade(id);
+        if (!GameManager.Instance.Upgrade.HasState(blueprint)
+            || GameManager.Instance.Upgrade.GetState(blueprint).unlockedLevel <= 0)
+            return false;
+
         ForgedGearSO gearData = ForgedGearDB.GetData(id);
         List<OreAmount> costs = new()
         {

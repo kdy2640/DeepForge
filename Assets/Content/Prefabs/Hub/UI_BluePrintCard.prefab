@@ -243,6 +243,7 @@ GameObject:
   - component: {fileID: 2825427318222049629}
   - component: {fileID: 7593667393277235941}
   - component: {fileID: 6234462478510793891}
+  - component: {fileID: 3102632809528142406}
   m_Layer: 0
   m_Name: UI_BluePrintCard
   m_TagString: Untagged
@@ -365,3 +366,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b68330b68eed1342ab1d4c94e03471a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_BluePrintCard
+  button: {fileID: 7593667393277235941}
+  icon: {fileID: 5690509219439466648}
+  nameText: {fileID: 1587514115812758275}
+  selectionOutline: {fileID: 3102632809528142406}
+--- !u!114 &3102632809528142406
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8615781294568903231}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 1, g: 0.7882353, b: 0.2901961, a: 1}
+  m_EffectDistance: {x: 3, y: -3}
+  m_UseGraphicAlpha: 1
