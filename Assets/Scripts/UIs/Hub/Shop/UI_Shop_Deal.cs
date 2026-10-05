@@ -21,11 +21,11 @@ public sealed class UI_Shop_Deal : UI_Base
         Bind<GameObject>(typeof(UIs));
         UI_DealPanel deal = GetGameObject((int)UIs.UI_DealPanel).GetComponent<UI_DealPanel>();
         deal.Init(this);
-        GetGameObject((int)UIs.UI_OptionPanel).GetComponent<UI_OptionPanel>().Init(this);
+        GetGameObject((int)UIs.UI_OptionPanel).GetComponent<UI_OptionPanel>().Init(ReturnToBaseView);
         GetGameObject((int)UIs.UI_BluePrintPanel).GetComponent<UI_BluePrintPanel>().Init(deal);
         GetGameObject((int)UIs.UI_InvenVisualPanel).GetComponent<UI_InvenVisualPanel>().Init(deal);
         GetGameObject((int)UIs.UI_MerchantVisualizer).GetComponent<UI_MerchantVisualizer>().Init(this, deal);
-        GetGameObject((int)UIs.UI_CanvasControlButton).GetComponent<UI_CanvasControlButton>().Init(this);
+        GetGameObject((int)UIs.UI_CanvasControlButton).GetComponent<UI_CanvasControlButton>().Init(OpenOrders);
     }
 
     public void SetDealMode(DealMode mode)
@@ -59,6 +59,8 @@ public sealed class UI_Shop_Deal : UI_Base
     private void OnDestroy()
     {
         if (!IsInitialized) return;
+        // 종료 시 전역 매니저가 먼저 파괴되면 구독 대상도 이미 사라진 상태다.
+        if (GameManager.Instance == null) return;
         GetGameObject((int)UIs.UI_OptionPanel).GetComponent<UI_OptionPanel>().Dispose();
         GetGameObject((int)UIs.UI_BluePrintPanel).GetComponent<UI_BluePrintPanel>().Dispose();
         GetGameObject((int)UIs.UI_InvenVisualPanel).GetComponent<UI_InvenVisualPanel>().Dispose();

@@ -269,6 +269,27 @@ public class StockManager : MonoBehaviour
         NotifyStockDataChanged();
     }
 
+    public bool TryDeliverForgedGears(IReadOnlyList<ForgedGear> forgedGears, int rewardCurrency)
+    {
+        if (forgedGears.Count == 0 || rewardCurrency < 0)
+            return false;
+
+        HashSet<ForgedGear> uniqueGears = new();
+        foreach (ForgedGear forgedGear in forgedGears)
+        {
+            if (!uniqueGears.Add(forgedGear) || !stockData.forgedGears.Contains(forgedGear))
+                return false;
+        }
+
+        foreach (ForgedGear forgedGear in uniqueGears)
+            stockData.forgedGears.Remove(forgedGear);
+
+        stockData.currency = (int)Math.Min(
+            (long)stockData.currency + rewardCurrency, int.MaxValue);
+        NotifyStockDataChanged();
+        return true;
+    }
+
     public bool RemoveForgedGear(ForgedGear forgedGear)
     {
         if (!stockData.forgedGears.Remove(forgedGear))

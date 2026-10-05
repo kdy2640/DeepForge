@@ -9,6 +9,7 @@ public class GameSaveData
     public List<TutorialSaveData> tutorials = new();
     public AudioSaveData audio = new();
     public StockSaveData stock = new();
+    public OrderSaveData orders;
 }
 
 [Serializable]
@@ -64,5 +65,12 @@ public class StockSaveData
     public int currency;
     public List<OreAmount> ores = new();
     public List<ForgedGear> forgedGears = new();
+}
+
+[Serializable]
+public class OrderSaveData
+{
+    public int seed;
+    public List<int> completedOrderIndices = new();
 }
 

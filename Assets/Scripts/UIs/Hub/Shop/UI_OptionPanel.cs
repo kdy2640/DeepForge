@@ -6,9 +6,9 @@ public sealed class UI_OptionPanel : MonoBehaviour
     [SerializeField] private Text currencyText;
     [SerializeField] private Button backButton;
 
-    public void Init(UI_Shop_Deal owner)
+    public void Init(System.Action close)
     {
-        backButton.onClick.AddListener(owner.ReturnToBaseView);
+        backButton.onClick.AddListener(() => close.Invoke());
         GameManager.Instance.StockManager.SubscribeStockDataChange(RefreshCurrency);
         RefreshCurrency();
     }

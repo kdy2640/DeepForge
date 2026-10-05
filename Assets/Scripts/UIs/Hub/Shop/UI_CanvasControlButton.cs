@@ -5,8 +5,8 @@ public sealed class UI_CanvasControlButton : MonoBehaviour
 {
     [SerializeField] private Button orderButton;
 
-    public void Init(UI_Shop_Deal owner)
+    public void Init(System.Action navigate)
     {
-        orderButton.onClick.AddListener(owner.OpenOrders);
+        orderButton.onClick.AddListener(() => navigate.Invoke());
     }
 }
