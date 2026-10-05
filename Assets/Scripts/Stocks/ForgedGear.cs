@@ -38,11 +38,13 @@ public class ForgedGear
 {
     [FormerlySerializedAs("type")]
     public int id;
+    public int level = 1;
     public ForgedGearData data;
 
-    public ForgedGear(int id, ForgedGearData data)
+    public ForgedGear(int id, ForgedGearData data, int level = 1)
     {
         this.id = id;
+        this.level = level;
         this.data = data;
     }
 }

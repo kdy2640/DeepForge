@@ -660,6 +660,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d46c06d8167107d4983ca30f6a7ea840, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_SmithInfoPanel
+  cards:
+  - {fileID: 4930222029725164182}
+  - {fileID: 740315033883918497}
+  - {fileID: 5426290319785226843}
+  - {fileID: 4799972523095587934}
 --- !u!114 &1564716636933461027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -780,6 +785,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b8dd902832c7fbf4b9f7350763756451, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_ForgedGearVisualPanel
+  gearIcon: {fileID: 0}
+  gearName: {fileID: 0}
+  materialText: {fileID: 0}
 --- !u!1 &1395723351657673873
 GameObject:
   m_ObjectHideFlags: 0
@@ -944,6 +952,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a117a6a2fa193ec45868e689bacd4143, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_MaterialSelectPanel
+  ores: []
+  previousHandleButton: {fileID: 0}
+  nextHandleButton: {fileID: 0}
+  previousMetalButton: {fileID: 0}
+  nextMetalButton: {fileID: 0}
+  previousGemButton: {fileID: 0}
+  nextGemButton: {fileID: 0}
+  handleIcon: {fileID: 0}
+  metalIcon: {fileID: 0}
+  gemIcon: {fileID: 0}
+  handleName: {fileID: 0}
+  metalName: {fileID: 0}
+  gemName: {fileID: 0}
 --- !u!1 &1687270770808816550
 GameObject:
   m_ObjectHideFlags: 0
@@ -2446,6 +2467,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90e6193a6246f7d4ea7255c2c1862315, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_ForgedGearDetailPanel
+  gearName: {fileID: 0}
+  description: {fileID: 0}
+  sellPrice: {fileID: 0}
+  materialNames: []
+  materialAmounts: []
+  forgeButton: {fileID: 0}
 --- !u!1 &3796408946374058653
 GameObject:
   m_ObjectHideFlags: 0
@@ -3389,6 +3416,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63942cbbe63133e4e82feb7097d3fa4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UI_BluePrintListPanel
+  content: {fileID: 0}
+  cardPrefab: {fileID: 0}
+  blueprints: []
+  emptyMessage: {fileID: 0}
 --- !u!114 &4805912445215073482
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5988,6 +6019,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cfce3eea29712484596f0937098c9da5, type: 3}
+--- !u!114 &740315033883918497 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3183266283029060831, guid: cfce3eea29712484596f0937098c9da5, type: 3}
+  m_PrefabInstance: {fileID: 2768336393106398334}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebd1ccd40334077438da4407eb96c2fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_QueueSlotCard
 --- !u!224 &3163563159472889441 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 976191120478323231, guid: cfce3eea29712484596f0937098c9da5, type: 3}
@@ -6408,6 +6450,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cfce3eea29712484596f0937098c9da5, type: 3}
+--- !u!114 &5426290319785226843 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3183266283029060831, guid: cfce3eea29712484596f0937098c9da5, type: 3}
+  m_PrefabInstance: {fileID: 7449857145612054148}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebd1ccd40334077438da4407eb96c2fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_QueueSlotCard
 --- !u!224 &7705400838094384283 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 976191120478323231, guid: cfce3eea29712484596f0937098c9da5, type: 3}
@@ -6510,6 +6563,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cfce3eea29712484596f0937098c9da5, type: 3}
+--- !u!114 &4930222029725164182 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3183266283029060831, guid: cfce3eea29712484596f0937098c9da5, type: 3}
+  m_PrefabInstance: {fileID: 7513852462080343625}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebd1ccd40334077438da4407eb96c2fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_QueueSlotCard
 --- !u!224 &7334870278138133590 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 976191120478323231, guid: cfce3eea29712484596f0937098c9da5, type: 3}
@@ -6612,6 +6676,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cfce3eea29712484596f0937098c9da5, type: 3}
+--- !u!114 &4799972523095587934 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3183266283029060831, guid: cfce3eea29712484596f0937098c9da5, type: 3}
+  m_PrefabInstance: {fileID: 7976392009236848769}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebd1ccd40334077438da4407eb96c2fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI_QueueSlotCard
 --- !u!224 &7151143239810278046 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 976191120478323231, guid: cfce3eea29712484596f0937098c9da5, type: 3}

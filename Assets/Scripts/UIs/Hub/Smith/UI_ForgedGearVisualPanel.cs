@@ -1,49 +1,48 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 
 public sealed class UI_ForgedGearVisualPanel : MonoBehaviour
 {
-    [SerializeField] private Image gearIcon;
-    [SerializeField] private Text gearName;
-    [SerializeField] private Text materialText;
+    [SerializeField] private Button levelUpButton;
+    [SerializeField] private Button levelDownButton;
+    [SerializeField] private Text levelText;
 
     private UI_Smith_Forge forge;
-    private UI_MaterialSelectPanel materials;
+    public int SelectedLevel { get; private set; } = 1;
+    public event Action LevelChanged;
 
-    public void Init(UI_Smith_Forge owner, UI_MaterialSelectPanel materialPanel)
+    public void Init(UI_Smith_Forge owner)
     {
         forge = owner;
-        materials = materialPanel;
         forge.BlueprintSelected += OnBlueprintSelected;
-        materials.MaterialChanged += OnMaterialChanged;
+        GameManager.Instance.Upgrade.SubscribeUpgradeChanged(Refresh);
+        levelUpButton.onClick.AddListener(() => SelectLevel(SelectedLevel + 1));
+        levelDownButton.onClick.AddListener(() => SelectLevel(SelectedLevel - 1));
         Refresh();
     }
 
     private void OnBlueprintSelected(ForgedGearUpgradeDataSO blueprint) => Refresh();
-    private void OnMaterialChanged(ForgedGearData data) => Refresh();
 
-    private void Refresh()
+    private void Refresh() => SelectLevel(SelectedLevel);
+
+    private void SelectLevel(int level)
     {
         ForgedGearUpgradeDataSO blueprint = forge.SelectedBlueprint;
-        gearIcon.gameObject.SetActive(blueprint != null);
-        if (blueprint == null)
-        {
-            gearName.text = "청사진을 선택해 주세요";
-            materialText.text = "";
-            return;
-        }
-        ForgedGearData data = materials.SelectedMaterials;
-        gearIcon.sprite = blueprint.DisplayIcon;
-        gearIcon.color = OreDataDB.GetData(data.metalOreId).Color;
-        gearName.text = blueprint.DisplayName;
-        materialText.text = $"손잡이 · {OreDataDB.GetData(data.handleOreId).DisplayName}\n"
-            + $"금속 · {OreDataDB.GetData(data.metalOreId).DisplayName}\n"
-            + (data.hasGem ? $"보석 · {OreDataDB.GetData(data.gemOreId).DisplayName}" : "보석 · 없음");
+        int maxLevel = blueprint != null && GameManager.Instance.Upgrade.HasState(blueprint)
+            ? Mathf.Min(blueprint.MaxLevel, GameManager.Instance.Upgrade.GetState(blueprint).unlockedLevel)
+            : 0;
+        int previousLevel = SelectedLevel;
+        SelectedLevel = Mathf.Clamp(level, 1, Mathf.Max(1, maxLevel));
+        levelText.text = maxLevel > 0 ? $"Lv. {SelectedLevel}" : "—";
+        levelUpButton.interactable = SelectedLevel < maxLevel;
+        levelDownButton.interactable = maxLevel > 0 && SelectedLevel > 1;
+        if (SelectedLevel != previousLevel) LevelChanged?.Invoke();
     }
 
     public void Dispose()
     {
         forge.BlueprintSelected -= OnBlueprintSelected;
-        materials.MaterialChanged -= OnMaterialChanged;
+        GameManager.Instance.Upgrade.UnsubscribeUpgradeChanged(Refresh);
     }
 }

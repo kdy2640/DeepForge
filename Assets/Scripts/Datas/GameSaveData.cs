@@ -10,6 +10,7 @@ public class GameSaveData
     public AudioSaveData audio = new();
     public StockSaveData stock = new();
     public OrderSaveData orders;
+    public SmithSaveData smith;
 }
 
 [Serializable]
@@ -72,5 +73,11 @@ public class OrderSaveData
 {
     public int seed;
     public List<int> completedOrderIndices = new();
+}
+
+[Serializable]
+public class SmithSaveData
+{
+    public SmithSlot[] slots = { new(), new(), new(), new() };
 }
 

@@ -232,30 +232,6 @@ public class StockManager : MonoBehaviour
         return true;
     }
 
-    public bool TryForgeGear(int id, ForgedGearData data)
-    {
-        ForgedGearUpgradeDataSO blueprint = UpgradeDataDB.GetForgedGearUpgrade(id);
-        if (!GameManager.Instance.Upgrade.HasState(blueprint)
-            || GameManager.Instance.Upgrade.GetState(blueprint).unlockedLevel <= 0)
-            return false;
-
-        ForgedGearSO gearData = ForgedGearDB.GetData(id);
-        List<OreAmount> costs = new()
-        {
-            new OreAmount(data.handleOreId, gearData.HandleOreCost),
-            new OreAmount(data.metalOreId, gearData.MetalOreCost)
-        };
-        if (data.hasGem)
-            costs.Add(new OreAmount(data.gemOreId, gearData.GemOreCost));
-
-        if (!CanConsumeOre(costs))
-            return false;
-
-        stockData.forgedGears.Add(new ForgedGear(id, data));
-        TryConsumeOre(costs);
-        return true;
-    }
-
     public bool TrySellForgedGear(ForgedGear forgedGear)
     {
         ForgedGearSO gearData = ForgedGearDB.GetData(forgedGear.id);
@@ -329,7 +305,8 @@ public class StockManager : MonoBehaviour
         {
             saveData.forgedGears.Add(new ForgedGear(
                 forgedGear.id,
-                forgedGear.data));
+                forgedGear.data,
+                forgedGear.level));
         }
 
         return saveData;
@@ -363,7 +340,8 @@ public class StockManager : MonoBehaviour
                 {
                     stockData.forgedGears.Add(new ForgedGear(
                         forgedGear.id,
-                        forgedGear.data));
+                        forgedGear.data,
+                        Mathf.Max(1, forgedGear.level)));
                 }
             }
         }

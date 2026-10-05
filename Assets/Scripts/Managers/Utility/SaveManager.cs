@@ -74,6 +74,7 @@ public class SaveManager : MonoBehaviour
         GameManager.Instance.Utility.Audio.ResetAudioSaveData();
         GameManager.Instance.StockManager.ResetStockSaveData();
         GameManager.Instance.BaseCamp.Order.ResetOrderSaveData();
+        GameManager.Instance.BaseCamp.Smith.ResetSmithSaveData();
         DeleteSave();
     }
 
@@ -90,6 +91,7 @@ public class SaveManager : MonoBehaviour
         saveData.audio = GameManager.Instance.Utility.Audio.CreateAudioSaveData();
         saveData.stock = GameManager.Instance.StockManager.CreateStockSaveData();
         saveData.orders = GameManager.Instance.BaseCamp.Order.CreateOrderSaveData();
+        saveData.smith = GameManager.Instance.BaseCamp.Smith.CreateSmithSaveData();
         return saveData;
     }// 저장할 전체 데이터를 만든다.
 
@@ -100,5 +102,6 @@ public class SaveManager : MonoBehaviour
         GameManager.Instance.Utility.Audio.LoadAudioSaveData(saveData.audio);
         GameManager.Instance.StockManager.LoadStockSaveData(saveData.stock);
         GameManager.Instance.BaseCamp.Order.LoadOrderSaveData(saveData.orders);
+        GameManager.Instance.BaseCamp.Smith.LoadSmithSaveData(saveData.smith);
     }// 불러온 저장 데이터를 실제 게임 상태에 반영한다.
 }

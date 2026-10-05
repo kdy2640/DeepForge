@@ -14,15 +14,19 @@ public sealed class UI_ForgedGearDetailPanel : MonoBehaviour
 
     private UI_Smith_Forge forge;
     private UI_MaterialSelectPanel materials;
+    private UI_ForgedGearVisualPanel visual;
 
-    public void Init(UI_Smith_Forge owner, UI_MaterialSelectPanel materialPanel)
+    public void Init(UI_Smith_Forge owner, UI_MaterialSelectPanel materialPanel, UI_ForgedGearVisualPanel visualPanel)
     {
         forge = owner;
         materials = materialPanel;
+        visual = visualPanel;
+        visual.LevelChanged += Refresh;
         forge.BlueprintSelected += OnBlueprintSelected;
         materials.MaterialChanged += OnMaterialChanged;
         GameManager.Instance.StockManager.SubscribeStockDataChange(Refresh);
         GameManager.Instance.Upgrade.SubscribeUpgradeChanged(Refresh);
+        GameManager.Instance.BaseCamp.Smith.SlotsChanged += Refresh;
         forgeButton.onClick.AddListener(Forge);
         Refresh();
     }
@@ -47,7 +51,7 @@ public sealed class UI_ForgedGearDetailPanel : MonoBehaviour
 
         ForgedGearSO product = ForgedGearDB.GetData(blueprint.ForgedGearId);
         ForgedGearData data = materials.SelectedMaterials;
-        gearName.text = blueprint.DisplayName;
+        gearName.text = $"{blueprint.DisplayName} · Lv. {visual.SelectedLevel}";
         sellPrice.text = $"{product.SellPrice:N0} G";
         description.text = $"손잡이  {OreDataDB.GetData(data.handleOreId).DisplayName} × {product.HandleOreCost}\n"
             + $"금속  {OreDataDB.GetData(data.metalOreId).DisplayName} × {product.MetalOreCost}\n"
@@ -74,23 +78,26 @@ public sealed class UI_ForgedGearDetailPanel : MonoBehaviour
         }
 
         forgeButton.interactable = GameManager.Instance.Upgrade.HasState(blueprint)
-            && GameManager.Instance.Upgrade.GetState(blueprint).unlockedLevel > 0
-            && GameManager.Instance.StockManager.CanConsumeOre(totals);
+            && GameManager.Instance.Upgrade.GetState(blueprint).unlockedLevel >= visual.SelectedLevel
+            && GameManager.Instance.StockManager.CanConsumeOre(totals)
+            && GameManager.Instance.BaseCamp.Smith.HasEmptySlot;
     }
 
     public void Forge()
     {
         ForgedGearUpgradeDataSO blueprint = forge.SelectedBlueprint;
         if (blueprint == null) return;
-        if (GameManager.Instance.StockManager.TryForgeGear(blueprint.ForgedGearId, materials.SelectedMaterials))
-            description.text = $"{blueprint.DisplayName}\n1개 제작 완료";
+        if (GameManager.Instance.BaseCamp.Smith.TryStartForge(blueprint.ForgedGearId, materials.SelectedMaterials, visual.SelectedLevel))
+            description.text = $"{blueprint.DisplayName} · Lv. {visual.SelectedLevel}\n제작 시작 · 3초";
     }
 
     public void Dispose()
     {
         forge.BlueprintSelected -= OnBlueprintSelected;
         materials.MaterialChanged -= OnMaterialChanged;
+        visual.LevelChanged -= Refresh;
         GameManager.Instance.StockManager.UnsubscribeStockDataChange(Refresh);
         GameManager.Instance.Upgrade.UnsubscribeUpgradeChanged(Refresh);
+        GameManager.Instance.BaseCamp.Smith.SlotsChanged -= Refresh;
     }
 }
