@@ -14,10 +14,20 @@ public sealed class UI_QueueSlotCard : MonoBehaviour
         icon.gameObject.SetActive(slot.IsWorking);
         if (slot.IsWorking)
         {
-            ForgedGearUpgradeDataSO blueprint = UpgradeDataDB.GetForgedGearUpgrade(slot.product.id);
-            icon.sprite = blueprint.DisplayIcon;
-            icon.color = OreDataDB.GetData(slot.product.data.metalOreId).Color;
-            productName.text = blueprint.DisplayName;
+            if (slot.workType == SmithWorkType.EquipmentUpgrade)
+            {
+                EquipmentUpgradeDataSO equipment = UpgradeDataDB.GetEquipmentUpgrade(slot.equipmentId);
+                icon.sprite = equipment.DisplayIcon;
+                icon.color = Color.white;
+                productName.text = $"{equipment.DisplayName} · Lv. {slot.equipmentLevel}";
+            }
+            else
+            {
+                ForgedGearUpgradeDataSO blueprint = UpgradeDataDB.GetForgedGearUpgrade(slot.product.id);
+                icon.sprite = blueprint.DisplayIcon;
+                icon.color = OreDataDB.GetData(slot.product.data.metalOreId).Color;
+                productName.text = blueprint.DisplayName;
+            }
             remainingTime.text = $"{slot.remainingSeconds:F1}초";
         }
         else

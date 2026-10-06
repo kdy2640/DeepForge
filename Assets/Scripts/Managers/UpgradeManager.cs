@@ -139,6 +139,16 @@ public class UpgradeManager : MonoBehaviour
         return true;
     }
 
+    public void CompleteEquipmentUpgrade(EquipmentUpgradeDataSO data, int level)
+    {
+        UpgradeState state = GetState(data);
+        if (level <= state.level) return;
+        state.level = level;
+        RefreshRuntimeData();
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Upgrade);
+        onUpgradeChanged?.Invoke();
+    }
+
     private void RefreshRuntimeData()
     {
         runtimeLevel.Clear();
