@@ -22,9 +22,9 @@ public sealed class UI_Shop_Deal : UI_Base
         UI_DealPanel deal = GetGameObject((int)UIs.UI_DealPanel).GetComponent<UI_DealPanel>();
         deal.Init(this);
         GetGameObject((int)UIs.UI_OptionPanel).GetComponent<UI_OptionPanel>().Init(ReturnToBaseView);
+        GetGameObject((int)UIs.UI_MerchantVisualizer).GetComponent<UI_MerchantVisualizer>().Init(this, deal);
         GetGameObject((int)UIs.UI_BluePrintPanel).GetComponent<UI_BluePrintPanel>().Init(deal);
         GetGameObject((int)UIs.UI_InvenVisualPanel).GetComponent<UI_InvenVisualPanel>().Init(deal);
-        GetGameObject((int)UIs.UI_MerchantVisualizer).GetComponent<UI_MerchantVisualizer>().Init(this, deal);
         GetGameObject((int)UIs.UI_CanvasControlButton).GetComponent<UI_CanvasControlButton>().Init(OpenOrders);
     }
 

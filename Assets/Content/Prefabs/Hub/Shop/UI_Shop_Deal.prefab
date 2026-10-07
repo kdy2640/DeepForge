@@ -387,7 +387,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 496}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &2417197725278370396
 MonoBehaviour:
@@ -1781,7 +1781,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1160, y: 128}
+  m_SizeDelta: {x: 0, y: 128}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &554404422150707029
 MonoBehaviour:
@@ -3275,34 +3275,13 @@ MonoBehaviour:
   equipmentCategoryButton: {fileID: 9066057638067658224}
   productCategoryText: {fileID: 3319253083272187885}
   equipmentCategoryText: {fileID: 4431487748843749333}
+  selectedCategoryColor: {r: 0.1882353, g: 0.2, b: 0.22352941, a: 1}
+  unselectedCategoryColor: {r: 0.1254902, g: 0.14117648, b: 0.16862746, a: 1}
+  selectedCategoryTextColor: {r: 1, g: 0.7882353, b: 0.2901961, a: 1}
+  unselectedCategoryTextColor: {r: 0.9490196, g: 0.93333334, b: 0.8980392, a: 1}
   content: {fileID: 2909999707385101278}
   scrollRect: {fileID: 1523804092568249976}
   cardPrefab: {fileID: 3581545749151379120, guid: 0b87b625c183b7444b1f74f2f76fa1b3, type: 3}
-  productBlueprints:
-  - {fileID: 11400000, guid: 48707fd7e9f8a3a4fa0393964314057e, type: 2}
-  - {fileID: 11400000, guid: 0dce3b1bd2d20934a9227985a01844c4, type: 2}
-  - {fileID: 11400000, guid: 01bfa4a10e7adb6408423dee9c3cea4b, type: 2}
-  - {fileID: 11400000, guid: cf60ab906801f8d4da1035c257f623e2, type: 2}
-  - {fileID: 11400000, guid: e317edb11540fb742b325c73a40480a3, type: 2}
-  - {fileID: 11400000, guid: b71b73bc407e13d4da11c965b4ac7be8, type: 2}
-  - {fileID: 11400000, guid: 12998c829bcbaa644b76b647f51bce83, type: 2}
-  - {fileID: 11400000, guid: 2b31eee3b63d9794787499ca71b7e079, type: 2}
-  - {fileID: 11400000, guid: 59ed4008e7182204aa24db6dca5a79e8, type: 2}
-  - {fileID: 11400000, guid: e2b39027b234bf946b5df67c6b08ac2d, type: 2}
-  - {fileID: 11400000, guid: 2275931b8f0e483479e7f7e460f360ed, type: 2}
-  - {fileID: 11400000, guid: 643b05ebda882ba4da86857b0dbbf3bb, type: 2}
-  - {fileID: 11400000, guid: 65a3689964035a74691ccf4831c8b379, type: 2}
-  - {fileID: 11400000, guid: 90f72dd231b1fd14c843230c1c1420bf, type: 2}
-  - {fileID: 11400000, guid: 68ef9ec3a37bb4a4e865d9f8f23223af, type: 2}
-  - {fileID: 11400000, guid: 922034c8846a4684eb5d13cd9fe55dea, type: 2}
-  - {fileID: 11400000, guid: 19b863ef5c7056049bb91e43664c1259, type: 2}
-  - {fileID: 11400000, guid: c336f17b97b5b394395aeeaf5db567f6, type: 2}
-  - {fileID: 11400000, guid: f9ab60f0ca602344aa1dedec89adb95b, type: 2}
-  equipmentBlueprints:
-  - {fileID: 11400000, guid: 6000138bc1325204a917803440500e54, type: 2}
-  - {fileID: 11400000, guid: 8ae15877d0d1af641afe20f6412a8897, type: 2}
-  - {fileID: 11400000, guid: 06e105ba2b190e7488fdc02ed57acd37, type: 2}
-  - {fileID: 11400000, guid: d799a5c17339c2b47a06e4d39f8f0818, type: 2}
 --- !u!1 &6780645694540541409
 GameObject:
   m_ObjectHideFlags: 0
