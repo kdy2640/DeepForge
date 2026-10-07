@@ -3,6 +3,13 @@ using Unity.Collections;
 using Unity.Mathematics;
 using UnityEngine;
 
+public enum ChunkDensityState : byte
+{
+    Blank,
+    Fill,
+    Complicate
+}
+
 // 청크의 격자 범위와 밀도 배열을 보관한다. 배열의 수명은 TerrainData가 관리한다.
 public struct ChunkDensityData
 {
@@ -12,21 +19,23 @@ public struct ChunkDensityData
     public Vector3Int SampleCount;
     // 자연 지층 소속은 청크마다 하나이며 밀도 수정으로 바뀌지 않는다.
     public byte LayerId { get; }
+    // 균일 청크는 상수로 읽고, Complicate만 실제 배열을 소유한다.
+    public ChunkDensityState State { get; internal set; }
     // 청크 내부 좌표를 일차원으로 펼친 밀도 배열
     public NativeArray<float> Densities;
     // 0은 자연 지형, 1은 빈 공간에 쌓은 인공 지형이다.
     public NativeArray<byte> ArtificialFlags;
 
-    // 청크의 시작 좌표와 크기를 저장하고 샘플 수만큼 밀도 배열을 할당한다.
+    // 청크 정보만 준비한다. 배열의 할당과 상태 전환은 TerrainData가 담당한다.
     public ChunkDensityData(Vector3Int origin, Vector3Int cubeCount, Vector3Int sampleCount, byte layerId)
     {
         Origin = origin;
         CubeCount = cubeCount;
         SampleCount = sampleCount;
         LayerId = layerId;
-        Densities = new NativeArray<float>(
-            sampleCount.x * sampleCount.y * sampleCount.z, Allocator.Persistent);
-        ArtificialFlags = new NativeArray<byte>(Densities.Length, Allocator.Persistent);
+        State = ChunkDensityState.Blank;
+        Densities = default;
+        ArtificialFlags = default;
     }
 
     // 청크의 LayerId로 돌 목록을 조회하고 고정 시드로 위치와 종류를 결정한다.
@@ -65,6 +74,8 @@ public struct ChunkDensityData
     // 청크 내부 좌표를 일차원 인덱스로 바꿔 밀도를 읽는다.
     public float GetDensity(Vector3Int localIndex)
     {
+        if (State == ChunkDensityState.Blank) return 0f;
+        if (State == ChunkDensityState.Fill) return 1f;
         int index = (localIndex.x * SampleCount.y + localIndex.y) * SampleCount.z + localIndex.z;
         return Densities[index];
     }

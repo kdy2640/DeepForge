@@ -25,7 +25,7 @@ public class TerrainData : IDisposable
     public int ChunkSize { get; }
     public Vector3Int ChunkCounts { get; }
 
-    // 지형 크기에 맞춰 청크를 나누고 각 청크의 밀도 배열을 할당한다.
+    // 지형 크기에 맞춰 청크 정보만 준비한다. 초기 밀도 생성 시 상태를 결정한다.
     public TerrainData(TerrainGridGeometry grid)
     {
         TerrainLayer[] sourceLayers = TerrainTypeDB.GetLayers();
@@ -76,8 +76,16 @@ public class TerrainData : IDisposable
     // 모든 청크의 밀도를 0으로 초기화한다.
     public void ResetDensities()
     {
-        foreach (ChunkDensityData chunk in chunks.Values)
+        foreach (Vector3Int coordinate in new List<Vector3Int>(chunks.Keys))
         {
+            ChunkDensityData chunk = chunks[coordinate];
+            if (chunk.State != ChunkDensityState.Complicate)
+            {
+                chunk.State = ChunkDensityState.Blank;
+                chunks[coordinate] = chunk;
+                continue;
+            }
+            // 밀도만 지우며 기존 인공 지형 표시는 유지한다.
             var densities = chunk.Densities;
             for (int i = 0; i < densities.Length; i++)
             {
@@ -93,11 +101,54 @@ public class TerrainData : IDisposable
         return chunks[chunkCoord];
     }
 
+    // 초기 생성 Job이 모든 샘플을 덮어쓸 배열 또는 균일 상태를 준비한다.
+    internal ChunkDensityData InitializeChunk(Vector3Int coordinate, ChunkDensityState state)
+    {
+        ChunkDensityData chunk = chunks[coordinate];
+        if (chunk.State == ChunkDensityState.Complicate)
+        {
+            chunk.Densities.Dispose();
+            chunk.ArtificialFlags.Dispose();
+        }
+        chunk.State = state;
+        chunk.Densities = default;
+        chunk.ArtificialFlags = default;
+        if (state == ChunkDensityState.Complicate)
+        {
+            int length = chunk.SampleCount.x * chunk.SampleCount.y * chunk.SampleCount.z;
+            chunk.Densities = new NativeArray<float>(length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            chunk.ArtificialFlags = new NativeArray<byte>(length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+        }
+        chunks[coordinate] = chunk;
+        return chunk;
+    }
+
+    // 첫 쓰기 전에 균일 상태를 배열로 펼치고, 이후 쓰기는 같은 배열을 사용한다.
+    private ChunkDensityData EnsureChunkWritable(Vector3Int coordinate)
+    {
+        ChunkDensityData chunk = chunks[coordinate];
+        if (chunk.State == ChunkDensityState.Complicate) return chunk;
+
+        int length = chunk.SampleCount.x * chunk.SampleCount.y * chunk.SampleCount.z;
+        bool filled = chunk.State == ChunkDensityState.Fill;
+        chunk.Densities = new NativeArray<float>(length, Allocator.Persistent,
+            filled ? NativeArrayOptions.UninitializedMemory : NativeArrayOptions.ClearMemory);
+        chunk.ArtificialFlags = new NativeArray<byte>(length, Allocator.Persistent);
+        if (filled)
+        {
+            for (int i = 0; i < length; i++) chunk.Densities[i] = 1f;
+        }
+        chunk.State = ChunkDensityState.Complicate;
+        chunks[coordinate] = chunk;
+        return chunk;
+    }
+
     // 소유한 모든 청크의 네이티브 밀도 배열을 해제한다.
     public void Dispose()
     {
         foreach (ChunkDensityData chunk in chunks.Values)
         {
+            if (chunk.State != ChunkDensityState.Complicate) continue;
             chunk.Densities.Dispose();
             chunk.ArtificialFlags.Dispose();
         }
@@ -130,7 +181,7 @@ public class TerrainData : IDisposable
                 Mathf.Min(index.x / ChunkSize, ChunkCounts.x - 1),
                 Mathf.Min(index.y / ChunkSize, ChunkCounts.y - 1),
                 Mathf.Min(index.z / ChunkSize, ChunkCounts.z - 1));
-            ChunkDensityData chunk = chunks[chunkCoord];
+            ChunkDensityData chunk = EnsureChunkWritable(chunkCoord);
             chunk.SetDensity(index - chunk.Origin, Mathf.Clamp01(density));
         }
     }
@@ -242,7 +293,16 @@ public class TerrainData : IDisposable
                                     sampleY - chunk.Origin.y) * chunk.SampleCount.z + copyMin.z - chunk.Origin.z;
                                 int targetIndex = ((sampleX - snapshotMin.x) * snapshotCount.y +
                                     sampleY - snapshotMin.y) * snapshotCount.z + copyMin.z - snapshotMin.z;
-                                NativeArray<float>.Copy(chunk.Densities, sourceIndex, densitySnapshot, targetIndex, copyLength);
+                                if (chunk.State == ChunkDensityState.Complicate)
+                                {
+                                    NativeArray<float>.Copy(chunk.Densities, sourceIndex, densitySnapshot, targetIndex, copyLength);
+                                }
+                                else
+                                {
+                                    float density = chunk.State == ChunkDensityState.Fill ? 1f : 0f;
+                                    for (int sampleZ = 0; sampleZ < copyLength; sampleZ++)
+                                        densitySnapshot[targetIndex + sampleZ] = density;
+                                }
                             }
                         }
                     }
@@ -283,7 +343,7 @@ public class TerrainData : IDisposable
                 {
                     for (int z = minChunk.z; z <= maxChunk.z; z++)
                     {
-                        ChunkDensityData chunk = chunks[new Vector3Int(x, y, z)];
+                        ChunkDensityData chunk = EnsureChunkWritable(new Vector3Int(x, y, z));
                         // Each Job owns a separate density array and result buffer.
                         changedBounds[i] = new NativeArray<Vector3Int>(2, Allocator.TempJob);
                         ModifyDensitySphereJob job = new ModifyDensitySphereJob
@@ -411,7 +471,7 @@ public class TerrainData : IDisposable
         int jobIndex = 0;
         foreach (var entry in segmentsByChunk)
         {
-            ChunkDensityData chunk = chunks[entry.Key];
+            ChunkDensityData chunk = EnsureChunkWritable(entry.Key);
             segmentBuffers[jobIndex] = new NativeArray<CaveCarveSegment>(entry.Value.ToArray(), Allocator.TempJob);
             changedBounds[jobIndex] = new NativeArray<Vector3Int>(2, Allocator.TempJob);
             CarveJob job = new CarveJob

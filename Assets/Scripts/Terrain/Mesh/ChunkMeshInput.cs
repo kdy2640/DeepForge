@@ -17,6 +17,8 @@ internal struct ChunkMeshInput
     private Vector3Int chunkCoord;
     private Vector3Int chunkCounts;
     private int chunkSize;
+    // Neighbor states travel with the Job value without another native allocation.
+    private FixedList128Bytes<ChunkDensityState> densityStates;
 
     // 인공 지형 표시는 표면을 만드는 큐브의 여덟 꼭짓점 소유 청크만 참조한다.
     [ReadOnly] private NativeArray<byte> artificial000;
@@ -64,7 +66,8 @@ internal struct ChunkMeshInput
     [ReadOnly] private NativeArray<float> density112;
 
     // 현재 청크와 표면·노멀 계산에 필요한 이웃 청크의 밀도 배열을 연결한다.
-    public ChunkMeshInput(TerrainData data, Vector3Int chunkCoord)
+    public ChunkMeshInput(TerrainData data, Vector3Int chunkCoord,
+        NativeArray<float> constantDensities, NativeArray<byte> naturalFlags)
     {
         ChunkDensityData chunk = data.GetChunkData(chunkCoord);
         Origin = chunk.Origin;
@@ -75,6 +78,8 @@ internal struct ChunkMeshInput
         this.chunkCoord = chunkCoord;
         chunkCounts = data.ChunkCounts;
         chunkSize = data.ChunkSize;
+        densityStates = default;
+        densityStates.Length = 64;
 
         int xN = Mathf.Max(chunkCoord.x - 1, 0);
         int x0 = chunkCoord.x;
@@ -88,46 +93,118 @@ internal struct ChunkMeshInput
         int z0 = chunkCoord.z;
         int z1 = Mathf.Min(chunkCoord.z + 1, chunkCounts.z - 1);
         int z2 = Mathf.Min(chunkCoord.z + (chunkSize == 1 ? 2 : 1), chunkCounts.z - 1);
-        artificial000 = data.GetChunkData(new Vector3Int(x0, y0, z0)).ArtificialFlags;
-        artificial001 = data.GetChunkData(new Vector3Int(x0, y0, z1)).ArtificialFlags;
-        artificial010 = data.GetChunkData(new Vector3Int(x0, y1, z0)).ArtificialFlags;
-        artificial011 = data.GetChunkData(new Vector3Int(x0, y1, z1)).ArtificialFlags;
-        artificial100 = data.GetChunkData(new Vector3Int(x1, y0, z0)).ArtificialFlags;
-        artificial101 = data.GetChunkData(new Vector3Int(x1, y0, z1)).ArtificialFlags;
-        artificial110 = data.GetChunkData(new Vector3Int(x1, y1, z0)).ArtificialFlags;
-        artificial111 = data.GetChunkData(new Vector3Int(x1, y1, z1)).ArtificialFlags;
-        density000 = data.GetChunkData(new Vector3Int(x0, y0, z0)).Densities;
-        density001 = data.GetChunkData(new Vector3Int(x0, y0, z1)).Densities;
-        density010 = data.GetChunkData(new Vector3Int(x0, y1, z0)).Densities;
-        density011 = data.GetChunkData(new Vector3Int(x0, y1, z1)).Densities;
-        density100 = data.GetChunkData(new Vector3Int(x1, y0, z0)).Densities;
-        density101 = data.GetChunkData(new Vector3Int(x1, y0, z1)).Densities;
-        density110 = data.GetChunkData(new Vector3Int(x1, y1, z0)).Densities;
-        density111 = data.GetChunkData(new Vector3Int(x1, y1, z1)).Densities;
-        densityN00 = data.GetChunkData(new Vector3Int(xN, y0, z0)).Densities;
-        densityN01 = data.GetChunkData(new Vector3Int(xN, y0, z1)).Densities;
-        densityN10 = data.GetChunkData(new Vector3Int(xN, y1, z0)).Densities;
-        densityN11 = data.GetChunkData(new Vector3Int(xN, y1, z1)).Densities;
-        density200 = data.GetChunkData(new Vector3Int(x2, y0, z0)).Densities;
-        density201 = data.GetChunkData(new Vector3Int(x2, y0, z1)).Densities;
-        density210 = data.GetChunkData(new Vector3Int(x2, y1, z0)).Densities;
-        density211 = data.GetChunkData(new Vector3Int(x2, y1, z1)).Densities;
-        density0N0 = data.GetChunkData(new Vector3Int(x0, yN, z0)).Densities;
-        density1N0 = data.GetChunkData(new Vector3Int(x1, yN, z0)).Densities;
-        density0N1 = data.GetChunkData(new Vector3Int(x0, yN, z1)).Densities;
-        density1N1 = data.GetChunkData(new Vector3Int(x1, yN, z1)).Densities;
-        density020 = data.GetChunkData(new Vector3Int(x0, y2, z0)).Densities;
-        density120 = data.GetChunkData(new Vector3Int(x1, y2, z0)).Densities;
-        density021 = data.GetChunkData(new Vector3Int(x0, y2, z1)).Densities;
-        density121 = data.GetChunkData(new Vector3Int(x1, y2, z1)).Densities;
-        density00N = data.GetChunkData(new Vector3Int(x0, y0, zN)).Densities;
-        density01N = data.GetChunkData(new Vector3Int(x0, y1, zN)).Densities;
-        density10N = data.GetChunkData(new Vector3Int(x1, y0, zN)).Densities;
-        density11N = data.GetChunkData(new Vector3Int(x1, y1, zN)).Densities;
-        density002 = data.GetChunkData(new Vector3Int(x0, y0, z2)).Densities;
-        density012 = data.GetChunkData(new Vector3Int(x0, y1, z2)).Densities;
-        density102 = data.GetChunkData(new Vector3Int(x1, y0, z2)).Densities;
-        density112 = data.GetChunkData(new Vector3Int(x1, y1, z2)).Densities;
+        chunk = data.GetChunkData(new Vector3Int(x0, y0, z0));
+        artificial000 = chunk.State == ChunkDensityState.Complicate ? chunk.ArtificialFlags : naturalFlags;
+        chunk = data.GetChunkData(new Vector3Int(x0, y0, z1));
+        artificial001 = chunk.State == ChunkDensityState.Complicate ? chunk.ArtificialFlags : naturalFlags;
+        chunk = data.GetChunkData(new Vector3Int(x0, y1, z0));
+        artificial010 = chunk.State == ChunkDensityState.Complicate ? chunk.ArtificialFlags : naturalFlags;
+        chunk = data.GetChunkData(new Vector3Int(x0, y1, z1));
+        artificial011 = chunk.State == ChunkDensityState.Complicate ? chunk.ArtificialFlags : naturalFlags;
+        chunk = data.GetChunkData(new Vector3Int(x1, y0, z0));
+        artificial100 = chunk.State == ChunkDensityState.Complicate ? chunk.ArtificialFlags : naturalFlags;
+        chunk = data.GetChunkData(new Vector3Int(x1, y0, z1));
+        artificial101 = chunk.State == ChunkDensityState.Complicate ? chunk.ArtificialFlags : naturalFlags;
+        chunk = data.GetChunkData(new Vector3Int(x1, y1, z0));
+        artificial110 = chunk.State == ChunkDensityState.Complicate ? chunk.ArtificialFlags : naturalFlags;
+        chunk = data.GetChunkData(new Vector3Int(x1, y1, z1));
+        artificial111 = chunk.State == ChunkDensityState.Complicate ? chunk.ArtificialFlags : naturalFlags;
+        chunk = data.GetChunkData(new Vector3Int(x0, y0, z0));
+        densityStates[21] = chunk.State;
+        density000 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, y0, z1));
+        densityStates[22] = chunk.State;
+        density001 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, y1, z0));
+        densityStates[25] = chunk.State;
+        density010 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, y1, z1));
+        densityStates[26] = chunk.State;
+        density011 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, y0, z0));
+        densityStates[37] = chunk.State;
+        density100 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, y0, z1));
+        densityStates[38] = chunk.State;
+        density101 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, y1, z0));
+        densityStates[41] = chunk.State;
+        density110 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, y1, z1));
+        densityStates[42] = chunk.State;
+        density111 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(xN, y0, z0));
+        densityStates[5] = chunk.State;
+        densityN00 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(xN, y0, z1));
+        densityStates[6] = chunk.State;
+        densityN01 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(xN, y1, z0));
+        densityStates[9] = chunk.State;
+        densityN10 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(xN, y1, z1));
+        densityStates[10] = chunk.State;
+        densityN11 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x2, y0, z0));
+        densityStates[53] = chunk.State;
+        density200 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x2, y0, z1));
+        densityStates[54] = chunk.State;
+        density201 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x2, y1, z0));
+        densityStates[57] = chunk.State;
+        density210 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x2, y1, z1));
+        densityStates[58] = chunk.State;
+        density211 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, yN, z0));
+        densityStates[17] = chunk.State;
+        density0N0 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, yN, z0));
+        densityStates[33] = chunk.State;
+        density1N0 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, yN, z1));
+        densityStates[18] = chunk.State;
+        density0N1 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, yN, z1));
+        densityStates[34] = chunk.State;
+        density1N1 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, y2, z0));
+        densityStates[29] = chunk.State;
+        density020 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, y2, z0));
+        densityStates[45] = chunk.State;
+        density120 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, y2, z1));
+        densityStates[30] = chunk.State;
+        density021 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, y2, z1));
+        densityStates[46] = chunk.State;
+        density121 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, y0, zN));
+        densityStates[20] = chunk.State;
+        density00N = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, y1, zN));
+        densityStates[24] = chunk.State;
+        density01N = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, y0, zN));
+        densityStates[36] = chunk.State;
+        density10N = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, y1, zN));
+        densityStates[40] = chunk.State;
+        density11N = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, y0, z2));
+        densityStates[23] = chunk.State;
+        density002 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x0, y1, z2));
+        densityStates[27] = chunk.State;
+        density012 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, y0, z2));
+        densityStates[39] = chunk.State;
+        density102 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
+        chunk = data.GetChunkData(new Vector3Int(x1, y1, z2));
+        densityStates[43] = chunk.State;
+        density112 = chunk.State == ChunkDensityState.Complicate ? chunk.Densities : constantDensities;
     }
 
     // 표면 꼭짓점의 인공 여부를 밀도와 동일한 소유 청크에서 읽는다.
@@ -146,6 +223,8 @@ internal struct ChunkMeshInput
         int flatIndex = (localIndex.x * sampleCountY + localIndex.y) * sampleCountZ + localIndex.z;
         Vector3Int offset = owner - chunkCoord;
         int sourceIndex = offset.x * 4 + offset.y * 2 + offset.z;
+        int stateIndex = (offset.x + 1) * 16 + (offset.y + 1) * 4 + offset.z + 1;
+        if (densityStates[stateIndex] != ChunkDensityState.Complicate) flatIndex = 0;
         switch (sourceIndex)
         {
             case 0: return artificial000[flatIndex] != 0;
@@ -176,6 +255,8 @@ internal struct ChunkMeshInput
         int flatIndex = (localIndex.x * sampleCountY + localIndex.y) * sampleCountZ + localIndex.z;
         Vector3Int offset = owner - chunkCoord;
         int sourceIndex = (offset.x + 1) * 16 + (offset.y + 1) * 4 + offset.z + 1;
+        ChunkDensityState state = densityStates[sourceIndex];
+        if (state != ChunkDensityState.Complicate) flatIndex = (int)state;
 
         switch (sourceIndex)
         {

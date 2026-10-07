@@ -20,10 +20,15 @@ public class TerrainMeshGenerator : IDisposable
     private NativeArray<int> triangleTable;
     // 정점 위치와 노멀의 메시 버퍼 형식
     private NativeArray<VertexAttributeDescriptor> vertexAttributes;
+    // 균일 청크의 읽기 전용 Job 입력. 청크마다 배열을 할당하지 않는다.
+    private NativeArray<float> constantDensities;
+    private NativeArray<byte> naturalFlags;
 
     // 마칭 큐브 조회 테이블과 정점 버퍼 형식을 네이티브 배열로 준비한다.
     public TerrainMeshGenerator()
     {
+        constantDensities = new NativeArray<float>(new[] { 0f, 1f }, Allocator.Persistent);
+        naturalFlags = new NativeArray<byte>(1, Allocator.Persistent);
         corners = new NativeArray<Vector3Int>(MarchingTable.Corners, Allocator.Persistent);
         edgeCornerIndexes = new NativeArray<int>(new[]
         {
@@ -95,7 +100,7 @@ public class TerrainMeshGenerator : IDisposable
             {
                 for (int i = 0; i < meshes.Length; i++)
                 {
-                    ChunkMeshInput input = new ChunkMeshInput(data, chunkCoords[i]);
+                    ChunkMeshInput input = new ChunkMeshInput(data, chunkCoords[i], constantDensities, naturalFlags);
                     byte layerId = data.GetChunkData(chunkCoords[i]).LayerId;
                     Color layerColor = TerrainTypeDB.GetData(layerId).Layer.Color;
                     if (linearColorSpace) layerColor = layerColor.linear;
@@ -163,6 +168,8 @@ public class TerrainMeshGenerator : IDisposable
     // 메시 생성기가 소유한 조회 테이블과 정점 형식 배열을 해제한다.
     public void Dispose()
     {
+        constantDensities.Dispose();
+        naturalFlags.Dispose();
         corners.Dispose();
         edgeCornerIndexes.Dispose();
         triangleTable.Dispose();
