@@ -5,7 +5,7 @@ using Unity.Jobs;
 using Unity.Profiling;
 using UnityEngine;
 
-// 청크별 밀도 배열을 소유하고 격자 좌표 변환과 밀도 수정을 담당한다.
+// 청크를 좌표별로 관리하고 격자 좌표 변환과 밀도 수정 Job을 진행한다.
 public class TerrainData : IDisposable
 {
     public const byte ArtificialTypeId = 0;
@@ -14,7 +14,7 @@ public class TerrainData : IDisposable
     private static readonly ProfilerMarker ModifyMarker = new ProfilerMarker("TerrainDensity.Modify");
     private static readonly ProfilerMarker ScheduleMarker = new ProfilerMarker("TerrainDensity.Schedule");
     private static readonly ProfilerMarker CompleteMarker = new ProfilerMarker("TerrainDensity.Complete");
-    // 이 데이터가 소유하는 청크별 밀도 배열
+    // 상태가 바뀐 청크는 이 목록에 다시 반영한다.
     private readonly Dictionary<Vector3Int, ChunkDensityData> chunks =
         new Dictionary<Vector3Int, ChunkDensityData>();
 
@@ -79,78 +79,42 @@ public class TerrainData : IDisposable
         foreach (Vector3Int coordinate in new List<Vector3Int>(chunks.Keys))
         {
             ChunkDensityData chunk = chunks[coordinate];
-            if (chunk.State != ChunkDensityState.Complicate)
-            {
-                chunk.State = ChunkDensityState.Blank;
-                chunks[coordinate] = chunk;
-                continue;
-            }
-            // 밀도만 지우며 기존 인공 지형 표시는 유지한다.
-            var densities = chunk.Densities;
-            for (int i = 0; i < densities.Length; i++)
-            {
-                densities[i] = 0f;
-            }
+            chunk.ResetDensities();
+            chunks[coordinate] = chunk;
         }
     }
 
     // 좌표에 해당하는 청크 데이터를 반환한다.
-    // 반환된 배열은 빌려 쓰는 참조이며 해제는 TerrainData가 담당한다.
+    // 반환값은 struct 복사본이며 배열은 빌려 쓰는 참조다. 수명 변경은 관리 목록을 통해 진행한다.
     public ChunkDensityData GetChunkData(Vector3Int chunkCoord)
     {
         return chunks[chunkCoord];
     }
 
-    // 초기 생성 Job이 모든 샘플을 덮어쓸 배열 또는 균일 상태를 준비한다.
+    // 청크를 초기화한 뒤 바뀐 상태와 배열을 관리 목록에 반영한다.
     internal ChunkDensityData InitializeChunk(Vector3Int coordinate, ChunkDensityState state)
     {
         ChunkDensityData chunk = chunks[coordinate];
-        if (chunk.State == ChunkDensityState.Complicate)
-        {
-            chunk.Densities.Dispose();
-            chunk.ArtificialFlags.Dispose();
-        }
-        chunk.State = state;
-        chunk.Densities = default;
-        chunk.ArtificialFlags = default;
-        if (state == ChunkDensityState.Complicate)
-        {
-            int length = chunk.SampleCount.x * chunk.SampleCount.y * chunk.SampleCount.z;
-            chunk.Densities = new NativeArray<float>(length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-            chunk.ArtificialFlags = new NativeArray<byte>(length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
-        }
+        chunk.Initialize(state);
         chunks[coordinate] = chunk;
         return chunk;
     }
 
-    // 첫 쓰기 전에 균일 상태를 배열로 펼치고, 이후 쓰기는 같은 배열을 사용한다.
+    // 쓰기 가능한 청크를 준비하고 struct 변경을 관리 목록에 반영한다.
     private ChunkDensityData EnsureChunkWritable(Vector3Int coordinate)
     {
         ChunkDensityData chunk = chunks[coordinate];
-        if (chunk.State == ChunkDensityState.Complicate) return chunk;
-
-        int length = chunk.SampleCount.x * chunk.SampleCount.y * chunk.SampleCount.z;
-        bool filled = chunk.State == ChunkDensityState.Fill;
-        chunk.Densities = new NativeArray<float>(length, Allocator.Persistent,
-            filled ? NativeArrayOptions.UninitializedMemory : NativeArrayOptions.ClearMemory);
-        chunk.ArtificialFlags = new NativeArray<byte>(length, Allocator.Persistent);
-        if (filled)
-        {
-            for (int i = 0; i < length; i++) chunk.Densities[i] = 1f;
-        }
-        chunk.State = ChunkDensityState.Complicate;
+        chunk.EnsureWritable();
         chunks[coordinate] = chunk;
         return chunk;
     }
 
-    // 소유한 모든 청크의 네이티브 밀도 배열을 해제한다.
+    // 모든 청크에 자원 해제를 요청하고 관리 목록을 비운다.
     public void Dispose()
     {
         foreach (ChunkDensityData chunk in chunks.Values)
         {
-            if (chunk.State != ChunkDensityState.Complicate) continue;
-            chunk.Densities.Dispose();
-            chunk.ArtificialFlags.Dispose();
+            chunk.Dispose();
         }
 
         chunks.Clear();
