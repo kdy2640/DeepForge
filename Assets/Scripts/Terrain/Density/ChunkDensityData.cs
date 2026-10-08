@@ -21,8 +21,8 @@ public struct ChunkDensityData
     public byte LayerId { get; }
     // 균일 청크는 상수로 읽고, Complicate만 실제 배열을 소유한다.
     public ChunkDensityState State { get; private set; }
-    // 청크 내부 좌표를 일차원으로 펼친 밀도 배열
-    public NativeArray<float> Densities;
+    // 청크 내부 좌표를 일차원으로 펼친 밀도 배열. 0~255는 밀도 0~1에 대응한다.
+    public NativeArray<byte> Densities;
     // 0은 자연 지형, 1은 빈 공간에 쌓은 인공 지형이다.
     public NativeArray<byte> ArtificialFlags;
 
@@ -46,7 +46,7 @@ public struct ChunkDensityData
         if (state == ChunkDensityState.Complicate)
         {
             int length = SampleCount.x * SampleCount.y * SampleCount.z;
-            Densities = new NativeArray<float>(length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+            Densities = new NativeArray<byte>(length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
             ArtificialFlags = new NativeArray<byte>(length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
         }
     }
@@ -58,12 +58,12 @@ public struct ChunkDensityData
 
         int length = SampleCount.x * SampleCount.y * SampleCount.z;
         bool filled = State == ChunkDensityState.Fill;
-        Densities = new NativeArray<float>(length, Allocator.Persistent,
+        Densities = new NativeArray<byte>(length, Allocator.Persistent,
             filled ? NativeArrayOptions.UninitializedMemory : NativeArrayOptions.ClearMemory);
         ArtificialFlags = new NativeArray<byte>(length, Allocator.Persistent);
         if (filled)
         {
-            for (int i = 0; i < length; i++) Densities[i] = 1f;
+            for (int i = 0; i < length; i++) Densities[i] = 255;
         }
         State = ChunkDensityState.Complicate;
     }
@@ -76,7 +76,7 @@ public struct ChunkDensityData
             State = ChunkDensityState.Blank;
             return;
         }
-        for (int i = 0; i < Densities.Length; i++) Densities[i] = 0f;
+        for (int i = 0; i < Densities.Length; i++) Densities[i] = 0;
     }
 
     // 자신이 소유한 배열을 해제하고 미할당 상태로 돌린다.
@@ -131,13 +131,13 @@ public struct ChunkDensityData
         if (State == ChunkDensityState.Blank) return 0f;
         if (State == ChunkDensityState.Fill) return 1f;
         int index = (localIndex.x * SampleCount.y + localIndex.y) * SampleCount.z + localIndex.z;
-        return Densities[index];
+        return Densities[index] * (1f / 255f);
     }
 
     // 청크 내부 좌표에 해당하는 배열 위치에 밀도를 저장한다.
     public void SetDensity(Vector3Int localIndex, float density)
     {
         int index = (localIndex.x * SampleCount.y + localIndex.y) * SampleCount.z + localIndex.z;
-        Densities[index] = density;
+        Densities[index] = (byte)Mathf.RoundToInt(Mathf.Clamp01(density) * 255f);
     }
 }

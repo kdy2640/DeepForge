@@ -8,7 +8,7 @@ using UnityEngine;
 internal struct ModifyDensitySphereJob : IJob
 {
     // 수정 대상 청크의 밀도 배열과 격자 정보
-    public NativeArray<float> Densities;
+    public NativeArray<byte> Densities;
     public NativeArray<byte> ArtificialFlags;
     public float DensityThreshold;
     public Vector3Int Origin;
@@ -66,15 +66,16 @@ internal struct ModifyDensitySphereJob : IJob
 
                     Vector3Int localIndex = index - Origin;
                     int flatIndex = (localIndex.x * SampleCount.y + localIndex.y) * SampleCount.z + localIndex.z;
-                    float before = Densities[flatIndex];
-                    float after = Mathf.Clamp01(before + Power * falloff);
-                    if (Power < 0f && after == before)
+                    byte beforeStored = Densities[flatIndex];
+                    float before = beforeStored * (1f / 255f);
+                    byte after = (byte)Mathf.RoundToInt(Mathf.Clamp01(before + Power * falloff) * 255f);
+                    if (Power < 0f && after == beforeStored)
                     {
                         continue;
                     }
                     Densities[flatIndex] = after;
                     // 기존 고체는 유지하고, 빈 공간에 누적되는 밀도에만 인공 지형을 기록한다.
-                    if (after > before && before <= DensityThreshold)
+                    if (after > beforeStored && before <= DensityThreshold)
                     {
                         ArtificialFlags[flatIndex] = 1;
                     }

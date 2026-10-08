@@ -21,13 +21,13 @@ public class TerrainMeshGenerator : IDisposable
     // 정점 위치와 노멀의 메시 버퍼 형식
     private NativeArray<VertexAttributeDescriptor> vertexAttributes;
     // 균일 청크의 읽기 전용 Job 입력. 청크마다 배열을 할당하지 않는다.
-    private NativeArray<float> constantDensities;
+    private NativeArray<byte> constantDensities;
     private NativeArray<byte> naturalFlags;
 
     // 마칭 큐브 조회 테이블과 정점 버퍼 형식을 네이티브 배열로 준비한다.
     public TerrainMeshGenerator()
     {
-        constantDensities = new NativeArray<float>(new[] { 0f, 1f }, Allocator.Persistent);
+        constantDensities = new NativeArray<byte>(new byte[] { 0, 255 }, Allocator.Persistent);
         naturalFlags = new NativeArray<byte>(1, Allocator.Persistent);
         corners = new NativeArray<Vector3Int>(MarchingTable.Corners, Allocator.Persistent);
         edgeCornerIndexes = new NativeArray<int>(new[]

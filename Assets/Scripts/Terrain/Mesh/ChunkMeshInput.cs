@@ -32,42 +32,42 @@ internal struct ChunkMeshInput
 
     // Eight corner-owner combinations and single-axis gradient neighbors.
     // A one-cell chunk can read two chunks ahead for the gradient at its upper corner.
-    [ReadOnly] private NativeArray<float> density000;
-    [ReadOnly] private NativeArray<float> density001;
-    [ReadOnly] private NativeArray<float> density010;
-    [ReadOnly] private NativeArray<float> density011;
-    [ReadOnly] private NativeArray<float> density100;
-    [ReadOnly] private NativeArray<float> density101;
-    [ReadOnly] private NativeArray<float> density110;
-    [ReadOnly] private NativeArray<float> density111;
-    [ReadOnly] private NativeArray<float> densityN00;
-    [ReadOnly] private NativeArray<float> densityN01;
-    [ReadOnly] private NativeArray<float> densityN10;
-    [ReadOnly] private NativeArray<float> densityN11;
-    [ReadOnly] private NativeArray<float> density200;
-    [ReadOnly] private NativeArray<float> density201;
-    [ReadOnly] private NativeArray<float> density210;
-    [ReadOnly] private NativeArray<float> density211;
-    [ReadOnly] private NativeArray<float> density0N0;
-    [ReadOnly] private NativeArray<float> density1N0;
-    [ReadOnly] private NativeArray<float> density0N1;
-    [ReadOnly] private NativeArray<float> density1N1;
-    [ReadOnly] private NativeArray<float> density020;
-    [ReadOnly] private NativeArray<float> density120;
-    [ReadOnly] private NativeArray<float> density021;
-    [ReadOnly] private NativeArray<float> density121;
-    [ReadOnly] private NativeArray<float> density00N;
-    [ReadOnly] private NativeArray<float> density01N;
-    [ReadOnly] private NativeArray<float> density10N;
-    [ReadOnly] private NativeArray<float> density11N;
-    [ReadOnly] private NativeArray<float> density002;
-    [ReadOnly] private NativeArray<float> density012;
-    [ReadOnly] private NativeArray<float> density102;
-    [ReadOnly] private NativeArray<float> density112;
+    [ReadOnly] private NativeArray<byte> density000;
+    [ReadOnly] private NativeArray<byte> density001;
+    [ReadOnly] private NativeArray<byte> density010;
+    [ReadOnly] private NativeArray<byte> density011;
+    [ReadOnly] private NativeArray<byte> density100;
+    [ReadOnly] private NativeArray<byte> density101;
+    [ReadOnly] private NativeArray<byte> density110;
+    [ReadOnly] private NativeArray<byte> density111;
+    [ReadOnly] private NativeArray<byte> densityN00;
+    [ReadOnly] private NativeArray<byte> densityN01;
+    [ReadOnly] private NativeArray<byte> densityN10;
+    [ReadOnly] private NativeArray<byte> densityN11;
+    [ReadOnly] private NativeArray<byte> density200;
+    [ReadOnly] private NativeArray<byte> density201;
+    [ReadOnly] private NativeArray<byte> density210;
+    [ReadOnly] private NativeArray<byte> density211;
+    [ReadOnly] private NativeArray<byte> density0N0;
+    [ReadOnly] private NativeArray<byte> density1N0;
+    [ReadOnly] private NativeArray<byte> density0N1;
+    [ReadOnly] private NativeArray<byte> density1N1;
+    [ReadOnly] private NativeArray<byte> density020;
+    [ReadOnly] private NativeArray<byte> density120;
+    [ReadOnly] private NativeArray<byte> density021;
+    [ReadOnly] private NativeArray<byte> density121;
+    [ReadOnly] private NativeArray<byte> density00N;
+    [ReadOnly] private NativeArray<byte> density01N;
+    [ReadOnly] private NativeArray<byte> density10N;
+    [ReadOnly] private NativeArray<byte> density11N;
+    [ReadOnly] private NativeArray<byte> density002;
+    [ReadOnly] private NativeArray<byte> density012;
+    [ReadOnly] private NativeArray<byte> density102;
+    [ReadOnly] private NativeArray<byte> density112;
 
     // 현재 청크와 표면·노멀 계산에 필요한 이웃 청크의 밀도 배열을 연결한다.
     public ChunkMeshInput(TerrainData data, Vector3Int chunkCoord,
-        NativeArray<float> constantDensities, NativeArray<byte> naturalFlags)
+        NativeArray<byte> constantDensities, NativeArray<byte> naturalFlags)
     {
         ChunkDensityData chunk = data.GetChunkData(chunkCoord);
         Origin = chunk.Origin;
@@ -260,38 +260,38 @@ internal struct ChunkMeshInput
 
         switch (sourceIndex)
         {
-            case 21: return density000[flatIndex];
-            case 22: return density001[flatIndex];
-            case 25: return density010[flatIndex];
-            case 26: return density011[flatIndex];
-            case 37: return density100[flatIndex];
-            case 38: return density101[flatIndex];
-            case 41: return density110[flatIndex];
-            case 42: return density111[flatIndex];
-            case 5: return densityN00[flatIndex];
-            case 6: return densityN01[flatIndex];
-            case 9: return densityN10[flatIndex];
-            case 10: return densityN11[flatIndex];
-            case 53: return density200[flatIndex];
-            case 54: return density201[flatIndex];
-            case 57: return density210[flatIndex];
-            case 58: return density211[flatIndex];
-            case 17: return density0N0[flatIndex];
-            case 33: return density1N0[flatIndex];
-            case 18: return density0N1[flatIndex];
-            case 34: return density1N1[flatIndex];
-            case 29: return density020[flatIndex];
-            case 45: return density120[flatIndex];
-            case 30: return density021[flatIndex];
-            case 46: return density121[flatIndex];
-            case 20: return density00N[flatIndex];
-            case 24: return density01N[flatIndex];
-            case 36: return density10N[flatIndex];
-            case 40: return density11N[flatIndex];
-            case 23: return density002[flatIndex];
-            case 27: return density012[flatIndex];
-            case 39: return density102[flatIndex];
-            case 43: return density112[flatIndex];
+            case 21: return density000[flatIndex] * (1f / 255f);
+            case 22: return density001[flatIndex] * (1f / 255f);
+            case 25: return density010[flatIndex] * (1f / 255f);
+            case 26: return density011[flatIndex] * (1f / 255f);
+            case 37: return density100[flatIndex] * (1f / 255f);
+            case 38: return density101[flatIndex] * (1f / 255f);
+            case 41: return density110[flatIndex] * (1f / 255f);
+            case 42: return density111[flatIndex] * (1f / 255f);
+            case 5: return densityN00[flatIndex] * (1f / 255f);
+            case 6: return densityN01[flatIndex] * (1f / 255f);
+            case 9: return densityN10[flatIndex] * (1f / 255f);
+            case 10: return densityN11[flatIndex] * (1f / 255f);
+            case 53: return density200[flatIndex] * (1f / 255f);
+            case 54: return density201[flatIndex] * (1f / 255f);
+            case 57: return density210[flatIndex] * (1f / 255f);
+            case 58: return density211[flatIndex] * (1f / 255f);
+            case 17: return density0N0[flatIndex] * (1f / 255f);
+            case 33: return density1N0[flatIndex] * (1f / 255f);
+            case 18: return density0N1[flatIndex] * (1f / 255f);
+            case 34: return density1N1[flatIndex] * (1f / 255f);
+            case 29: return density020[flatIndex] * (1f / 255f);
+            case 45: return density120[flatIndex] * (1f / 255f);
+            case 30: return density021[flatIndex] * (1f / 255f);
+            case 46: return density121[flatIndex] * (1f / 255f);
+            case 20: return density00N[flatIndex] * (1f / 255f);
+            case 24: return density01N[flatIndex] * (1f / 255f);
+            case 36: return density10N[flatIndex] * (1f / 255f);
+            case 40: return density11N[flatIndex] * (1f / 255f);
+            case 23: return density002[flatIndex] * (1f / 255f);
+            case 27: return density012[flatIndex] * (1f / 255f);
+            case 39: return density102[flatIndex] * (1f / 255f);
+            case 43: return density112[flatIndex] * (1f / 255f);
             default: throw new ArgumentOutOfRangeException(nameof(index));
         }
     }

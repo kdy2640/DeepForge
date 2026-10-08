@@ -7,7 +7,7 @@ using UnityEngine;
 [BurstCompile(FloatMode = FloatMode.Strict, FloatPrecision = FloatPrecision.High)]
 internal struct FormTerrainDensityJob : IJobParallelFor
 {
-    [WriteOnly] public NativeArray<float> Densities;
+    [WriteOnly] public NativeArray<byte> Densities;
     [WriteOnly] public NativeArray<byte> ArtificialFlags;
     public Vector3Int Origin;
     public Vector3Int SampleCount;
@@ -37,7 +37,7 @@ internal struct FormTerrainDensityJob : IJobParallelFor
             density = (surfaceY - y) * 0.1f + DensityThreshold;
         }
 
-        Densities[index] = Mathf.Clamp01(density);
+        Densities[index] = (byte)Mathf.RoundToInt(Mathf.Clamp01(density) * 255f);
 
         ArtificialFlags[index] = 0;
     }

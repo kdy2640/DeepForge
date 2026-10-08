@@ -217,7 +217,7 @@ public class TerrainData : IDisposable
             power < 0f ? erosionSampleCount.x * erosionSampleCount.y * erosionSampleCount.z : 0,
             Allocator.TempJob);
 
-        NativeArray<float> densitySnapshot = default;
+        NativeArray<byte> densitySnapshot = default;
         CalculateErosionWeightsJob weightsJob = default;
         if (power < 0f)
         {
@@ -226,7 +226,7 @@ public class TerrainData : IDisposable
             Vector3Int snapshotMax = Vector3Int.Min(maxIndex + Vector3Int.one,
                 new Vector3Int(Width, DensityFieldHeight, Width));
             Vector3Int snapshotCount = snapshotMax - snapshotMin + Vector3Int.one;
-            densitySnapshot = new NativeArray<float>(snapshotCount.x * snapshotCount.y * snapshotCount.z,
+            densitySnapshot = new NativeArray<byte>(snapshotCount.x * snapshotCount.y * snapshotCount.z,
                 Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
             Vector3Int snapshotMinChunk = new Vector3Int(
                 Mathf.Min(snapshotMin.x / ChunkSize, ChunkCounts.x - 1),
@@ -259,11 +259,11 @@ public class TerrainData : IDisposable
                                     sampleY - snapshotMin.y) * snapshotCount.z + copyMin.z - snapshotMin.z;
                                 if (chunk.State == ChunkDensityState.Complicate)
                                 {
-                                    NativeArray<float>.Copy(chunk.Densities, sourceIndex, densitySnapshot, targetIndex, copyLength);
+                                    NativeArray<byte>.Copy(chunk.Densities, sourceIndex, densitySnapshot, targetIndex, copyLength);
                                 }
                                 else
                                 {
-                                    float density = chunk.State == ChunkDensityState.Fill ? 1f : 0f;
+                                    byte density = chunk.State == ChunkDensityState.Fill ? (byte)255 : (byte)0;
                                     for (int sampleZ = 0; sampleZ < copyLength; sampleZ++)
                                         densitySnapshot[targetIndex + sampleZ] = density;
                                 }
