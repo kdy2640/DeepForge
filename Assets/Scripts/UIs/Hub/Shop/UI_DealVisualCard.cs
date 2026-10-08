@@ -34,7 +34,7 @@ public sealed class UI_DealVisualCard : MonoBehaviour
     {
         visual.DOKill();
         visual.anchoredPosition = new Vector2(0, buying ? 48 : -96);
-        visual.DOAnchorPos(Vector2.zero, 0.25f).SetEase(Ease.OutCubic);
+        visual.DOAnchorPos(Vector2.zero, 0.25f).SetEase(Ease.OutCubic).SetRecyclable(true);
     }
 
     private void OnDisable()
