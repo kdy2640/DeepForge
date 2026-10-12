@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 생성 규칙·지층·돌 후보 목록을 변경하면 Version을 올려 기존 월드를 초기화한다.
+// 생성 규칙·지층·돌 후보 목록을 변경하면 Version을 올려 기존 월드를 보존하고 새로 생성한다.
 [Serializable]
 public sealed class WorldSaveData
 {
@@ -13,6 +13,7 @@ public sealed class WorldSaveData
     public TerrainSurfaceSettings Surface;
     public TerrainDensitySettings Density;
     public CaveSettings Cave;
+    public Bounds MiningBounds;
     public int StoneSeed;
     public int StonesPerChunk;
 }

@@ -4,7 +4,10 @@ public sealed class BaseCamp : MonoBehaviour
 {
     [SerializeField] private Transform terrainContact;
     [SerializeField] private Transform spawnPoint;
+    [SerializeField] private Transform entrancePoint;
     [SerializeField] private PlayerController player;
+
+    public Transform EntrancePoint => entrancePoint;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -18,7 +21,7 @@ public sealed class BaseCamp : MonoBehaviour
             player.GetComponent<PlayerReturn>().BeginTracking();
     }
 
-    public void PlaceAndSpawn(TerrainManager terrain)
+    public void Place(TerrainManager terrain)
     {
         TerrainData data = terrain.Data;
         float centerX = data.Width * 0.5f;
@@ -44,18 +47,22 @@ public sealed class BaseCamp : MonoBehaviour
             transform.rotation = terrain.transform.rotation;
             transform.position += contactPosition - terrainContact.position;
 
-            Rigidbody body = player.GetComponent<Rigidbody>();
-            if (!body.isKinematic)
-            {
-                body.linearVelocity = Vector3.zero;
-                body.angularVelocity = Vector3.zero;
-            }
-            player.transform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
-            body.position = spawnPoint.position;
-            body.rotation = spawnPoint.rotation;
             return;
         }
 
         throw new System.InvalidOperationException("기지 접점인 지형 +Z 끝 중앙에 표면이 없습니다.");
+    }
+
+    public void SpawnPlayer()
+    {
+        Rigidbody body = player.GetComponent<Rigidbody>();
+        if (!body.isKinematic)
+        {
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+        }
+        player.transform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
+        body.position = spawnPoint.position;
+        body.rotation = spawnPoint.rotation;
     }
 }

@@ -173,6 +173,7 @@ MonoBehaviour:
       BaseSurfaceHeight: 125
       Amplitude: 0
     Density:
+      Seed: 15
       NoiseScale: 0.08
       DensityThreshold: 0.5
       Use3DNoise: 0
@@ -191,7 +192,7 @@ MonoBehaviour:
       TransitionWidth: 0.75
       NoiseScale: 0.12
       NoiseAmplitude: 0.25
-      EntrancePosition: {x: 24, y: 24}
+      EntranceLength: 12
       EntranceMaxSlope: 30
     Material:
       Material: {fileID: 2100000, guid: d2672cbd58c6427a899b26bae3f9299a, type: 2}
@@ -208,6 +209,9 @@ MonoBehaviour:
       DensityFieldHeight: 150
       Resolution: 0.375
       ChunkSize: 16
+    MiningBounds:
+      m_Center: {x: 192, y: 23, z: 192}
+      m_Extent: {x: 190, y: 21, z: 190}
     Streaming:
       Target: {fileID: 1026908064}
       LoadDistance: 42

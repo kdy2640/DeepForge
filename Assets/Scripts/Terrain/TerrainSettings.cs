@@ -19,6 +19,9 @@ public sealed class TerrainSettings
     public StonePlacementSettings Stones = new StonePlacementSettings();
     [Header("지형 격자")]
     public TerrainGridSettings Grid = new TerrainGridSettings();
+    [Header("채굴 가능 영역")]
+    [Tooltip("지형 로컬 좌표. 바깥의 측면·바닥·최상부 암반은 채굴로 제거되지 않습니다.")]
+    public Bounds MiningBounds = new Bounds(new Vector3(192f, 23f, 192f), new Vector3(380f, 42f, 380f));
     [Header("청크 스트리밍")]
     public TerrainStreamingSettings Streaming = new TerrainStreamingSettings();
 }

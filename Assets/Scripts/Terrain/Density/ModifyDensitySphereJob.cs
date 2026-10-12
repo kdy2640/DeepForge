@@ -16,6 +16,8 @@ internal struct ModifyDensitySphereJob : IJob
     // 이번 Job이 처리할 전체 격자 좌표 범위
     public Vector3Int MinIndex;
     public Vector3Int MaxIndex;
+    public Vector3Int MinMiningIndex;
+    public Vector3Int MaxMiningIndex;
     // 지형 로컬 좌표 기준 구 영역과 밀도 변화량
     public Vector3 LocalPosition;
     public float Resolution;
@@ -43,6 +45,12 @@ internal struct ModifyDensitySphereJob : IJob
                     float falloff;
                     if (Power < 0f)
                     {
+                        if (x < MinMiningIndex.x || x > MaxMiningIndex.x ||
+                            y < MinMiningIndex.y || y > MaxMiningIndex.y ||
+                            z < MinMiningIndex.z || z > MaxMiningIndex.z)
+                        {
+                            continue;
+                        }
                         Vector3Int weightIndex = index - ErosionOrigin;
                         int weightFlatIndex = (weightIndex.x * ErosionSampleCount.y + weightIndex.y)
                             * ErosionSampleCount.z + weightIndex.z;

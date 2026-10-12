@@ -64,6 +64,7 @@ public class TerrainManager : MonoBehaviour
                 localPosition,
                 mining,
                 isAdding,
+                settings.MiningBounds,
                 settings.Density.DensityThreshold,
                 erosionDirection,
                 normalToWorld,
@@ -119,9 +120,10 @@ public class TerrainManager : MonoBehaviour
         data = new TerrainData(chunkManager.Grid);
         generator = generator ?? new TerrainDensityFormer();
         generator.Generate(data, settings.Surface, settings.Density);
+        baseCamp.Place(this);
         GenerateCaves();
         GameManager.Instance.Utility.World.ApplySavedChunks(data);
-        baseCamp.PlaceAndSpawn(this);
+        baseCamp.SpawnPlayer();
         if (chunkManager.Registry == null)
         {
             chunkManager.Initialize(this);
@@ -158,7 +160,9 @@ public class TerrainManager : MonoBehaviour
         if (!cave.Enabled) return;
 
         CaveCarveSegment[] segments = new CaveGenerator().GenerateWithEntrance(
-            data, cave, settings.Density.DensityThreshold);
+            cave, settings.Density.DensityThreshold,
+            transform.InverseTransformPoint(baseCamp.EntrancePoint.position),
+            transform.InverseTransformDirection(baseCamp.EntrancePoint.forward));
 
         // 최초 메시 생성 전이므로 변경 bounds를 이용한 별도 메시 갱신은 필요 없다.
         data.CarvePassages(segments, settings.Density.DensityThreshold, cave.TransitionWidth,

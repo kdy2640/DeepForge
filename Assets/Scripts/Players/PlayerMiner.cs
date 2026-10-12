@@ -146,7 +146,8 @@ public sealed class PlayerMiner : MonoBehaviour
         }
 
         if (Physics.Raycast(ray, out RaycastHit hit, maxDistance,
-            LayerMask.GetMask("Plane", "Stone"), QueryTriggerInteraction.Collide))
+            LayerMask.GetMask("Plane", "Stone", "MineBoundary"), QueryTriggerInteraction.Collide) &&
+            hit.collider.gameObject.layer != LayerMask.NameToLayer("MineBoundary"))
         { 
 
             anchor.SetActive(true);

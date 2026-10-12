@@ -185,6 +185,7 @@ public class TerrainData : IDisposable
         Vector3 localPosition,
         MiningSetting mining,
         bool isAdding,
+        Bounds miningBounds,
         float densityThreshold,
         Vector3 worldErosionDirection,
         Matrix4x4 densityNormalToWorld,
@@ -212,6 +213,18 @@ public class TerrainData : IDisposable
         Vector3Int extent = Vector3Int.one * indexRadius;
         Vector3Int minIndex = Vector3Int.Max(center - extent, Vector3Int.zero);
         Vector3Int maxIndex = Vector3Int.Min(center + extent, minChangedIndex);
+        // 청크 끝 샘플과 설정된 보호층을 모두 남긴다. 타격 구의 중심이 아니라
+        // 실제 수정할 샘플 범위를 제한하므로 큰 채굴 반경도 외곽을 뚫지 못한다.
+        Vector3Int minMiningIndex = Vector3Int.Max(Vector3Int.one,
+            Vector3Int.CeilToInt(miningBounds.min / Resolution));
+        Vector3Int maxMiningIndex = Vector3Int.Min(
+            new Vector3Int(Width, DensityFieldHeight, Width) - Vector3Int.one,
+            Vector3Int.FloorToInt(miningBounds.max / Resolution));
+        if (!isAdding && (maxIndex.x < minMiningIndex.x || maxIndex.y < minMiningIndex.y || maxIndex.z < minMiningIndex.z ||
+            minIndex.x > maxMiningIndex.x || minIndex.y > maxMiningIndex.y || minIndex.z > maxMiningIndex.z))
+        {
+            return false;
+        }
         if (minIndex.x > maxIndex.x || minIndex.y > maxIndex.y || minIndex.z > maxIndex.z)
         {
             return false;
@@ -334,6 +347,8 @@ public class TerrainData : IDisposable
                             SampleCount = chunk.SampleCount,
                             MinIndex = Vector3Int.Max(minIndex, chunk.Origin),
                             MaxIndex = Vector3Int.Min(maxIndex, chunk.Origin + chunk.SampleCount - Vector3Int.one),
+                            MinMiningIndex = minMiningIndex,
+                            MaxMiningIndex = maxMiningIndex,
                             LocalPosition = localPosition,
                             Resolution = Resolution,
                             Radius = radius,

@@ -9,16 +9,35 @@ public class CaveGenerator
     // Carve 전 기본 밀도를 읽어 지하 통로와 지표 출입구를 만든다. 밀도는 수정하지 않는다.
     // bounds는 반지름·벽면 보정·밀도 전이를 포함할 지하 허용 영역이며 출입구는 이 영역 밖으로 이어진다.
     public CaveCarveSegment[] GenerateWithEntrance(
-        TerrainData data, CaveSettings settings, float densityThreshold)
+        CaveSettings settings, float densityThreshold, Vector3 entrancePosition, Vector3 entranceForward)
     {
         float margin = settings.RadiusRange.y + settings.NoiseAmplitude + (1f - densityThreshold) * settings.TransitionWidth;
         Bounds centerBounds = new Bounds(settings.Bounds.center, settings.Bounds.size - Vector3.one * (2f * margin));
         CaveCarveSegment[] segments = Generate(centerBounds, settings);
 
-        CaveCarveSegment entrance = CreateCaveEntrance(data, segments, settings, densityThreshold);
+        Vector3 forward = new Vector3(entranceForward.x, 0f, entranceForward.z).normalized;
+        Vector3 entranceStartPosition = entrancePosition + Vector3.up * margin;
+        Vector3 approachEnd = entranceStartPosition + forward * settings.EntranceLength -
+            Vector3.up * (settings.EntranceLength * Mathf.Tan(settings.EntranceMaxSlope * Mathf.Deg2Rad));
+        CaveCarveSegment entrance = CreateCaveEntrance(segments, settings, approachEnd, forward);
         int entranceStart = segments.Length;
+        int approachCount = Mathf.CeilToInt(Vector3.Distance(entranceStartPosition, approachEnd) / settings.SegmentLength);
         int entranceCount = Mathf.CeilToInt(Vector3.Distance(entrance.Start, entrance.End) / settings.SegmentLength);
-        System.Array.Resize(ref segments, entranceStart + entranceCount);
+        System.Array.Resize(ref segments, entranceStart + approachCount + entranceCount);
+        Vector3 previousApproach = entranceStartPosition;
+        for (int i = 1; i <= approachCount; i++)
+        {
+            Vector3 point = i == approachCount ? approachEnd :
+                Vector3.Lerp(entranceStartPosition, approachEnd, (float)i / approachCount);
+            segments[entranceStart + i - 1] = new CaveCarveSegment
+            {
+                Start = previousApproach,
+                End = point,
+                Radius = settings.RadiusRange.y
+            };
+            previousApproach = point;
+        }
+        entranceStart += approachCount;
         Vector3 previous = entrance.Start;
         for (int i = 1; i <= entranceCount; i++)
         {
@@ -36,32 +55,10 @@ public class CaveGenerator
         return segments;
     }
 
-    // 지표의 빈 공간에서 시작해 제한 경사로 연결 가능한 가장 가까운 동굴 구간 끝점에 붙인다.
+    // 캠프 앞 고정 진입 구간에서 시작해 제한 경사로 연결 가능한 동굴 구간 끝점에 붙인다.
     private CaveCarveSegment CreateCaveEntrance(
-        TerrainData data, CaveCarveSegment[] segments, CaveSettings settings, float densityThreshold)
+        CaveCarveSegment[] segments, CaveSettings settings, Vector3 entrance, Vector3 forward)
     {
-        Vector3Int column = data.PositionToIndex(new Vector3(settings.EntrancePosition.x, 0f, settings.EntrancePosition.y));
-        float surfaceY = 0f;
-        bool foundSurface = false;
-        for (int y = data.DensityFieldHeight - 1; y >= 0; y--)
-        {
-            float lower = data.GetDensity(new Vector3Int(column.x, y, column.z));
-            float upper = data.GetDensity(new Vector3Int(column.x, y + 1, column.z));
-            if (lower > densityThreshold && upper <= densityThreshold)
-            {
-                float t = (densityThreshold - lower) / (upper - lower);
-                surfaceY = (y + t) * data.Resolution;
-                foundSurface = true;
-                break;
-            }
-        }
-        if (!foundSurface)
-        {
-            throw new System.InvalidOperationException("동굴 출입구 위치에 지표 교차점이 없습니다. 출입구 X/Z와 기본 지형 설정을 확인하세요.");
-        }
-
-        float margin = settings.RadiusRange.y + settings.NoiseAmplitude + (1f - densityThreshold) * settings.TransitionWidth;
-        Vector3 entrance = new Vector3(column.x * data.Resolution, surfaceY + margin, column.z * data.Resolution);
         float maxSlope = Mathf.Tan(settings.EntranceMaxSlope * Mathf.Deg2Rad);
         var candidates = new HashSet<Vector3>();
         foreach (CaveCarveSegment segment in segments)
@@ -71,7 +68,8 @@ public class CaveGenerator
                 Vector3 point = endpoint == 0 ? segment.Start : segment.End;
                 Vector3 difference = entrance - point;
                 float horizontalDistance = new Vector2(difference.x, difference.z).magnitude;
-                if (point.y >= surfaceY || difference.y > horizontalDistance * maxSlope) continue;
+                if (point.y >= entrance.y || difference.y > horizontalDistance * maxSlope ||
+                    Vector3.Dot(point - entrance, forward) <= 0f) continue;
                 candidates.Add(point);
             }
         }
