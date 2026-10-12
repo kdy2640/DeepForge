@@ -93,8 +93,14 @@ public struct ChunkDensityData
     }
 
     // 청크의 LayerId로 돌 목록을 조회하고 고정 시드로 위치와 종류를 결정한다.
-    public StoneSpawnData[] CreateStoneSpawns(int seed, int count, float resolution)
+    public StoneSpawnData[] CreateStoneSpawns(int seed, int count, float resolution, Bounds miningBounds)
     {
+        // 보호 영역에 걸친 청크는 광석을 배치하지 않는다. 내부 청크의 난수 순서는 유지한다.
+        Vector3 chunkMin = (Vector3)Origin * resolution;
+        Vector3 chunkMax = (Vector3)(Origin + CubeCount) * resolution;
+        if (!miningBounds.Contains(chunkMin) || !miningBounds.Contains(chunkMax))
+            return System.Array.Empty<StoneSpawnData>();
+
         List<int> stoneIDs = TerrainTypeDB.GetData(LayerId).Layer.stondataIDs;
         if (stoneIDs.Count == 0) return System.Array.Empty<StoneSpawnData>();
 

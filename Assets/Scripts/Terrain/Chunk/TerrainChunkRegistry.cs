@@ -125,7 +125,8 @@ public class TerrainChunkRegistry : System.IDisposable
             if (chunk.stoneSpawns == null)
             {
                 chunk.stoneSpawns = owner.Data.GetChunkData(chunkCoord).CreateStoneSpawns(
-                    owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Data.Resolution);
+                    owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Data.Resolution,
+                    owner.Settings.MiningBounds);
                 GameManager.Instance.Utility.World.ApplyStoneStates(chunkCoord, chunk.stoneSpawns);
             }
             return chunk;
@@ -145,7 +146,8 @@ public class TerrainChunkRegistry : System.IDisposable
             meshRenderer = chunkObject.AddComponent<MeshRenderer>(),
             meshCollider = chunkObject.AddComponent<MeshCollider>(),
             stoneSpawns = owner.Data.GetChunkData(chunkCoord).CreateStoneSpawns(
-                owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Data.Resolution)
+                owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Data.Resolution,
+                owner.Settings.MiningBounds)
         };
 
         chunk.meshRenderer.sharedMaterial = owner.Settings.Material.Material;
