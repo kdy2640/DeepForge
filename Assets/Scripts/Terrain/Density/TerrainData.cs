@@ -91,6 +91,21 @@ public class TerrainData : IDisposable
         return chunks[chunkCoord];
     }
 
+    // 생성한 지층 소속은 유지하고 저장된 밀도만 복원한다. 인공 표시는 저장하지 않는다.
+    public void ApplySavedChunk(ChunkSaveData saved)
+    {
+        if (saved.Encoding == WorldDensityEncoding.Original) return;
+        ChunkDensityState state = saved.Encoding == WorldDensityEncoding.Blank ? ChunkDensityState.Blank :
+            saved.Encoding == WorldDensityEncoding.Fill ? ChunkDensityState.Fill : ChunkDensityState.Complicate;
+        ChunkDensityData chunk = InitializeChunk(saved.Coordinate, state);
+        if (state == ChunkDensityState.Complicate)
+        {
+            if (saved.Densities.Length != chunk.Densities.Length) throw new System.IO.InvalidDataException("저장 밀도 샘플 수 불일치");
+            chunk.Densities.CopyFrom(saved.Densities);
+            for (int i = 0; i < chunk.ArtificialFlags.Length; i++) chunk.ArtificialFlags[i] = 0;
+        }
+    }
+
     // 청크를 초기화한 뒤 바뀐 상태와 배열을 관리 목록에 반영한다.
     internal ChunkDensityData InitializeChunk(Vector3Int coordinate, ChunkDensityState state)
     {

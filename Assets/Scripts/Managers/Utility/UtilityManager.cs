@@ -5,6 +5,7 @@ public sealed class UtilityManager : MonoBehaviour
     public AudioManager Audio { get; private set; }
     public TutorialManager Tutorial { get; private set; }
     public SaveManager Save { get; private set; }
+    public WorldManager World { get; private set; }
     public ToastManager Toast { get; private set; }
 
     private void Awake()
@@ -12,6 +13,7 @@ public sealed class UtilityManager : MonoBehaviour
         Audio = GetComponentInChildren<AudioManager>(true);
         Tutorial = GetComponentInChildren<TutorialManager>(true);
         Save = GetComponentInChildren<SaveManager>(true);
+        World = GetComponentInChildren<WorldManager>(true);
         Toast = GetComponentInChildren<ToastManager>(true);
     }
 }

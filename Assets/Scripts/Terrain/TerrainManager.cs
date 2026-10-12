@@ -79,6 +79,7 @@ public class TerrainManager : MonoBehaviour
         }
         if (changed)
         {
+            GameManager.Instance.Utility.World.MarkDensityChanged(minChangedIndex, maxChangedIndex);
             chunkManager.RegenerateChunksInBounds(minChangedIndex, maxChangedIndex);
             DensityChanged?.Invoke(minChangedIndex, maxChangedIndex);
         }
@@ -104,24 +105,28 @@ public class TerrainManager : MonoBehaviour
         if (data != null)
         {
             data.Dispose();
+            data = null;
         }
 
+        generationRoutine = StartCoroutine(GenerateTerrainRoutine());
+    }
+
+    private IEnumerator GenerateTerrainRoutine()
+    {
+        var loading = GameManager.Instance.Utility.World.LoadOrCreateWorldAsync(settings);
+        while (!loading.IsCompleted) yield return null;
+        loading.GetAwaiter().GetResult();
         data = new TerrainData(chunkManager.Grid);
         generator = generator ?? new TerrainDensityFormer();
         generator.Generate(data, settings.Surface, settings.Density);
         GenerateCaves();
+        GameManager.Instance.Utility.World.ApplySavedChunks(data);
         baseCamp.PlaceAndSpawn(this);
         if (chunkManager.Registry == null)
         {
             chunkManager.Initialize(this);
         }
         chunkManager.Registry.ClearChunks();
-        generationRoutine = StartCoroutine(GenerateTerrainRoutine());
-    }
-
-    // 초기 청크를 여러 프레임에 나눠 생성한 뒤 스트리밍을 시작한다.
-    private IEnumerator GenerateTerrainRoutine()
-    {
         yield return chunkManager.GenerateInitialChunks(settings.Streaming.Target);
         generationRoutine = null;
     }
@@ -138,12 +143,7 @@ public class TerrainManager : MonoBehaviour
     {
         chunkManager ??= new TerrainChunkManager(settings.Grid, settings.Streaming);
         if (data == null)
-        {
-            data = new TerrainData(chunkManager.Grid);
-            generator = generator ?? new TerrainDensityFormer();
-            generator.Generate(data, settings.Surface, settings.Density);
-            GenerateCaves();
-        }
+            throw new System.InvalidOperationException("월드 로드가 끝나기 전에 지형에 접근했습니다.");
 
         if (chunkManager.Registry == null)
         {

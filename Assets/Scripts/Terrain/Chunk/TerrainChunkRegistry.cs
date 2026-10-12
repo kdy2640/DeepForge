@@ -126,6 +126,7 @@ public class TerrainChunkRegistry : System.IDisposable
             {
                 chunk.stoneSpawns = owner.Data.GetChunkData(chunkCoord).CreateStoneSpawns(
                     owner.Settings.Stones.Seed, owner.Settings.Stones.CountPerChunk, owner.Data.Resolution);
+                GameManager.Instance.Utility.World.ApplyStoneStates(chunkCoord, chunk.stoneSpawns);
             }
             return chunk;
         }
@@ -148,6 +149,7 @@ public class TerrainChunkRegistry : System.IDisposable
         };
 
         chunk.meshRenderer.sharedMaterial = owner.Settings.Material.Material;
+        GameManager.Instance.Utility.World.ApplyStoneStates(chunkCoord, chunk.stoneSpawns);
         chunks[chunkCoord] = chunk;
         return chunk;
     }

@@ -12,9 +12,6 @@ public class TerrainDensityFormer
     private static readonly ProfilerMarker ScheduleMarker = new ProfilerMarker("TerrainDensity.Form.Schedule");
     private static readonly ProfilerMarker CompleteMarker = new ProfilerMarker("TerrainDensity.Form.Complete");
 
-    // 동일한 입력에서 지형을 재현하기 위한 고정 시드
-    private const int NoiseSeed = 15;
-
     // 청크별 밀도 채우기를 예약하고 모든 Job이 완료된 뒤 반환한다.
     public void Generate(TerrainData data, TerrainSurfaceSettings surface, TerrainDensitySettings density)
     {
@@ -67,7 +64,7 @@ public class TerrainDensityFormer
                             SampleCount = chunk.SampleCount,
                             SurfaceHeights = surfaceHeights,
                             SurfaceWidth = surfaceWidth,
-                            NoiseSeed = NoiseSeed,
+                            NoiseSeed = density.Seed,
                             NoiseScale = density.NoiseScale,
                             DensityThreshold = density.DensityThreshold,
                             Use3DNoise = density.Use3DNoise

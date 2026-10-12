@@ -26,9 +26,7 @@ public sealed class PlayerMiner : MonoBehaviour
     InputManager inputManager;
 
     float nextLeftEditTime;
-    float nextRightEditTime;
     bool isLeftMouseHolding;
-    bool isRightMouseHolding;
     CameraController cameraController;
     bool isInputSubscribed;
     bool isUIInputBlocked;
@@ -87,28 +85,6 @@ public sealed class PlayerMiner : MonoBehaviour
         }
     }
 
-    private void OnRightMouse(InputAction.CallbackContext context)
-    {
-        if (isUIInputBlocked) return;
-
-        if (context.started)
-        {
-            isRightMouseHolding = true;
-            nextRightEditTime = 0f;
-            if (!isMiningMode || terrainManager == null || cameraController == null) return;
-
-            UpdateMiningTarget();
-            if (!anchor.activeSelf) return;
-
-            terrainManager.AddDensitySphere(mouseHit, settings, isAdding: true, worldErosionDirection: Vector3.zero);
-            nextRightEditTime = Time.time + Mathf.Max(0.01f, settings.EditInterval);
-        }
-        else if (context.canceled)
-        {
-            isRightMouseHolding = false;
-        }
-    }
-
     private void SetMiningMode(bool enabled)
     {
         cameraController.SetMiningMode(enabled);
@@ -122,7 +98,6 @@ public sealed class PlayerMiner : MonoBehaviour
         else
         {
             isLeftMouseHolding = false;
-            isRightMouseHolding = false;
             hasErosionStart = false;
             erosionElapsedTime = 0f;
             anchor.SetActive(false);
@@ -136,7 +111,6 @@ public sealed class PlayerMiner : MonoBehaviour
         if (isUIInputBlocked)
         {
             isLeftMouseHolding = false;
-            isRightMouseHolding = false;
             hasErosionStart = false;
             erosionElapsedTime = 0f;
             anchor.SetActive(false);
@@ -177,7 +151,7 @@ public sealed class PlayerMiner : MonoBehaviour
 
             anchor.SetActive(true);
             anchor.transform.position = hit.point;
-            float anchorRadius = isRightMouseHolding ? settings.AnchorRadius : appliedMiningSettings.AnchorRadius;
+            float anchorRadius = appliedMiningSettings.AnchorRadius;
             anchor.transform.localScale = Vector3.one * (anchorRadius * 2f);
             mouseHit = hit.point;
             mouseHitNormal = hit.normal;
@@ -209,7 +183,6 @@ public sealed class PlayerMiner : MonoBehaviour
         UnsubscribeInputEvents();
         miningTool.DOKill(complete: true);
         isLeftMouseHolding = false;
-        isRightMouseHolding = false;
         hasErosionStart = false;
         erosionElapsedTime = 0f;
     }
@@ -234,7 +207,6 @@ public sealed class PlayerMiner : MonoBehaviour
         inputManager.Subscribe(InputEvent.ChangeEditMode, OnChangeEditMode);
         inputManager.Subscribe(InputEvent.ChangeShadingMode, OnChangeShadingMode);
         inputManager.Subscribe(InputEvent.LeftMouseClick, OnLeftMouse);
-        inputManager.Subscribe(InputEvent.RightMouseClick, OnRightMouse);
         upgradeManager = GameManager.Instance.Upgrade;
         upgradeManager.SubscribeUpgradeChanged(RefreshMiningStats);
         RefreshMiningStats();
@@ -251,7 +223,6 @@ public sealed class PlayerMiner : MonoBehaviour
         inputManager.Unsubscribe(InputEvent.ChangeEditMode, OnChangeEditMode);
         inputManager.Unsubscribe(InputEvent.ChangeShadingMode, OnChangeShadingMode);
         inputManager.Unsubscribe(InputEvent.LeftMouseClick, OnLeftMouse);
-        inputManager.Unsubscribe(InputEvent.RightMouseClick, OnRightMouse);
         upgradeManager.UnsubscribeUpgradeChanged(RefreshMiningStats);
         inputManager = null;
         isInputSubscribed = false;
@@ -296,7 +267,6 @@ public sealed class PlayerMiner : MonoBehaviour
             return;
         }
 
-        float interval = Mathf.Max(0.01f, settings.EditInterval);
 
         if (isLeftMouseHolding)
         {
@@ -325,18 +295,6 @@ public sealed class PlayerMiner : MonoBehaviour
             nextLeftEditTime = 0f;
         }
 
-        if (isRightMouseHolding)
-        {
-            if (Time.time >= nextRightEditTime)
-            {
-                terrainManager.AddDensitySphere(mouseHit, settings, isAdding: true, worldErosionDirection: Vector3.zero);
-                nextRightEditTime = Time.time + interval;
-            }
-        }
-        else
-        {
-            nextRightEditTime = 0f;
-        }
     }
 
     private void PlayMiningFeedback()

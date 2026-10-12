@@ -84,12 +84,16 @@ public sealed class PlayerReturn : MonoBehaviour
         if (returning)
             return;
 
+        bool wasTracking = tracking;
         tracking = false;
         path.Clear();
         raisedCablePoints.Clear();
         looseCablePoints.Clear();
         nextGroundUpdateTime = 0f;
         cable.positionCount = 0;
+
+        if (wasTracking)
+            SaveAfterReturn();
     }
 
     private void OnReturn(InputAction.CallbackContext context)
@@ -249,6 +253,19 @@ public sealed class PlayerReturn : MonoBehaviour
         }
 
         body.MovePosition(position);
+    }
+
+    private async void SaveAfterReturn()
+    {
+        try
+        {
+            if (GameManager.Instance.Utility.Save.SaveGame())
+                await GameManager.Instance.Utility.World.SaveWorldAsync();
+        }
+        catch (System.Exception error)
+        {
+            Debug.LogError($"복귀 후 월드 저장 실패: {error}");
+        }
     }
 
     private void StopReturn()

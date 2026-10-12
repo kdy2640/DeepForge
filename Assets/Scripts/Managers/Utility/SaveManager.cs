@@ -5,6 +5,8 @@ public class SaveManager : MonoBehaviour
 {
     [SerializeField] private string saveFileName = "save.json";
 
+    private bool loadedSuccessfully;
+
     private string SavePath => Path.Combine(Application.persistentDataPath, saveFileName);
 
     private void Start()
@@ -20,51 +22,73 @@ public class SaveManager : MonoBehaviour
     // 에디터 플레이 종료 시에도 호출될 수 있다.
 
 
-    public void SaveGame()
+    public bool SaveGame()
     {
+        // 읽기에 실패한 기존 재고를 기본값으로 덮어쓰지 않는다.
+        if (!loadedSuccessfully) return false;
         GameSaveData saveData = CreateSaveData();
-        string json = JsonUtility.ToJson(saveData, true);
-
-        File.WriteAllText(SavePath, json);
-        Debug.Log($"Save complete. path : {SavePath}");
-    }// 현재 게임 상태를 GameSaveData로 만들고 JSON 파일로 저장한다.
-    // 저장 위치는 Application.persistentDataPath 안이다.
-    // todo 업그레이드를 할때 저장하기
-
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(saveData, true));
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(SavePath));
+            using (var file = new FileStream(SavePath + ".tmp", FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                file.Write(bytes, 0, bytes.Length);
+                file.Flush(true);
+            }
+            if (File.Exists(SavePath)) File.Replace(SavePath + ".tmp", SavePath, SavePath + ".bak");
+            else File.Move(SavePath + ".tmp", SavePath);
+            return true;
+        }
+        catch (System.Exception error) when (error is IOException || error is System.UnauthorizedAccessException)
+        {
+            Debug.LogError($"게임 저장 실패: {SavePath}\n{error.Message}");
+            return false;
+        }
+    }
 
     public void LoadGame()
     {
+        loadedSuccessfully = false;
         if (!HasSave())
         {
             ResetSave();
-            Debug.Log($"Save file does not exist. path : {SavePath}");
             return;
         }
-
-        string json = File.ReadAllText(SavePath);
-        // 기존 제작품 저장의 type 숫자는 현재 id와 같다.
-        GameSaveData saveData = JsonUtility.FromJson<GameSaveData>(json.Replace("\"type\":", "\"id\":"));
-
-        if (saveData == null)
+        foreach (string path in new[] { SavePath, SavePath + ".bak" })
         {
-            Debug.LogWarning("Save data is null.");
+            if (!File.Exists(path)) continue;
+            GameSaveData saveData;
+            try
+            {
+                string json = File.ReadAllText(path);
+                saveData = JsonUtility.FromJson<GameSaveData>(json.Replace("\"type\":", "\"id\":"));
+                if (saveData == null || saveData.stock == null) throw new InvalidDataException("게임 저장 데이터 형식 오류");
+                if (path != SavePath)
+                {
+                    File.Copy(path, SavePath + ".tmp", true);
+                    if (File.Exists(SavePath)) File.Replace(SavePath + ".tmp", SavePath, null);
+                    else File.Move(SavePath + ".tmp", SavePath);
+                }
+            }
+            catch (System.Exception error) when (error is IOException || error is InvalidDataException || error is System.UnauthorizedAccessException || error is System.ArgumentException)
+            {
+                Debug.LogWarning($"게임 저장 읽기 실패: {path}\n{error.Message}");
+                continue;
+            }
+            ApplySaveData(saveData);
+            loadedSuccessfully = true;
             return;
         }
-
-        ApplySaveData(saveData);
-        Debug.Log($"Load complete. path : {SavePath}");
-    }// 저장 파일을 읽어서 GameSaveData로 변환한다.
-    // 변환된 데이터를 현재 게임 상태에 적용한다.
+        Debug.LogError("게임 저장과 백업을 읽지 못했습니다. 기존 파일을 보존하고 저장을 중단합니다.");
+    }
 
     [ContextMenu("Delete Save")]
     public void DeleteSave()
     {
-        if (!HasSave())
-            return;
-
-        File.Delete(SavePath);
-        Debug.Log($"Save deleted. path : {SavePath}");
-    }// 저장 파일이 있으면 삭제한다.
+        foreach (string path in new[] { SavePath, SavePath + ".bak", SavePath + ".tmp" })
+            if (File.Exists(path)) File.Delete(path);
+    }
 
     [ContextMenu("Reset Save")]
     public void ResetSave()
@@ -76,11 +100,12 @@ public class SaveManager : MonoBehaviour
         GameManager.Instance.BaseCamp.Order.ResetOrderSaveData();
         GameManager.Instance.BaseCamp.Smith.ResetSmithSaveData();
         DeleteSave();
+        loadedSuccessfully = true;
     }
 
     public bool HasSave()
     {
-        return File.Exists(SavePath);
+        return File.Exists(SavePath) || File.Exists(SavePath + ".bak");
     }// 저장 파일이 존재하는지 확인한다.
 
     private GameSaveData CreateSaveData()

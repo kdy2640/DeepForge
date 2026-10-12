@@ -33,6 +33,7 @@ public sealed class TerrainSurfaceSettings
 [Serializable]
 public sealed class TerrainDensitySettings
 {
+    public int Seed = 15;
     public float NoiseScale = 1f;
     public float DensityThreshold = 0.5f;
     public bool Use3DNoise;
@@ -54,7 +55,7 @@ public sealed class TerrainShadingSettings
 public sealed class StonePlacementSettings
 {
     public int Seed = 12345;
-    [Min(0)] public int CountPerChunk = 1;
+    [Range(0, 8)] public int CountPerChunk = 1;
     public StoneActor Prefab;
     [Min(0)] public int PrewarmCount = 256;
     [Min(1)] public int PrewarmPerFrame = 16;
