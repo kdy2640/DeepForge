@@ -197,7 +197,7 @@ MonoBehaviour:
     Material:
       Material: {fileID: 2100000, guid: d2672cbd58c6427a899b26bae3f9299a, type: 2}
     Shading:
-      IsSmoothShading: 1
+      IsSmoothShading: 0
     Stones:
       Seed: 12345
       CountPerChunk: 1
