@@ -201,7 +201,7 @@ public sealed class StoneActor : Poolable
         foreach (BoxCollider modelCollider in modelColliders)
             modelCollider.enabled = false;
 
-        GameManager.Instance.StockManager.AddOre(new List<OreAmount>(dataSO.RewardList));
+        GameManager.Instance.GameLoop.BackPack.Add(dataSO.RewardList);
         GameManager.Instance.Utility.Save.SaveGame();
         GameManager.Instance.Utility.World.MarkStoneCollected(spawnData.ChunkCoordinate, spawnData.SpawnIndex);
         if (gameObject.activeInHierarchy)

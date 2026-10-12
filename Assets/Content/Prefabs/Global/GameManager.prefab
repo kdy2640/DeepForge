@@ -677,6 +677,56 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 255f067761a836042834d49e96d24dbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SmithManager
+--- !u!1 &7388495479029643625
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3460955860141972338}
+  - component: {fileID: 4331458624923035440}
+  m_Layer: 0
+  m_Name: GameLoopManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3460955860141972338
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7388495479029643625}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4861554719873257788}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4331458624923035440
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7388495479029643625}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ece672b91f6447a4fbdcd608d3355156, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameLoopManager
+  upgradeManager: {fileID: 6817583298313445971}
+  backpackEquipmentId: 1
+  backpackCapacities: 320000006400000096000000
+  backPack:
+    ores: []
+    capacity: 50
 --- !u!1 &7869543391463356428
 GameObject:
   m_ObjectHideFlags: 0
@@ -840,6 +890,7 @@ Transform:
   m_Children:
   - {fileID: 9168217385980195309}
   - {fileID: 7776936287544005537}
+  - {fileID: 3460955860141972338}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7846559304178540431

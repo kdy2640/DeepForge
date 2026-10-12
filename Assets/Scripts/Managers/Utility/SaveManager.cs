@@ -97,6 +97,7 @@ public class SaveManager : MonoBehaviour
         GameManager.Instance.Utility.Tutorial.ResetTutorialSaveData();
         GameManager.Instance.Utility.Audio.ResetAudioSaveData();
         GameManager.Instance.StockManager.ResetStockSaveData();
+        GameManager.Instance.GameLoop.BackPack.Clear();
         GameManager.Instance.BaseCamp.Order.ResetOrderSaveData();
         GameManager.Instance.BaseCamp.Smith.ResetSmithSaveData();
         DeleteSave();
@@ -115,6 +116,7 @@ public class SaveManager : MonoBehaviour
         saveData.tutorials = GameManager.Instance.Utility.Tutorial.CreateTutorialSaveData();
         saveData.audio = GameManager.Instance.Utility.Audio.CreateAudioSaveData();
         saveData.stock = GameManager.Instance.StockManager.CreateStockSaveData();
+        saveData.backPack = GameManager.Instance.GameLoop.BackPack.CreateSaveData();
         saveData.orders = GameManager.Instance.BaseCamp.Order.CreateOrderSaveData();
         saveData.smith = GameManager.Instance.BaseCamp.Smith.CreateSmithSaveData();
         return saveData;
@@ -126,6 +128,7 @@ public class SaveManager : MonoBehaviour
         GameManager.Instance.Utility.Tutorial.LoadTutorialSaveData(saveData.tutorials);
         GameManager.Instance.Utility.Audio.LoadAudioSaveData(saveData.audio);
         GameManager.Instance.StockManager.LoadStockSaveData(saveData.stock);
+        GameManager.Instance.GameLoop.BackPack.LoadSaveData(saveData.backPack);
         GameManager.Instance.BaseCamp.Order.LoadOrderSaveData(saveData.orders);
         GameManager.Instance.BaseCamp.Smith.LoadSmithSaveData(saveData.smith);
     }// 불러온 저장 데이터를 실제 게임 상태에 반영한다.

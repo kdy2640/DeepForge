@@ -9,6 +9,7 @@ public class GameSaveData
     public List<TutorialSaveData> tutorials = new();
     public AudioSaveData audio = new();
     public StockSaveData stock = new();
+    public List<OreAmount> backPack = new();
     public OrderSaveData orders;
     public SmithSaveData smith;
 }

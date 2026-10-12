@@ -92,7 +92,8 @@ public sealed class PlayerReturn : MonoBehaviour
         nextGroundUpdateTime = 0f;
         cable.positionCount = 0;
 
-        if (wasTracking)
+        bool deposited = GameManager.Instance.GameLoop.DepositBackPack();
+        if (wasTracking || deposited)
             SaveAfterReturn();
     }
 
