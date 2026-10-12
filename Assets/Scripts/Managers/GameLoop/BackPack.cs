@@ -8,6 +8,8 @@ public sealed class BackPack
     [SerializeField] private List<OreAmount> ores = new();
     [SerializeField] private int capacity = 50;
 
+    public event Action Changed;
+
     public IReadOnlyList<OreAmount> Ores => ores;
     public int Capacity => capacity;
     public int Count
@@ -23,7 +25,10 @@ public sealed class BackPack
 
     public void SetCapacity(int value)
     {
+        if (capacity == value)
+            return;
         capacity = value;
+        Changed?.Invoke();
     }
 
     // 보상 목록 순서대로 남은 공간만큼 담고, 실제로 담은 총수량을 반환한다.
@@ -50,6 +55,8 @@ public sealed class BackPack
             remaining -= amount;
             added += amount;
         }
+        if (added > 0)
+            Changed?.Invoke();
         return added;
     }
 
@@ -63,7 +70,10 @@ public sealed class BackPack
 
     public void Clear()
     {
+        if (ores.Count == 0)
+            return;
         ores.Clear();
+        Changed?.Invoke();
     }
 
     public List<OreAmount> CreateSaveData()
@@ -79,5 +89,6 @@ public sealed class BackPack
         ores.Clear();
         foreach (OreAmount ore in savedOres)
             ores.Add(new OreAmount(ore.oreId, ore.amount));
+        Changed?.Invoke();
     }
 }
