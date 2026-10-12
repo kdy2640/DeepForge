@@ -6,19 +6,29 @@ public sealed class BaseCamp : MonoBehaviour
     [SerializeField] private Transform spawnPoint;
     [SerializeField] private Transform entrancePoint;
     [SerializeField] private PlayerController player;
+    [SerializeField] private CanvasController canvasController;
 
     public Transform EntrancePoint => entrancePoint;
+    public bool IsPlayerInside { get; private set; } = true;
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.attachedRigidbody == player.GetComponent<Rigidbody>())
+        {
+            IsPlayerInside = true;
             player.GetComponent<PlayerReturn>().ResetAtCamp();
+            canvasController.RequestStateChange(CanvasController.CanvasState.BaseView);
+        }
     }
 
     private void OnTriggerExit(Collider other)
     {
         if (other.attachedRigidbody == player.GetComponent<Rigidbody>())
+        {
+            IsPlayerInside = false;
             player.GetComponent<PlayerReturn>().BeginTracking();
+            canvasController.RequestStateChange(CanvasController.CanvasState.MineView);
+        }
     }
 
     public void Place(TerrainManager terrain)
@@ -55,6 +65,7 @@ public sealed class BaseCamp : MonoBehaviour
 
     public void SpawnPlayer()
     {
+        IsPlayerInside = true;
         Rigidbody body = player.GetComponent<Rigidbody>();
         if (!body.isKinematic)
         {

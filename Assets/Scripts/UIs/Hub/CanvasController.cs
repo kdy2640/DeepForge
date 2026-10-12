@@ -21,7 +21,8 @@ public sealed class CanvasController : MonoBehaviour
         Shop_Deal,
         Smith_Equipment,
         Smith_Forge,
-        Mine_Prepare
+        Mine_Prepare,
+        MineView
     }
 
     [Serializable]
@@ -47,6 +48,7 @@ public sealed class CanvasController : MonoBehaviour
     [SerializeField] private CanvasState initialState = CanvasState.BaseView;
     [SerializeField] private List<ViewEntry> views = new();
     [SerializeField] private PlayerMiner playerMiner;
+    [SerializeField] private BaseCamp baseCamp;
 
     private readonly Dictionary<CanvasState, ViewEntry> viewByState = new();
     private ViewEntry currentEntry;
@@ -69,6 +71,9 @@ public sealed class CanvasController : MonoBehaviour
 
     public void RequestStateChange(CanvasState nextState)
     {
+        if (nextState == CanvasState.BaseView || nextState == CanvasState.MineView)
+            nextState = baseCamp.IsPlayerInside ? CanvasState.BaseView : CanvasState.MineView;
+
         if (CurrentState == nextState && pendingState == null)
             return;
 

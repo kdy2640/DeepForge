@@ -1289,7 +1289,11 @@ MonoBehaviour:
   - state: 5
     prefab: {fileID: 212512138778380994, guid: 07c553aa6669a4d4da189caede36534b, type: 3}
     cursorMode: 1
+  - state: 6
+    prefab: {fileID: 1140702305190673679, guid: 6e3d9de683235434c9c05e1a8a800d2e, type: 3}
+    cursorMode: 0
   playerMiner: {fileID: 1026908058}
+  baseCamp: {fileID: 8026041122753866803}
 --- !u!114 &1113099161
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1986,6 +1990,10 @@ PrefabInstance:
       propertyPath: player
       value: 
       objectReference: {fileID: 1026908067}
+    - target: {fileID: 7525098606990990558, guid: eb66bd86338c96d438548c703b65b898, type: 3}
+      propertyPath: canvasController
+      value: 
+      objectReference: {fileID: 1113099160}
     - target: {fileID: 8339060600273491447, guid: eb66bd86338c96d438548c703b65b898, type: 3}
       propertyPath: canvasController
       value: 
