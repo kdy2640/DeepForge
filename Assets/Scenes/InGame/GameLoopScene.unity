@@ -1208,12 +1208,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerReturn
   cable: {fileID: 2029951235}
   cableAttachment: {fileID: 1637983642}
+  terrainManager: {fileID: 134620926}
   sampleDistance: 0.35
   turnSampleAngle: 10
   returnSpeed: 16
   loosePointSpacing: 0.25
   groundClearance: 0.01
   cableDropDuration: 0.25
+  returnMining:
+    AnchorRadius: 1
+    EditPower: 0.3
+    EditInterval: 0.1
+    HitInterval: 0.1
+    HitPower: 0.4
+    HitPassCount: 5
+    HitEdgeWidth: 0.35
+    ErosionDirectionBlendTime: 0.5
+    ErosionSideStrength: 0.2
+    UseErosionDistanceFalloff: 1
 --- !u!135 &1026908069
 SphereCollider:
   m_ObjectHideFlags: 0

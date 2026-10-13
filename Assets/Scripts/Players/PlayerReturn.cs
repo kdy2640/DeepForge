@@ -9,6 +9,7 @@ public sealed class PlayerReturn : MonoBehaviour
 {
     [SerializeField] private LineRenderer cable;
     [SerializeField] private Transform cableAttachment;
+    [SerializeField] private TerrainManager terrainManager;
     [FormerlySerializedAs("maximumSampleDistance")]
     [SerializeField, Min(0.05f)] private float sampleDistance = 0.35f;
     [SerializeField, Range(1f, 90f)] private float turnSampleAngle = 10f;
@@ -16,6 +17,11 @@ public sealed class PlayerReturn : MonoBehaviour
     [SerializeField, Min(0.05f)] private float loosePointSpacing = 0.25f;
     [SerializeField, Min(0f)] private float groundClearance = 0.01f;
     [SerializeField, Min(0.01f)] private float cableDropDuration = 0.25f;
+    [SerializeField] private MiningSetting returnMining = new MiningSetting
+    {
+        HitPower = 0.4f,
+        HitInterval = 0.1f
+    };
 
     private readonly List<Vector3> path = new();
     private readonly List<Vector3> raisedCablePoints = new();
@@ -29,6 +35,7 @@ public sealed class PlayerReturn : MonoBehaviour
     private Vector3 lastSamplePosition;
     private float nextGroundUpdateTime;
     private float cableReleaseTime;
+    private float nextReturnMiningTime;
     private bool tracking;
     private bool returning;
     private bool stopRequested;
@@ -110,6 +117,7 @@ public sealed class PlayerReturn : MonoBehaviour
 
         returning = true;
         stopRequested = false;
+        nextReturnMiningTime = 0f;
         moverWasEnabled = player.PlayerMover.enabled;
         minerWasEnabled = player.PlayerMiner.enabled;
         player.PlayerMover.enabled = false;
@@ -225,6 +233,7 @@ public sealed class PlayerReturn : MonoBehaviour
             Vector3 direction = delta / distance;
             float step = Mathf.Min(remainingDistance, distance);
             float allowedStep = step;
+            RaycastHit obstacle = default;
             Vector3 scale = transform.lossyScale;
             float radius = sphere.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
             Vector3 center = position + transform.TransformVector(sphere.center);
@@ -238,13 +247,18 @@ public sealed class PlayerReturn : MonoBehaviour
                     Physics.GetIgnoreLayerCollision(gameObject.layer, hit.collider.gameObject.layer))
                     continue;
 
-                allowedStep = Mathf.Min(allowedStep, Mathf.Max(0f, hit.distance - skin));
+                float hitStep = Mathf.Max(0f, hit.distance - skin);
+                if (hitStep < allowedStep)
+                {
+                    allowedStep = hitStep;
+                    obstacle = hit;
+                }
             }
 
             position += direction * allowedStep;
             if (allowedStep < step)
             {
-                stopRequested = true;
+                stopRequested = !TryClearReturnObstacle(obstacle, radius);
                 break;
             }
 
@@ -254,6 +268,23 @@ public sealed class PlayerReturn : MonoBehaviour
         }
 
         body.MovePosition(position);
+    }
+
+    private bool TryClearReturnObstacle(RaycastHit obstacle, float playerRadius)
+    {
+        // Only terrain chunk meshes can be carved; camp structures and boundaries still block return.
+        if (obstacle.collider is not MeshCollider ||
+            obstacle.collider.transform.parent != terrainManager.transform)
+            return false;
+
+        // Keep the route and return state while waiting for the next small cut.
+        if (Time.time < nextReturnMiningTime)
+            return true;
+
+        nextReturnMiningTime = Time.time + returnMining.HitInterval;
+        returnMining.AnchorRadius = playerRadius + 0.15f;
+        return terrainManager.AddDensitySphere(
+            obstacle.point, returnMining, isAdding: false, worldErosionDirection: -obstacle.normal);
     }
 
     private async void SaveAfterReturn()

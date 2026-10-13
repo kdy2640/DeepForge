@@ -697,6 +697,7 @@ MonoBehaviour:
     prefab: {fileID: 212512138778380994, guid: 07c553aa6669a4d4da189caede36534b, type: 3}
     cursorMode: 0
   playerMiner: {fileID: 0}
+  baseCamp: {fileID: 0}
 --- !u!114 &414015263
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1025,7 +1026,6 @@ MonoBehaviour:
     ErosionDirectionBlendTime: 0.5
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1
-  equipmentId: 0
   terrainManager: {fileID: 134620926}
   miningChips: {fileID: 666992551}
   miningAudio: {fileID: 666992550}
@@ -1161,7 +1161,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59788f797f558b744abc57730e3e8b9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMover
-  speed: 8
   groundAcceleration: 50
   airAcceleration: 15
   jumpVelocity: 6
@@ -1196,12 +1195,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerReturn
   cable: {fileID: 1647017519}
   cableAttachment: {fileID: 727824362}
+  terrainManager: {fileID: 134620926}
   sampleDistance: 0.35
   turnSampleAngle: 10
   returnSpeed: 16
   loosePointSpacing: 0.25
   groundClearance: 0.01
   cableDropDuration: 0.25
+  returnMining:
+    AnchorRadius: 1
+    EditPower: 0.3
+    EditInterval: 0.1
+    HitInterval: 0.1
+    HitPower: 0.4
+    HitPassCount: 5
+    HitEdgeWidth: 0.35
+    ErosionDirectionBlendTime: 0.5
+    ErosionSideStrength: 0.2
+    UseErosionDistanceFalloff: 1
 --- !u!135 &1026908069
 SphereCollider:
   m_ObjectHideFlags: 0
