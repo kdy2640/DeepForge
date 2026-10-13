@@ -18,6 +18,12 @@ public sealed class MiningSetting
     [Tooltip("반경 중 가장자리 감쇠 구간의 비율. 1이면 기존 전체 반경 감쇠입니다.")]
     [Range(0.05f, 1f)] public float HitEdgeWidth = 0.35f;
 
+    [Header("원기둥 채굴")]
+    [Tooltip("기본 위력 0.4에서 제거할 깊이(격자 칸 수). 위력 강화 배율만큼 깊어집니다.")]
+    [Min(1)] public int HitDepthLayers = 3;
+    [Tooltip("원기둥 주변을 수축 보정할 폭(격자 칸 수).")]
+    [Min(0.01f)] public float HitCorrectionWidth = 1f;
+
     [Header("굴착")]
     [Min(0.01f)] public float ErosionDirectionBlendTime = 0.5f;
     [Range(0f, 1f)] public float ErosionSideStrength = 0.2f;

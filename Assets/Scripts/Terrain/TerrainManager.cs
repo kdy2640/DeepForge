@@ -87,6 +87,23 @@ public class TerrainManager : MonoBehaviour
         return changed;
     }
 
+    // 원기둥 제거와 주변 수축이 모두 끝난 뒤 한 번만 메시와 변경 이벤트를 갱신한다.
+    public bool MineCylinder(Vector3 worldPosition, MiningSetting mining, Vector3 worldDirection)
+    {
+        EnsureInitialized();
+        Vector3 localPosition = transform.InverseTransformPoint(worldPosition);
+        Vector3 localDirection = transform.InverseTransformVector(worldDirection).normalized;
+        if (!data.ModifyDensityCylinder(localPosition, localDirection, mining,
+            settings.MiningBounds, settings.Density.DensityThreshold,
+            out Vector3Int minChangedIndex, out Vector3Int maxChangedIndex))
+            return false;
+
+        GameManager.Instance.Utility.World.MarkDensityChanged(minChangedIndex, maxChangedIndex);
+        chunkManager.RegenerateChunksInBounds(minChangedIndex, maxChangedIndex);
+        DensityChanged?.Invoke(minChangedIndex, maxChangedIndex);
+        return true;
+    }
+
     // 현재 지형을 정리하고 설정값으로 밀도와 청크 메시를 다시 생성한다.
     public void GenerateTerrain()
     {

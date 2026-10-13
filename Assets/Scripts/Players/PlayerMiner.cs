@@ -245,6 +245,8 @@ public sealed class PlayerMiner : MonoBehaviour
             HitInterval = settings.HitInterval,
             HitPassCount = settings.HitPassCount,
             HitEdgeWidth = settings.HitEdgeWidth,
+            HitDepthLayers = settings.HitDepthLayers,
+            HitCorrectionWidth = settings.HitCorrectionWidth,
             ErosionDirectionBlendTime = settings.ErosionDirectionBlendTime,
             ErosionSideStrength = settings.ErosionSideStrength,
             UseErosionDistanceFalloff = settings.UseErosionDistanceFalloff
@@ -284,8 +286,8 @@ public sealed class PlayerMiner : MonoBehaviour
 
                 float blend = Mathf.SmoothStep(0f, 1f, erosionElapsedTime / settings.ErosionDirectionBlendTime);
                 Vector3 erosionDirection = Vector3.Slerp(erosionStartDirection, viewDirection, blend);
-                if (terrainManager.AddDensitySphere(
-                    mouseHit, appliedMiningSettings, isAdding: false, worldErosionDirection: erosionDirection))
+                if (terrainManager.MineCylinder(
+                    mouseHit, appliedMiningSettings, erosionDirection))
                 {
                     // 내부 계산 횟수 대신 실제 타격 간격으로 방향 전환을 진행한다.
                     erosionElapsedTime = Mathf.Min(erosionElapsedTime + settings.HitInterval, settings.ErosionDirectionBlendTime);

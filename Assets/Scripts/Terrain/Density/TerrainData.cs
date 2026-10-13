@@ -393,6 +393,165 @@ public class TerrainData : IDisposable
         return changed;
     }
 
+    // 기존 구형 수정과 별개로 원기둥 내부를 제거한 뒤 주변 표면만 수축한다.
+    public bool ModifyDensityCylinder(
+        Vector3 localPosition, Vector3 localDirection, MiningSetting mining,
+        Bounds miningBounds, float densityThreshold,
+        out Vector3Int minChangedIndex, out Vector3Int maxChangedIndex)
+    {
+        using var modifyScope = ModifyMarker.Auto();
+        // 장비 기본 위력 0.4를 기준으로 깊이에 강화 배율을 적용한다.
+        float depth = mining.HitDepthLayers * Resolution * (mining.HitPower / 0.4f);
+        float radius = mining.AnchorRadius;
+        float correctionWidth = mining.HitCorrectionWidth * Resolution;
+        Vector3 start = localPosition - localDirection * Resolution;
+        Vector3 end = localPosition + localDirection * depth;
+        float length = depth + Resolution;
+        Vector3Int terrainMax = new Vector3Int(Width, DensityFieldHeight, Width);
+        minChangedIndex = terrainMax;
+        maxChangedIndex = new Vector3Int(-1, -1, -1);
+
+        // 표면 교차점의 양 끝 샘플까지 포함한다. 실제 쓰기는 보호층 안으로 제한한다.
+        Vector3 extent = Vector3.one * (radius + correctionWidth + Resolution);
+        Vector3Int minIndex = Vector3Int.Max(Vector3Int.zero,
+            Vector3Int.FloorToInt((Vector3.Min(start, end) - extent) / Resolution));
+        Vector3Int maxIndex = Vector3Int.Min(terrainMax,
+            Vector3Int.CeilToInt((Vector3.Max(start, end) + extent) / Resolution));
+        Vector3Int minMiningIndex = Vector3Int.Max(Vector3Int.one,
+            Vector3Int.CeilToInt(miningBounds.min / Resolution));
+        Vector3Int maxMiningIndex = Vector3Int.Min(terrainMax - Vector3Int.one,
+            Vector3Int.FloorToInt(miningBounds.max / Resolution));
+        Vector3Int writableMin = Vector3Int.Max(minIndex, minMiningIndex);
+        Vector3Int writableMax = Vector3Int.Min(maxIndex, maxMiningIndex);
+        if (writableMin.x > writableMax.x || writableMin.y > writableMax.y || writableMin.z > writableMax.z)
+            return false;
+
+        Vector3Int minChunk = Vector3Int.Min(minIndex / ChunkSize, ChunkCounts - Vector3Int.one);
+        Vector3Int maxChunk = Vector3Int.Min(maxIndex / ChunkSize, ChunkCounts - Vector3Int.one);
+        Vector3Int chunkCount = maxChunk - minChunk + Vector3Int.one;
+        int jobCount = chunkCount.x * chunkCount.y * chunkCount.z;
+        Vector3Int sampleCount = maxIndex - minIndex + Vector3Int.one;
+        int sampleLength = sampleCount.x * sampleCount.y * sampleCount.z;
+        NativeArray<byte> snapshot = new NativeArray<byte>(sampleLength, Allocator.TempJob,
+            NativeArrayOptions.UninitializedMemory);
+        NativeArray<float> weights = new NativeArray<float>(sampleLength, Allocator.TempJob);
+        NativeArray<JobHandle> handles = new NativeArray<JobHandle>(jobCount, Allocator.Temp);
+        ChunkDensityData[] affectedChunks = new ChunkDensityData[jobCount];
+        NativeArray<Vector3Int>[] changedBounds = new NativeArray<Vector3Int>[jobCount];
+        int chunkIndex = 0;
+        for (int x = minChunk.x; x <= maxChunk.x; x++)
+        for (int y = minChunk.y; y <= maxChunk.y; y++)
+        for (int z = minChunk.z; z <= maxChunk.z; z++)
+        {
+            affectedChunks[chunkIndex] = EnsureChunkWritable(new Vector3Int(x, y, z));
+            changedBounds[chunkIndex] = new NativeArray<Vector3Int>(2, Allocator.TempJob);
+            chunkIndex++;
+        }
+
+        bool changed = false;
+        // 첫 단계는 통째 제거, 이후 단계는 매번 새 표면을 계산하는 수축 보정이다.
+        for (int pass = -1; pass < mining.HitPassCount; pass++)
+        {
+            JobHandle weightsHandle = default;
+            if (pass >= 0)
+            {
+                foreach (ChunkDensityData chunk in affectedChunks)
+                {
+                    Vector3Int copyMin = Vector3Int.Max(minIndex, chunk.Origin);
+                    Vector3Int copyMax = Vector3Int.Min(maxIndex, chunk.Origin + chunk.SampleCount - Vector3Int.one);
+                    int copyLength = copyMax.z - copyMin.z + 1;
+                    for (int x = copyMin.x; x <= copyMax.x; x++)
+                    for (int y = copyMin.y; y <= copyMax.y; y++)
+                    {
+                        int sourceIndex = ((x - chunk.Origin.x) * chunk.SampleCount.y + y - chunk.Origin.y)
+                            * chunk.SampleCount.z + copyMin.z - chunk.Origin.z;
+                        int targetIndex = ((x - minIndex.x) * sampleCount.y + y - minIndex.y)
+                            * sampleCount.z + copyMin.z - minIndex.z;
+                        NativeArray<byte>.Copy(chunk.Densities, sourceIndex, snapshot, targetIndex, copyLength);
+                    }
+                }
+                weightsHandle = new CalculateCylinderErosionWeightsJob
+                {
+                    Densities = snapshot,
+                    Origin = minIndex,
+                    SampleCount = sampleCount,
+                    Resolution = Resolution,
+                    DensityThreshold = densityThreshold,
+                    Start = start,
+                    Direction = localDirection,
+                    Length = length,
+                    Radius = radius,
+                    CorrectionWidth = correctionWidth,
+                    Weights = weights
+                }.Schedule(sampleLength, 64);
+            }
+
+            for (int i = 0; i < jobCount; i++)
+            {
+                ChunkDensityData chunk = affectedChunks[i];
+                Vector3Int chunkMin = Vector3Int.Max(writableMin, chunk.Origin);
+                Vector3Int chunkMax = Vector3Int.Min(writableMax, chunk.Origin + chunk.SampleCount - Vector3Int.one);
+                if (pass < 0)
+                {
+                    handles[i] = new ModifyDensityCylinderJob
+                    {
+                        Densities = chunk.Densities,
+                        Origin = chunk.Origin,
+                        SampleCount = chunk.SampleCount,
+                        MinIndex = chunkMin,
+                        MaxIndex = chunkMax,
+                        Start = start,
+                        Direction = localDirection,
+                        Length = length,
+                        Radius = radius,
+                        Resolution = Resolution,
+                        ChangedBounds = changedBounds[i]
+                    }.Schedule();
+                }
+                else
+                {
+                    // 기존 구형 Job의 굴착 분기는 전달된 표면 가중치만 사용한다.
+                    handles[i] = new ModifyDensitySphereJob
+                    {
+                        Densities = chunk.Densities,
+                        ArtificialFlags = chunk.ArtificialFlags,
+                        DensityThreshold = densityThreshold,
+                        Origin = chunk.Origin,
+                        SampleCount = chunk.SampleCount,
+                        MinIndex = chunkMin,
+                        MaxIndex = chunkMax,
+                        MinMiningIndex = minMiningIndex,
+                        MaxMiningIndex = maxMiningIndex,
+                        Power = -mining.HitPower / mining.HitPassCount,
+                        ErosionWeights = weights,
+                        ErosionOrigin = minIndex,
+                        ErosionSampleCount = sampleCount,
+                        ChangedBounds = changedBounds[i]
+                    }.Schedule(weightsHandle);
+                }
+            }
+            JobHandle.CompleteAll(handles);
+            bool passChanged = false;
+            for (int i = 0; i < jobCount; i++)
+            {
+                Vector3Int min = changedBounds[i][0];
+                Vector3Int max = changedBounds[i][1];
+                if (min.x > max.x) continue;
+                minChangedIndex = Vector3Int.Min(minChangedIndex, min);
+                maxChangedIndex = Vector3Int.Max(maxChangedIndex, max);
+                passChanged = true;
+                changed = true;
+            }
+            if (pass >= 0 && !passChanged) break;
+        }
+
+        handles.Dispose();
+        weights.Dispose();
+        snapshot.Dispose();
+        for (int i = 0; i < jobCount; i++) changedBounds[i].Dispose();
+        return changed;
+    }
+
     // 통로들을 청크별로 배정하고 국소 Carve가 모두 끝난 뒤 실제 변경 범위를 반환한다.
     // 입력은 지형 로컬 단위다. 0 < threshold < 1, transitionWidth > 0,
     // noiseAmplitude >= 0, 각 Radius > noiseAmplitude를 호출 측에서 보장한다.
