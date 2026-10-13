@@ -207,7 +207,7 @@ public class CaveGenerator
             int cell = cells[selected];
             cells[selected] = cells[i];
             cells[i] = cell;
-            float3 jitter = random.NextFloat3(0.25f, 0.75f);
+            float3 jitter = random.NextFloat3(new float3(0.25f), new float3(0.75f, 1f, 0.75f));
             Vector3 fraction = new Vector3(
                 (cell / (cellCounts.y * cellCounts.z) + jitter.x) / cellCounts.x,
                 (cell / cellCounts.z % cellCounts.y + jitter.y) / cellCounts.y,
@@ -228,7 +228,7 @@ public class CaveGenerator
                 uint faceSeed = math.hash(new int4(seed, lower.x, lower.y, lower.z))
                     ^ (0x9E3779B9u * (uint)(axis + 1));
                 var faceRandom = new Random(faceSeed | 1u);
-                float3 fraction = faceRandom.NextFloat3(0.25f, 0.75f);
+                float3 fraction = faceRandom.NextFloat3(new float3(0.25f), new float3(0.75f, 1f, 0.75f));
                 Vector3 portal = origin + Vector3.Scale(
                     (Vector3)lower + new Vector3(fraction.x, fraction.y, fraction.z), regionSize);
                 portal[axis] = origin[axis] + (lower[axis] + 1) * regionSize[axis];
