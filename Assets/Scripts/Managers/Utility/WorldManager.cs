@@ -9,7 +9,7 @@ using UnityEngine;
 // 월드 생성 조건, 변경 청크와 Region 파일을 소유한다. Unity 데이터 접근은 메인 스레드에서만 한다.
 public sealed class WorldManager : MonoBehaviour
 {
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 5;
     private const int RegionSize = 4;
     private const uint RegionMagic = 0x31574644;
     private const int HeaderSize = 40;

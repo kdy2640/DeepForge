@@ -6,75 +6,48 @@ using Random = Unity.Mathematics.Random;
 // 유한한 생성 영역의 Region 통로와 지표 출입구를 만든다.
 public class CaveGenerator
 {
-    // Carve 전 기본 밀도를 읽어 지하 통로와 지표 출입구를 만든다. 밀도는 수정하지 않는다.
-    // bounds는 반지름·벽면 보정·밀도 전이를 포함할 지하 허용 영역이며 출입구는 이 영역 밖으로 이어진다.
+    // 경사로 끝을 고정 갈림길로 삼아 두 내부 노드에 연결한다.
     public CaveCarveSegment[] GenerateWithEntrance(
         CaveSettings settings, float densityThreshold, Vector3 entrancePosition, Vector3 entranceForward)
     {
         float margin = settings.RadiusRange.y + settings.NoiseAmplitude + (1f - densityThreshold) * settings.TransitionWidth;
         Bounds centerBounds = new Bounds(settings.Bounds.center, settings.Bounds.size - Vector3.one * (2f * margin));
-        CaveCarveSegment[] segments = Generate(centerBounds, settings);
+        CaveCarveSegment[] segments = Generate(centerBounds, settings, out List<Vector3> nodes);
 
         Vector3 forward = new Vector3(entranceForward.x, 0f, entranceForward.z).normalized;
-        Vector3 entranceStartPosition = entrancePosition + Vector3.up * margin;
-        Vector3 approachEnd = entranceStartPosition + forward * settings.EntranceLength -
+        Vector3 entranceStart = entrancePosition + Vector3.up * margin;
+        Vector3 fork = entranceStart + forward * settings.EntranceLength -
             Vector3.up * (settings.EntranceLength * Mathf.Tan(settings.EntranceMaxSlope * Mathf.Deg2Rad));
-        CaveCarveSegment entrance = CreateCaveEntrance(segments, settings, approachEnd, forward);
-        int entranceStart = segments.Length;
-        int approachCount = Mathf.CeilToInt(Vector3.Distance(entranceStartPosition, approachEnd) / settings.SegmentLength);
-        int entranceCount = Mathf.CeilToInt(Vector3.Distance(entrance.Start, entrance.End) / settings.SegmentLength);
-        System.Array.Resize(ref segments, entranceStart + approachCount + entranceCount);
-        Vector3 previousApproach = entranceStartPosition;
-        for (int i = 1; i <= approachCount; i++)
+        List<CaveCarveSegment> branches = CreateCaveEntrance(segments, nodes, settings, centerBounds, fork, forward);
+        var result = new List<CaveCarveSegment>(segments);
+        int divisions = Mathf.CeilToInt(Vector3.Distance(entranceStart, fork) / settings.SegmentLength);
+        Vector3 previous = entranceStart;
+        for (int i = 1; i <= divisions; i++)
         {
-            Vector3 point = i == approachCount ? approachEnd :
-                Vector3.Lerp(entranceStartPosition, approachEnd, (float)i / approachCount);
-            segments[entranceStart + i - 1] = new CaveCarveSegment
-            {
-                Start = previousApproach,
-                End = point,
-                Radius = settings.RadiusRange.y
-            };
-            previousApproach = point;
-        }
-        entranceStart += approachCount;
-        Vector3 previous = entrance.Start;
-        for (int i = 1; i <= entranceCount; i++)
-        {
-            Vector3 point = i == entranceCount ? entrance.End :
-                Vector3.Lerp(entrance.Start, entrance.End, (float)i / entranceCount);
-            segments[entranceStart + i - 1] = new CaveCarveSegment
-            {
-                Start = previous,
-                End = point,
-                Radius = entrance.Radius
-            };
+            Vector3 point = i == divisions ? fork : Vector3.Lerp(entranceStart, fork, (float)i / divisions);
+            result.Add(new CaveCarveSegment { Start = previous, End = point, Radius = settings.RadiusRange.y });
             previous = point;
         }
-
-        return segments;
+        result.AddRange(branches);
+        return result.ToArray();
     }
 
-    // 캠프 앞 고정 진입 구간에서 시작해 제한 경사로 연결 가능한 동굴 구간 끝점에 붙인다.
-    private CaveCarveSegment CreateCaveEntrance(
-        CaveCarveSegment[] segments, CaveSettings settings, Vector3 entrance, Vector3 forward)
+    // 실제 내부 노드를 거리순으로 검사하고, 갈림길에서 방향이 벌어지는 두 경로를 선택한다.
+    private List<CaveCarveSegment> CreateCaveEntrance(
+        CaveCarveSegment[] segments, List<Vector3> nodes, CaveSettings settings,
+        Bounds centerBounds, Vector3 entrance, Vector3 forward)
     {
         float maxSlope = Mathf.Tan(settings.EntranceMaxSlope * Mathf.Deg2Rad);
-        var candidates = new HashSet<Vector3>();
-        foreach (CaveCarveSegment segment in segments)
+        var candidates = new List<Vector3>();
+        foreach (Vector3 point in nodes)
         {
-            for (int endpoint = 0; endpoint < 2; endpoint++)
-            {
-                Vector3 point = endpoint == 0 ? segment.Start : segment.End;
-                Vector3 difference = entrance - point;
-                float horizontalDistance = new Vector2(difference.x, difference.z).magnitude;
-                if (point.y >= entrance.y || difference.y > horizontalDistance * maxSlope ||
-                    Vector3.Dot(point - entrance, forward) <= 0f) continue;
-                candidates.Add(point);
-            }
+            Vector3 difference = point - entrance;
+            float horizontalDistance = new Vector2(difference.x, difference.z).magnitude;
+            if (difference.y >= 0f || -difference.y > horizontalDistance * maxSlope ||
+                Vector3.Dot(difference, forward) <= 0f) continue;
+            candidates.Add(point);
         }
-        var ordered = new List<Vector3>(candidates);
-        ordered.Sort((a, b) =>
+        candidates.Sort((a, b) =>
         {
             int distanceOrder = (a - entrance).sqrMagnitude.CompareTo((b - entrance).sqrMagnitude);
             if (distanceOrder != 0) return distanceOrder;
@@ -84,71 +57,159 @@ public class CaveGenerator
             return yOrder != 0 ? yOrder : a.z.CompareTo(b.z);
         });
 
-        // 도착부 이전에 다른 동굴을 관통하면 진입로 바닥이 꺼지므로 해당 후보를 제외한다.
-        float joinDistance = 2f * (settings.RadiusRange.y + settings.NoiseAmplitude);
-        foreach (Vector3 connection in ordered)
+        // 입구는 일반 동굴보다 높다. 입구 연결에만 이 범위를 사용한다.
+        Vector3 pathMin = Vector3.Min(centerBounds.min, entrance);
+        Vector3 pathMax = Vector3.Max(centerBounds.max, entrance);
+        // 접속점의 중심선뿐 아니라 통로 반지름까지 합쳐지는 도착부를 제외한다.
+        float joinDistance = 3f * (settings.RadiusRange.y + settings.NoiseAmplitude);
+        float forkDistance = 4f * (settings.RadiusRange.y + settings.NoiseAmplitude);
+        var paths = new List<List<CaveCarveSegment>>();
+        for (int candidate = 0; candidate < candidates.Count; candidate++)
         {
-            float length = Vector3.Distance(entrance, connection);
-            if (length <= joinDistance)
+            var path = new List<CaveCarveSegment>();
+            BuildPaths(new List<Vector3> { entrance, candidates[candidate] }, new List<Vector2Int> { new Vector2Int(0, 1) },
+                math.hash(new int4(settings.Seed, candidate, 0, 17)), pathMin, pathMax,
+                settings.RadiusRange.y, settings.RadiusRange.y, settings.BendDistance, settings.SegmentLength, path);
+
+            // 수평 곡선을 따라 일정한 경사로 내려간다. 제어점의 높이 난수로 급경사가 생기지 않게 한다.
+            float horizontalLength = 0f;
+            foreach (CaveCarveSegment leg in path)
             {
-                return new CaveCarveSegment { Start = entrance, End = connection, Radius = settings.RadiusRange.y };
+                Vector3 delta = leg.End - leg.Start;
+                horizontalLength += new Vector2(delta.x, delta.z).magnitude;
             }
-            Vector3 approach = (connection - entrance) * ((length - joinDistance) / length);
-            float a = approach.sqrMagnitude;
-            bool clear = true;
-            foreach (CaveCarveSegment segment in segments)
+            var slopedPath = new List<CaveCarveSegment>(path.Count);
+            float horizontalTravelled = 0f;
+            Vector3 previous = entrance;
+            for (int i = 0; i < path.Count; i++)
             {
-                // 도착부를 뺀 진입 선분과 기존 선분의 최단 거리를 계산한다.
-                Vector3 direction = segment.End - segment.Start;
-                Vector3 offset = entrance - segment.Start;
-                float e = direction.sqrMagnitude;
-                float c = Vector3.Dot(approach, offset);
-                float s;
-                float t = 0f;
-                if (e == 0f)
+                Vector3 delta = path[i].End - path[i].Start;
+                horizontalTravelled += new Vector2(delta.x, delta.z).magnitude;
+                Vector3 end = path[i].End;
+                end.y = Mathf.Lerp(entrance.y, candidates[candidate].y, horizontalTravelled / horizontalLength);
+                if (i == path.Count - 1) end = candidates[candidate];
+                int divisions = Mathf.CeilToInt(Vector3.Distance(previous, end) / settings.SegmentLength);
+                Vector3 start = previous;
+                for (int j = 1; j <= divisions; j++)
                 {
-                    s = Mathf.Clamp01(-c / a);
+                    Vector3 point = j == divisions ? end : Vector3.Lerp(start, end, (float)j / divisions);
+                    slopedPath.Add(new CaveCarveSegment { Start = previous, End = point, Radius = path[i].Radius });
+                    previous = point;
                 }
-                else
+            }
+            path = slopedPath;
+
+            bool walkable = true;
+            float length = 0f;
+            foreach (CaveCarveSegment leg in path)
+            {
+                Vector3 delta = leg.End - leg.Start;
+                length += delta.magnitude;
+                if (delta.y > 0.00001f || -delta.y > new Vector2(delta.x, delta.z).magnitude * maxSlope + 0.00001f)
                 {
-                    float b = Vector3.Dot(approach, direction);
-                    float f = Vector3.Dot(direction, offset);
-                    float denominator = a * e - b * b;
-                    s = denominator > 0f ? Mathf.Clamp01((b * f - c * e) / denominator) : 0f;
-                    t = (b * s + f) / e;
-                    if (t < 0f)
-                    {
-                        t = 0f;
-                        s = Mathf.Clamp01(-c / a);
-                    }
-                    else if (t > 1f)
-                    {
-                        t = 1f;
-                        s = Mathf.Clamp01((b - c) / a);
-                    }
-                }
-                float clearance = settings.RadiusRange.y + segment.Radius + 2f * settings.NoiseAmplitude;
-                if ((offset + approach * s - direction * t).sqrMagnitude < clearance * clearance)
-                {
-                    clear = false;
+                    walkable = false;
                     break;
                 }
             }
-            if (clear)
-            {
-                return new CaveCarveSegment { Start = entrance, End = connection, Radius = settings.RadiusRange.y };
-            }
-        }
+            if (!walkable) continue;
 
-        throw new System.InvalidOperationException("경사와 통로 간격을 만족하는 동굴 출입구를 만들 수 없습니다. 출입구 위치·동굴 영역·경사 설정을 확인하세요.");
+            bool networkClear = false;
+            // 먼저 기존 동굴과 검사한 뒤, 앞서 통과한 경로들과 한 쌍씩 검사한다.
+            for (int group = -1; group < paths.Count; group++)
+            {
+                if (group >= 0)
+                {
+                    Vector3 heading = path[0].End - entrance;
+                    Vector3 otherHeading = paths[group][0].End - entrance;
+                    heading.y = 0f;
+                    otherHeading.y = 0f;
+                    if (Vector3.Angle(heading, otherHeading) < 45f) continue;
+                }
+                IReadOnlyList<CaveCarveSegment> obstacles = group < 0 ? (IReadOnlyList<CaveCarveSegment>)segments : paths[group];
+                bool clear = true;
+                float travelled = 0f;
+                foreach (CaveCarveSegment leg in path)
+                {
+                    float legLength = Vector3.Distance(leg.Start, leg.End);
+                    float from = Mathf.Max(travelled, group < 0 ? 0f : forkDistance);
+                    float to = Mathf.Min(travelled + legLength, group < 0 ? length - joinDistance : length);
+                    travelled += legLength;
+                    if (from >= to) continue;
+                    Vector3 start = Vector3.Lerp(leg.Start, leg.End, (from - travelled + legLength) / legLength);
+                    Vector3 end = Vector3.Lerp(leg.Start, leg.End, (to - travelled + legLength) / legLength);
+                    Vector3 approach = end - start;
+                    float a = approach.sqrMagnitude;
+                    float obstacleTravelled = 0f;
+                    foreach (CaveCarveSegment obstacle in obstacles)
+                    {
+                        Vector3 obstacleStart = obstacle.Start;
+                        if (group >= 0)
+                        {
+                            float obstacleLength = Vector3.Distance(obstacle.Start, obstacle.End);
+                            float skipped = Mathf.Max(0f, forkDistance - obstacleTravelled);
+                            obstacleTravelled += obstacleLength;
+                            if (skipped >= obstacleLength) continue;
+                            obstacleStart = Vector3.Lerp(obstacle.Start, obstacle.End, skipped / obstacleLength);
+                        }
+                        float clearance = leg.Radius + obstacle.Radius + 2f * settings.NoiseAmplitude;
+                        // 멀리 떨어진 구간은 선분 거리 계산을 생략한다.
+                        Vector3 min = Vector3.Min(start, end) - Vector3.one * clearance;
+                        Vector3 max = Vector3.Max(start, end) + Vector3.one * clearance;
+                        Vector3 obstacleMin = Vector3.Min(obstacleStart, obstacle.End);
+                        Vector3 obstacleMax = Vector3.Max(obstacleStart, obstacle.End);
+                        if (obstacleMax.x < min.x || obstacleMin.x > max.x ||
+                            obstacleMax.y < min.y || obstacleMin.y > max.y ||
+                            obstacleMax.z < min.z || obstacleMin.z > max.z) continue;
+
+                        Vector3 direction = obstacle.End - obstacleStart;
+                        Vector3 offset = start - obstacleStart;
+                        float e = direction.sqrMagnitude;
+                        float c = Vector3.Dot(approach, offset);
+                        float s;
+                        float t = 0f;
+                        if (e == 0f) s = Mathf.Clamp01(-c / a);
+                        else
+                        {
+                            float b = Vector3.Dot(approach, direction);
+                            float f = Vector3.Dot(direction, offset);
+                            float denominator = a * e - b * b;
+                            s = denominator > 0f ? Mathf.Clamp01((b * f - c * e) / denominator) : 0f;
+                            t = (b * s + f) / e;
+                            if (t < 0f) { t = 0f; s = Mathf.Clamp01(-c / a); }
+                            else if (t > 1f) { t = 1f; s = Mathf.Clamp01((b - c) / a); }
+                        }
+                        if ((offset + approach * s - direction * t).sqrMagnitude < clearance * clearance)
+                        {
+                            clear = false;
+                            break;
+                        }
+                    }
+                    if (!clear) break;
+                }
+                if (group < 0)
+                {
+                    networkClear = clear;
+                    if (!clear) break;
+                }
+                else if (clear)
+                {
+                    var branches = new List<CaveCarveSegment>(paths[group]);
+                    branches.AddRange(path);
+                    return branches;
+                }
+            }
+            if (networkClear) paths.Add(path);
+        }
+        throw new System.InvalidOperationException("경사와 통로 간격을 만족하는 입구 갈림길을 만들 수 없습니다. 출입구 위치·동굴 영역·경사 설정을 확인하세요.");
     }
 
     // centerBounds는 지형 로컬 좌표의 통로 중심 허용 영역이다.
     // 호출 조건: 양수인 영역 크기와 settings.RegionCounts, settings.NodesPerRegion >= 2,
     // settings.ExtraConnectionsPerRegion >= 0, 0 < settings.RadiusRange.x <= settings.RadiusRange.y, settings.BendDistance >= 0, settings.SegmentLength > 0.
     // 벽면 보정과 밀도 전이를 포함한 외곽 여유, 지표 깊이는 호출 측에서 확보한다.
-    public CaveCarveSegment[] Generate(Bounds centerBounds, CaveSettings settings)
+    public CaveCarveSegment[] Generate(Bounds centerBounds, CaveSettings settings, out List<Vector3> entranceNodes)
     {
+        entranceNodes = new List<Vector3>();
         Vector3 origin = centerBounds.min;
         Vector3 regionSize = new Vector3(
             centerBounds.size.x / settings.RegionCounts.x,
@@ -165,6 +226,7 @@ public class CaveGenerator
                     uint regionSeed = math.hash(new int4(settings.Seed, x, y, z));
                     List<Vector3> nodes = PlaceNodes(
                         settings.Seed, coordinate, settings.RegionCounts, origin, regionSize, settings.NodesPerRegion);
+                    for (int i = 0; i < settings.NodesPerRegion; i++) entranceNodes.Add(nodes[i]);
                     List<Vector2Int> connections = BuildConnections(
                         nodes, settings.NodesPerRegion, settings.ExtraConnectionsPerRegion);
                     Vector3 regionMin = origin + Vector3.Scale((Vector3)coordinate, regionSize);
