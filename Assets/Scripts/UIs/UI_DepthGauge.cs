@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-// 입구를 0m로 삼고, 실제 청크의 지층 소속을 세로 눈금에 표시한다.
+// 입구를 0m로 삼고, 지형과 동일한 심도 기준으로 지층을 표시한다.
 public sealed class UI_DepthGauge : MonoBehaviour
 {
     private Transform player;
@@ -45,34 +45,21 @@ public sealed class UI_DepthGauge : MonoBehaviour
         while (!terrain.IsInitialLoadComplete)
             yield return null;
 
-        layers = TerrainTypeDB.GetLayers();
+        TerrainData data = terrain.Data;
+        layers = data.Layers;
         layerBottoms = new float[layers.Length];
         layerTops = new float[layers.Length];
         for (int i = 0; i < layers.Length; i++)
         {
-            layerBottoms[i] = float.PositiveInfinity;
-            layerTops[i] = float.NegativeInfinity;
+            float top = data.LayerOriginY - layers[i].StartDepth;
+            float bottom = i + 1 < layers.Length
+                ? data.LayerOriginY - layers[i + 1].StartDepth
+                : terrain.Settings.MiningBounds.min.y;
+            layerTops[i] = terrain.transform.TransformPoint(Vector3.up * top).y;
+            layerBottoms[i] = terrain.transform.TransformPoint(Vector3.up * bottom).y;
             layerBands[i].color = layers[i].Color;
             layerBoundaries[i].GetComponent<Image>().color =
                 Color.Lerp(layers[i].Color, Color.white, 0.45f);
-        }
-
-        TerrainData data = terrain.Data;
-        for (int y = 0; y < data.ChunkCounts.y; y++)
-        {
-            ChunkDensityData chunk = data.GetChunkData(new Vector3Int(0, y, 0));
-            for (int i = 0; i < layers.Length; i++)
-            {
-                if (layers[i].TypeId != chunk.LayerId)
-                    continue;
-
-                float bottom = terrain.transform.TransformPoint(
-                    Vector3.up * (chunk.Origin.y * data.Resolution)).y;
-                float top = terrain.transform.TransformPoint(
-                    Vector3.up * ((chunk.Origin.y + chunk.CubeCount.y) * data.Resolution)).y;
-                layerBottoms[i] = Mathf.Min(layerBottoms[i], bottom);
-                layerTops[i] = Mathf.Max(layerTops[i], top);
-            }
         }
 
         ready = true;
@@ -131,7 +118,7 @@ public sealed class UI_DepthGauge : MonoBehaviour
                 band.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, top - bottom);
             }
 
-            // 같은 지층의 청크 사이에는 선을 긋지 않고, 지층이 바뀌는 위쪽 경계만 표시한다.
+            // 지층이 바뀌는 위쪽 경계만 표시한다.
             float boundaryY = (depth - topDepth) * pixelsPerMeter;
             layerBoundaries[i].gameObject.SetActive(
                 topDepth > 0f && bottomDepth > topDepth && Mathf.Abs(boundaryY) <= halfHeight);
@@ -140,8 +127,7 @@ public sealed class UI_DepthGauge : MonoBehaviour
 
         TerrainData data = terrain.Data;
         float localY = terrain.transform.InverseTransformPoint(player.position).y;
-        int chunkY = Mathf.Clamp(Mathf.FloorToInt(localY / (data.ChunkSize * data.Resolution)), 0, data.ChunkCounts.y - 1);
-        byte typeId = data.GetChunkData(new Vector3Int(0, chunkY, 0)).LayerId;
+        byte typeId = data.GetLayerAtHeight(localY).TypeId;
         for (int i = 0; i < layers.Length; i++)
         {
             if (layers[i].TypeId != typeId || currentLayer == i)

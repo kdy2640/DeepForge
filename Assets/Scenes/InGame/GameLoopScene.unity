@@ -170,7 +170,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TerrainManager
   settings:
     Surface:
-      BaseSurfaceHeight: 125
+      BaseSurfaceHeight: 175.5
       Amplitude: 0
     Density:
       Seed: 15
@@ -180,8 +180,8 @@ MonoBehaviour:
     Cave:
       Enabled: 1
       Bounds:
-        m_Center: {x: 192, y: 23, z: 192}
-        m_Extent: {x: 184, y: 15, z: 184}
+        m_Center: {x: 192, y: 34.375, z: 192}
+        m_Extent: {x: 184, y: 22.5625, z: 184}
       Seed: 15
       RegionCounts: {x: 4, y: 1, z: 4}
       NodesPerRegion: 6
@@ -206,12 +206,12 @@ MonoBehaviour:
       PrewarmPerFrame: 16
     Grid:
       Width: 1024
-      DensityFieldHeight: 150
+      DensityFieldHeight: 200
       Resolution: 0.375
       ChunkSize: 16
     MiningBounds:
-      m_Center: {x: 192, y: 23, z: 192}
-      m_Extent: {x: 190, y: 21, z: 190}
+      m_Center: {x: 192, y: 34.375, z: 192}
+      m_Extent: {x: 190, y: 28.5625, z: 190}
     Streaming:
       Target: {fileID: 1026908064}
       LoadDistance: 42

@@ -24,11 +24,13 @@ public class TerrainData : IDisposable
     public float Resolution { get; }
     public int ChunkSize { get; }
     public Vector3Int ChunkCounts { get; }
+    public TerrainLayer[] Layers { get; }
+    public float LayerOriginY { get; private set; }
 
     // 지형 크기에 맞춰 청크 정보만 준비한다. 초기 밀도 생성 시 상태를 결정한다.
     public TerrainData(TerrainGridGeometry grid)
     {
-        TerrainLayer[] sourceLayers = TerrainTypeDB.GetLayers();
+        Layers = TerrainTypeDB.GetLayers();
 
         Width = grid.Width;
         DensityFieldHeight = grid.DensityFieldHeight;
@@ -57,20 +59,30 @@ public class TerrainData : IDisposable
                         x == ChunkCounts.x - 1 ? 1 : 0,
                         y == ChunkCounts.y - 1 ? 1 : 0,
                         z == ChunkCounts.z - 1 ? 1 : 0);
-                    // 끝 청크의 실제 높이를 포함한 중심으로 자연 지층을 한 번 배정한다.
-                    float centerY = (origin.y + cubeCount.y * 0.5f) * Resolution;
-                    byte layerId = sourceLayers[0].TypeId;
-                    for (int i = 1; i < sourceLayers.Length; i++)
-                    {
-                        if (centerY < sourceLayers[i].YStart) break;
-                        layerId = sourceLayers[i].TypeId;
-                    }
-                    chunks.Add(chunkCoord, new ChunkDensityData(origin, cubeCount, sampleCount, layerId));
+                    chunks.Add(chunkCoord, new ChunkDensityData(origin, cubeCount, sampleCount));
                 }
             }
         }
 
         grid.Initialize(this);
+    }
+
+    // 기지 배치가 끝난 뒤, 입구의 지형 로컬 높이를 심도 0으로 고정한다.
+    public void SetLayerOrigin(float localEntranceY)
+    {
+        LayerOriginY = localEntranceY;
+    }
+
+    public TerrainLayer GetLayerAtHeight(float localY)
+    {
+        float depth = LayerOriginY - localY;
+        int index = 0;
+        for (int i = 1; i < Layers.Length; i++)
+        {
+            if (depth < Layers[i].StartDepth) break;
+            index = i;
+        }
+        return Layers[index];
     }
 
     // 모든 청크의 밀도를 0으로 초기화한다.

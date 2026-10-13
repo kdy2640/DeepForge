@@ -17,8 +17,6 @@ public struct ChunkDensityData
     public Vector3Int Origin;
     public Vector3Int CubeCount;
     public Vector3Int SampleCount;
-    // 자연 지층 소속은 청크마다 하나이며 밀도 수정으로 바뀌지 않는다.
-    public byte LayerId { get; }
     // 균일 청크는 상수로 읽고, Complicate만 실제 배열을 소유한다.
     public ChunkDensityState State { get; private set; }
     // 청크 내부 좌표를 일차원으로 펼친 밀도 배열. 0~255는 밀도 0~1에 대응한다.
@@ -27,12 +25,11 @@ public struct ChunkDensityData
     public NativeArray<byte> ArtificialFlags;
 
     // 청크 정보만 준비한다. 초기 생성이나 첫 쓰기 때 필요한 배열을 할당한다.
-    public ChunkDensityData(Vector3Int origin, Vector3Int cubeCount, Vector3Int sampleCount, byte layerId)
+    public ChunkDensityData(Vector3Int origin, Vector3Int cubeCount, Vector3Int sampleCount)
     {
         Origin = origin;
         CubeCount = cubeCount;
         SampleCount = sampleCount;
-        LayerId = layerId;
         State = ChunkDensityState.Blank;
         Densities = default;
         ArtificialFlags = default;
@@ -92,17 +89,15 @@ public struct ChunkDensityData
         State = ChunkDensityState.Blank;
     }
 
-    // 청크의 LayerId로 돌 목록을 조회하고 고정 시드로 위치와 종류를 결정한다.
-    public StoneSpawnData[] CreateStoneSpawns(int seed, int count, float resolution, Bounds miningBounds)
+    // 고정 시드로 위치를 정한 뒤, 각 위치의 지층에서 돌 종류를 선택한다.
+    public StoneSpawnData[] CreateStoneSpawns(int seed, int count, TerrainData terrain, Bounds miningBounds)
     {
+        float resolution = terrain.Resolution;
         // 보호 영역에 걸친 청크는 광석을 배치하지 않는다. 내부 청크의 난수 순서는 유지한다.
         Vector3 chunkMin = (Vector3)Origin * resolution;
         Vector3 chunkMax = (Vector3)(Origin + CubeCount) * resolution;
         if (!miningBounds.Contains(chunkMin) || !miningBounds.Contains(chunkMax))
             return System.Array.Empty<StoneSpawnData>();
-
-        List<int> stoneIDs = TerrainTypeDB.GetData(LayerId).Layer.stondataIDs;
-        if (stoneIDs.Count == 0) return System.Array.Empty<StoneSpawnData>();
 
         uint chunkSeed = math.hash(new int4(seed, Origin.x, Origin.y, Origin.z));
         // Unity.Mathematics.Random의 시드는 0이 될 수 없다.
@@ -123,11 +118,15 @@ public struct ChunkDensityData
         }
 
         // 종류 선택이 기존 위치 난수 순서에 영향을 주지 않도록 위치 계산 후 선택한다.
+        int spawnCount = 0;
         for (int i = 0; i < spawns.Length; i++)
         {
+            List<int> stoneIDs = terrain.GetLayerAtHeight(spawns[i].TerrainLocalPosition.y).stondataIDs;
+            if (stoneIDs.Count == 0) continue;
             spawns[i].StoneID = stoneIDs[random.NextInt(stoneIDs.Count)];
+            spawns[spawnCount++] = spawns[i];
         }
-
+        if (spawnCount != spawns.Length) System.Array.Resize(ref spawns, spawnCount);
         return spawns;
     }
 

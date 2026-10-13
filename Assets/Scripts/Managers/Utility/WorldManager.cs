@@ -9,7 +9,7 @@ using UnityEngine;
 // 월드 생성 조건, 변경 청크와 Region 파일을 소유한다. Unity 데이터 접근은 메인 스레드에서만 한다.
 public sealed class WorldManager : MonoBehaviour
 {
-    public const int CurrentVersion = 2;
+    public const int CurrentVersion = 3;
     private const int RegionSize = 4;
     private const uint RegionMagic = 0x31574644;
     private const int HeaderSize = 40;
@@ -173,8 +173,8 @@ public sealed class WorldManager : MonoBehaviour
     {
         if (!changedChunks.TryGetValue(coordinate, out ChunkSaveData chunk))
         {
-            int count = TerrainTypeDB.GetData(terrain.GetChunkData(coordinate).LayerId).Layer.stondataIDs.Count == 0
-                ? 0 : Metadata.StonesPerChunk;
+            int count = terrain.GetChunkData(coordinate).CreateStoneSpawns(
+                Metadata.StoneSeed, Metadata.StonesPerChunk, terrain, Metadata.MiningBounds).Length;
             chunk = new ChunkSaveData { Coordinate = coordinate, StoneMask = (byte)((1 << count) - 1), Encoding = WorldDensityEncoding.Original };
             changedChunks.Add(coordinate, chunk);
         }

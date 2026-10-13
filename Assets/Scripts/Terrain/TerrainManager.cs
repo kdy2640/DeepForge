@@ -138,6 +138,7 @@ public class TerrainManager : MonoBehaviour
         generator = generator ?? new TerrainDensityFormer();
         generator.Generate(data, settings.Surface, settings.Density);
         baseCamp.Place(this);
+        data.SetLayerOrigin(transform.InverseTransformPoint(baseCamp.EntrancePoint.position).y);
         GenerateCaves();
         GameManager.Instance.Utility.World.ApplySavedChunks(data);
         baseCamp.SpawnPlayer();

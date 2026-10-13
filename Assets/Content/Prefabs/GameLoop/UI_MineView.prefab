@@ -2474,9 +2474,9 @@ MonoBehaviour:
   - {fileID: 7122451860500096413}
   - {fileID: 6844429700607477317}
   layerNames:
-  - "\uD604\uBB34\uC554"
-  - "\uD654\uAC15\uC554"
   - "\uC11D\uD68C\uC554"
+  - "\uD654\uAC15\uC554"
+  - "\uD604\uBB34\uC554"
   visibleMeters: 40
   tickMeters: 5
 --- !u!225 &4835302680690111153

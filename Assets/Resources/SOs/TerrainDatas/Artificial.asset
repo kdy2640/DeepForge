@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Artificial
   m_EditorClassIdentifier: Assembly-CSharp::TerrainTypeSO
   layer:
-    YStart: 0
+    StartDepth: 0
     TypeId: 0
     Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-    stondataIDs: []
+    stondataIDs: 
