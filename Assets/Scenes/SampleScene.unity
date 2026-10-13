@@ -1021,6 +1021,8 @@ MonoBehaviour:
     HitPower: 0.4
     HitPassCount: 5
     HitEdgeWidth: 0.35
+    HitDepthLayers: 3
+    HitCorrectionWidth: 1
     ErosionDirectionBlendTime: 0.5
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1
@@ -1032,6 +1034,8 @@ MonoBehaviour:
     HitPower: 0.4
     HitPassCount: 5
     HitEdgeWidth: 0.35
+    HitDepthLayers: 3
+    HitCorrectionWidth: 1
     ErosionDirectionBlendTime: 0.5
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1
@@ -1185,6 +1189,9 @@ MonoBehaviour:
   airAcceleration: 15
   jumpVelocity: 6
   minimumGroundNormalY: 0.6
+  dashSpeed: 20
+  dashDuration: 0.15
+  dashRechargeTime: 1.5
 --- !u!114 &1026908067
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1230,6 +1237,8 @@ MonoBehaviour:
     HitPower: 0.4
     HitPassCount: 5
     HitEdgeWidth: 0.35
+    HitDepthLayers: 3
+    HitCorrectionWidth: 1
     ErosionDirectionBlendTime: 0.5
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1

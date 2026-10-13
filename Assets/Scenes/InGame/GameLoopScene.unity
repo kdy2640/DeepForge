@@ -1139,6 +1139,8 @@ MonoBehaviour:
     HitPower: 0.4
     HitPassCount: 5
     HitEdgeWidth: 0.35
+    HitDepthLayers: 3
+    HitCorrectionWidth: 1
     ErosionDirectionBlendTime: 0.5
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1
@@ -1150,6 +1152,8 @@ MonoBehaviour:
     HitPower: 0.4
     HitPassCount: 5
     HitEdgeWidth: 0.35
+    HitDepthLayers: 3
+    HitCorrectionWidth: 1
     ErosionDirectionBlendTime: 0.5
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1
@@ -1351,6 +1355,8 @@ MonoBehaviour:
     HitPower: 0.4
     HitPassCount: 5
     HitEdgeWidth: 0.35
+    HitDepthLayers: 3
+    HitCorrectionWidth: 1
     ErosionDirectionBlendTime: 0.5
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1
