@@ -4,8 +4,6 @@ using UnityEngine;
 public sealed class GameLoopManager : MonoBehaviour
 {
     [SerializeField] private UpgradeManager upgradeManager;
-    [SerializeField] private int backpackEquipmentId = 1;
-    [SerializeField] private int[] backpackCapacities = { 50, 100, 150 };
     [SerializeField] private BackPack backPack = new();
 
     public BackPack BackPack => backPack;
@@ -23,8 +21,8 @@ public sealed class GameLoopManager : MonoBehaviour
 
     private void RefreshCapacity()
     {
-        int level = upgradeManager.RuntimeLevel.GetEquipment(backpackEquipmentId);
-        backPack.SetCapacity(backpackCapacities[Mathf.Min(level, backpackCapacities.Length - 1)]);
+        backPack.SetCapacity(Mathf.RoundToInt(
+            upgradeManager.RuntimeStat.Equipment.Get(EquipmentStatType.BackpackCapacity)));
     }
 
     public bool DepositBackPack()

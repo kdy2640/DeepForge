@@ -25,6 +25,7 @@ public sealed class MineLighting : MonoBehaviour
     private Camera playerCamera;
     private Color outsideBackgroundColor;
     private float headlightIntensity;
+    private UpgradeManager upgradeManager;
 
     private void Start()
     {
@@ -35,7 +36,20 @@ public sealed class MineLighting : MonoBehaviour
         playerCamera = headlight.GetComponentInParent<Camera>();
         outsideBackgroundColor = playerCamera.backgroundColor;
         headlightIntensity = headlight.intensity;
+        upgradeManager = GameManager.Instance.Upgrade;
+        upgradeManager.SubscribeUpgradeChanged(RefreshLightingStats);
+        RefreshLightingStats();
         ApplyLighting(0f);
+    }
+
+    private void OnDestroy()
+    {
+        upgradeManager.UnsubscribeUpgradeChanged(RefreshLightingStats);
+    }
+
+    private void RefreshLightingStats()
+    {
+        headlight.range = upgradeManager.RuntimeStat.Equipment.Get(EquipmentStatType.LightRange);
     }
 
     private void LateUpdate()

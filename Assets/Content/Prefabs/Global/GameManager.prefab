@@ -722,8 +722,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameLoopManager
   upgradeManager: {fileID: 6817583298313445971}
-  backpackEquipmentId: 1
-  backpackCapacities: 320000006400000096000000
   backPack:
     ores: []
     capacity: 50
@@ -939,6 +937,14 @@ MonoBehaviour:
   runtimeLevel:
     equipmentLevels: 
     forgedGearLevels: 
+  runtimeStat:
+    equipment:
+      values:
+      - 0
+      - 0
+      - 0
+      - 0
+      - 0
 --- !u!1 &8415880613632776877
 GameObject:
   m_ObjectHideFlags: 0

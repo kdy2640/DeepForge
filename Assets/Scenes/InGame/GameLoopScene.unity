@@ -1039,7 +1039,6 @@ MonoBehaviour:
     ErosionDirectionBlendTime: 0.5
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1
-  equipmentId: 0
   terrainManager: {fileID: 134620926}
   miningChips: {fileID: 666992551}
   miningAudio: {fileID: 666992550}
@@ -1175,7 +1174,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59788f797f558b744abc57730e3e8b9b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMover
-  speed: 8
   groundAcceleration: 50
   airAcceleration: 15
   jumpVelocity: 6

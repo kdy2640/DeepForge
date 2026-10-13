@@ -9,7 +9,7 @@ using UnityEngine.Serialization;
 [RequireComponent(typeof(Collider))]
 public sealed class PlayerMover : MonoBehaviour
 {
-    [SerializeField] private float speed = 10f;
+    private float speed;
     [SerializeField, Min(0f)] private float groundAcceleration = 50f;
     [SerializeField, Min(0f)] private float airAcceleration = 15f;
     [SerializeField, Min(0f)]
@@ -20,6 +20,7 @@ public sealed class PlayerMover : MonoBehaviour
     private Rigidbody rigid;
     private Transform cameraHolder;
     private InputManager inputManager;
+    private UpgradeManager upgradeManager;
     private Vector2 inputDirection;
     private readonly HashSet<Collider> groundContacts = new();
     private bool jumpRequested;
@@ -164,6 +165,9 @@ public sealed class PlayerMover : MonoBehaviour
 
         inputManager.Subscribe(InputEvent.Move, OnMove);
         inputManager.Subscribe(InputEvent.Jump, OnJump);
+        upgradeManager = GameManager.Instance.Upgrade;
+        upgradeManager.SubscribeUpgradeChanged(RefreshMovementStats);
+        RefreshMovementStats();
         isInputSubscribed = true;
     }
 
@@ -176,7 +180,13 @@ public sealed class PlayerMover : MonoBehaviour
 
         inputManager.Unsubscribe(InputEvent.Move, OnMove);
         inputManager.Unsubscribe(InputEvent.Jump, OnJump);
+        upgradeManager.UnsubscribeUpgradeChanged(RefreshMovementStats);
         inputManager = null;
         isInputSubscribed = false;
+    }
+
+    private void RefreshMovementStats()
+    {
+        speed = upgradeManager.RuntimeStat.Equipment.Get(EquipmentStatType.MoveSpeed);
     }
 }

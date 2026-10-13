@@ -23,3 +23,7 @@ MonoBehaviour:
     amount: 1
   maxLevel: 5
   equipmentId: 3
+  statModifiers:
+  - statType: 4
+    modifierType: 1
+    value: 0.15

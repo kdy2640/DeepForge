@@ -17,8 +17,10 @@ public class UpgradeManager : MonoBehaviour
 {
     [SerializeField] private List<UpgradeState> upgradeStates = new();
     [SerializeField] private RuntimeLevel runtimeLevel = new();
+    [SerializeField] private RuntimeStat runtimeStat = new();
 
     public RuntimeLevel RuntimeLevel => runtimeLevel;
+    public RuntimeStat RuntimeStat => runtimeStat;
 
     private readonly Dictionary<string, UpgradeState> upgradeStateMap = new();
     private Action onUpgradeChanged;
@@ -152,10 +154,14 @@ public class UpgradeManager : MonoBehaviour
     private void RefreshRuntimeData()
     {
         runtimeLevel.Clear();
+        runtimeStat.Equipment.Initialize();
         foreach (UpgradeState state in upgradeStates)
         {
             if (state.data is EquipmentUpgradeDataSO equipmentUpgrade)
+            {
                 runtimeLevel.SetEquipment(equipmentUpgrade.EquipmentId, state.level);
+                runtimeStat.Equipment.Apply(equipmentUpgrade.StatModifiers, state.level);
+            }
             else if (state.data is ForgedGearUpgradeDataSO forgedGearUpgrade)
                 runtimeLevel.SetForgedGear(forgedGearUpgrade.ForgedGearId, state.level);
         }
