@@ -33,7 +33,7 @@ public sealed class EquipmentStat
 
     internal void Initialize()
     {
-        values[(int)EquipmentStatType.MiningRadius] = 2.5f;
+        values[(int)EquipmentStatType.MiningRadius] = 1f;
         values[(int)EquipmentStatType.MiningPower] = 0.4f;
         values[(int)EquipmentStatType.BackpackCapacity] = 50f;
         values[(int)EquipmentStatType.MoveSpeed] = 8f;
