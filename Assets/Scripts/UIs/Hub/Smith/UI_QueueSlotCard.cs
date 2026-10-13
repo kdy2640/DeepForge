@@ -22,7 +22,8 @@ public sealed class UI_QueueSlotCard : MonoBehaviour
                 EquipmentUpgradeDataSO equipment = UpgradeDataDB.GetEquipmentUpgrade(slot.equipmentId);
                 icon.sprite = equipment.DisplayIcon;
                 icon.color = Color.white;
-                int displayLevel = slot.equipmentLevel + (equipment.EquipmentId == (int)EquipmentType.Pickaxe ? 1 : 0);
+                int displayLevel = slot.equipmentLevel + (equipment.EquipmentId == (int)EquipmentType.Pickaxe
+                    || equipment.EquipmentId == (int)EquipmentType.Boots ? 1 : 0);
                 productName.text = $"{equipment.DisplayName} · Lv. {displayLevel}";
             }
             else

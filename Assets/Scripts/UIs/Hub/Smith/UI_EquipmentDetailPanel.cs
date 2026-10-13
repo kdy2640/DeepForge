@@ -43,9 +43,21 @@ public sealed class UI_EquipmentDetailPanel : MonoBehaviour
         UpgradeState state = GameManager.Instance.Upgrade.GetState(data);
         bool working = GameManager.Instance.BaseCamp.Smith.IsEquipmentUpgradeInProgress(data.EquipmentId);
         equipmentName.text = data.DisplayName;
-        int levelOffset = data.EquipmentId == (int)EquipmentType.Pickaxe ? 1 : 0;
+        int levelOffset = data.EquipmentId == (int)EquipmentType.Pickaxe || data.EquipmentId == (int)EquipmentType.Boots ? 1 : 0;
         description.text = $"현재 Lv. {state.level + levelOffset} → 목표 Lv. {visual.SelectedLevel + levelOffset}\n"
             + (working ? "제작 중" : visual.SelectedLevel <= state.level ? "현재보다 높은 레벨을 선택하세요." : "제작 시간 · 3초");
+        if (data.EquipmentId == (int)EquipmentType.Boots)
+        {
+            string ability = visual.SelectedLevel switch
+            {
+                1 => "더블 점프",
+                2 => "트리플 점프",
+                3 => "트리플 점프 · 대시 1회",
+                _ => "트리플 점프 · 대시 2회"
+            };
+            description.text += $"\n{ability}";
+            if (visual.SelectedLevel >= 3) description.text += "\nShift 대시 · 1회당 1.5초 충전";
+        }
         var costs = data.RequiredOres.GroupBy(cost => cost.oreId)
             .Select(group => new OreAmount(group.Key, group.Sum(cost => cost.amount))).ToList();
         for (int i = 0; i < costs.Count; i++)

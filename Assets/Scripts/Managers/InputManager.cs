@@ -12,7 +12,8 @@ public enum InputEvent
     MoveMouse,
     Jump,
     ChangeShadingMode,
-    ReturnToCamp
+    ReturnToCamp,
+    Dash
 }
 
 
