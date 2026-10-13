@@ -7,9 +7,12 @@ public sealed class UI_QueueSlotCard : MonoBehaviour
     [SerializeField] private Text productName;
     [SerializeField] private Text remainingTime;
     private SmithSlot slot;
+    private ForgedGear displayedGear;
 
     public void SetData(SmithSlot smithSlot)
     {
+        if (displayedGear != null) displayedGear.IconChanged -= RefreshIcon;
+        displayedGear = null;
         slot = smithSlot;
         icon.gameObject.SetActive(slot.IsWorking);
         if (slot.IsWorking)
@@ -19,13 +22,16 @@ public sealed class UI_QueueSlotCard : MonoBehaviour
                 EquipmentUpgradeDataSO equipment = UpgradeDataDB.GetEquipmentUpgrade(slot.equipmentId);
                 icon.sprite = equipment.DisplayIcon;
                 icon.color = Color.white;
-                productName.text = $"{equipment.DisplayName} · Lv. {slot.equipmentLevel}";
+                int displayLevel = slot.equipmentLevel + (equipment.EquipmentId == (int)EquipmentType.Pickaxe ? 1 : 0);
+                productName.text = $"{equipment.DisplayName} · Lv. {displayLevel}";
             }
             else
             {
                 ForgedGearUpgradeDataSO blueprint = UpgradeDataDB.GetForgedGearUpgrade(slot.product.id);
-                icon.sprite = blueprint.DisplayIcon;
-                icon.color = OreDataDB.GetData(slot.product.data.metalOreId).Color;
+                displayedGear = slot.product;
+                if (isActiveAndEnabled) displayedGear.IconChanged += RefreshIcon;
+                RefreshIcon();
+                GameManager.Instance.GetComponentInChildren<ForgedGearIconBaker>().Request(displayedGear);
                 productName.text = blueprint.DisplayName;
             }
             remainingTime.text = $"{slot.remainingSeconds:F1}초";
@@ -40,5 +46,24 @@ public sealed class UI_QueueSlotCard : MonoBehaviour
     private void Update()
     {
         if (slot.IsWorking) remainingTime.text = $"{slot.remainingSeconds:F1}초";
+    }
+
+    private void RefreshIcon()
+    {
+        icon.sprite = displayedGear.Icon != null ? displayedGear.Icon : UpgradeDataDB.GetForgedGearUpgrade(displayedGear.id).DisplayIcon;
+        icon.color = Color.white;
+        icon.preserveAspect = true;
+    }
+
+    private void OnEnable()
+    {
+        if (displayedGear == null) return;
+        displayedGear.IconChanged += RefreshIcon;
+        RefreshIcon();
+    }
+
+    private void OnDisable()
+    {
+        if (displayedGear != null) displayedGear.IconChanged -= RefreshIcon;
     }
 }

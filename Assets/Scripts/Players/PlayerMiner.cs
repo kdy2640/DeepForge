@@ -22,6 +22,9 @@ public sealed class PlayerMiner : MonoBehaviour
     [SerializeField] private ParticleSystem miningChips;
     [SerializeField] private AudioSource miningAudio;
     [SerializeField] private Transform miningTool;
+    [Header("곡괭이 외형 · 나무부터 다이아몬드까지")]
+    [SerializeField] private Renderer pickaxeRenderer;
+    [SerializeField] private Material[] pickaxeMaterials;
     InputManager inputManager;
 
     float nextLeftEditTime;
@@ -230,6 +233,7 @@ public sealed class PlayerMiner : MonoBehaviour
 
     private void RefreshMiningStats()
     {
+        pickaxeRenderer.sharedMaterial = pickaxeMaterials[upgradeManager.RuntimeLevel.GetEquipment((int)EquipmentType.Pickaxe)];
         EquipmentStat equipment = upgradeManager.RuntimeStat.Equipment;
         // 강화 대상은 계산된 최종값을 사용하고 나머지 채굴 설정은 유지한다.
         appliedMiningSettings = new MiningSetting

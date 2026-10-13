@@ -114,8 +114,7 @@ public sealed class UI_DealPanel : MonoBehaviour
         shop.SetDealMode(UI_Shop_Deal.DealMode.Sell);
         ForgedGearSO data = ForgedGearDB.GetData(gear.id);
         UI_DealVisualCard card = Instantiate(cardPrefab, content, false);
-        card.SetData(null, new Color32(185, 179, 169, 255),
-            1, data.SellPrice, () => RemoveGear(gear));
+        card.SetData(gear, data.SellPrice, () => RemoveGear(gear));
         gears.Add(gear, card);
         card.Animate(false);
         RefreshSelection();

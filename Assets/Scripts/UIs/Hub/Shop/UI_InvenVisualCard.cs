@@ -9,9 +9,12 @@ public sealed class UI_InvenVisualCard : MonoBehaviour
     [SerializeField] private Text nameText;
     [SerializeField] private Text amountText;
     [SerializeField] private Outline selectionOutline;
+    private ForgedGear gear;
 
     public void SetData(OreDataSO data, int amount, Action select)
     {
+        if (gear != null) gear.IconChanged -= RefreshIcon;
+        gear = null;
         icon.sprite = data.Icon;
         icon.color = data.Color;
         nameText.text = data.DisplayName;
@@ -21,12 +24,16 @@ public sealed class UI_InvenVisualCard : MonoBehaviour
         button.onClick.AddListener(() => select.Invoke());
     }
 
-    public void SetData(ForgedGearSO data, Action select)
+    public void SetData(ForgedGear data, Action select)
     {
-        icon.sprite = null;
-        icon.color = new Color32(185, 179, 169, 255);
-        nameText.text = data.name;
+        if (gear != null) gear.IconChanged -= RefreshIcon;
+        gear = data;
+        if (isActiveAndEnabled) gear.IconChanged += RefreshIcon;
+        RefreshIcon();
+        GameManager.Instance.GetComponentInChildren<ForgedGearIconBaker>().Request(gear);
+        nameText.text = ForgedGearDB.GetData(data.id).name;
         amountText.text = "× 1";
+        button.interactable = true;
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => select.Invoke());
     }
@@ -34,5 +41,24 @@ public sealed class UI_InvenVisualCard : MonoBehaviour
     public void SetSelected(bool selected)
     {
         selectionOutline.enabled = selected;
+    }
+
+    private void RefreshIcon()
+    {
+        icon.sprite = gear.Icon != null ? gear.Icon : UpgradeDataDB.GetForgedGearUpgrade(gear.id).DisplayIcon;
+        icon.color = Color.white;
+        icon.preserveAspect = true;
+    }
+
+    private void OnEnable()
+    {
+        if (gear == null) return;
+        gear.IconChanged += RefreshIcon;
+        RefreshIcon();
+    }
+
+    private void OnDisable()
+    {
+        if (gear != null) gear.IconChanged -= RefreshIcon;
     }
 }

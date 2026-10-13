@@ -15,6 +15,8 @@ public sealed class UI_BluePrintVisualCard : MonoBehaviour
         bool owned = availability == UpgradeAvailability.BlueprintAlreadyOwned || availability == UpgradeAvailability.MaxLevel;
         nameText.text = data.MaxLevel > 1 ? $"{data.DisplayName} · {unlockedLevel}/{data.MaxLevel}"
             : owned ? $"{data.DisplayName} · 보유" : data.DisplayName;
+        if (data is EquipmentUpgradeDataSO equipment && equipment.EquipmentId == (int)EquipmentType.Pickaxe)
+            nameText.text = $"{data.DisplayName} · Lv. {unlockedLevel + 1}/{data.MaxLevel + 1}";
         priceText.text = $"{data.BlueprintPrice:N0} G";
         icon.sprite = data.DisplayIcon;
         icon.color = new Color32(185, 179, 169, 255);

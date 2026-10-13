@@ -369,6 +369,10 @@ PrefabInstance:
       propertyPath: m_CastShadows
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3967734630813506078, guid: 7c38f44dcdd3ec94f91192a72d50c5ec, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 75ea9b04b6ac885429f9925e68e5282f, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -377,6 +381,11 @@ PrefabInstance:
 --- !u!4 &307132123 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3967734630811080958, guid: 7c38f44dcdd3ec94f91192a72d50c5ec, type: 3}
+  m_PrefabInstance: {fileID: 307132122}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &307132124 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3967734630813506078, guid: 7c38f44dcdd3ec94f91192a72d50c5ec, type: 3}
   m_PrefabInstance: {fileID: 307132122}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &330585543
@@ -1030,6 +1039,17 @@ MonoBehaviour:
   miningChips: {fileID: 666992551}
   miningAudio: {fileID: 666992550}
   miningTool: {fileID: 307132123}
+  pickaxeRenderer: {fileID: 307132124}
+  pickaxeMaterials:
+  - {fileID: 2100000, guid: 75ea9b04b6ac885429f9925e68e5282f, type: 2}
+  - {fileID: 2100000, guid: d20c0c56e28404b4cbcf609fa9f699d4, type: 2}
+  - {fileID: 2100000, guid: f094e8aee34287c49b93b3349f33f404, type: 2}
+  - {fileID: 2100000, guid: 429917289535ece48bfbbd401c688834, type: 2}
+  - {fileID: 2100000, guid: 9dd9e667d7f04814180e3c6953ce42e7, type: 2}
+  - {fileID: 2100000, guid: bb0848c6932ca3b4ea283b4ed72fea3e, type: 2}
+  - {fileID: 2100000, guid: 5c64c4285215ba548a512f2e359d81fc, type: 2}
+  - {fileID: 2100000, guid: 8e739f80f7448594b8561d6a2927c79a, type: 2}
+  - {fileID: 2100000, guid: 232a860821d88bb4f95e80f5353e214b, type: 2}
 --- !u!54 &1026908060
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -18,3 +18,5 @@ MonoBehaviour:
   handleOreCost: 2
   metalOreCost: 1
   gemOreCost: 1
+  iconModel: {fileID: 1202290078608693061, guid: 921a5d792b8e20e46a91f650a8799206, type: 3}
+  iconRotation: {x: 0, y: 25, z: -35}

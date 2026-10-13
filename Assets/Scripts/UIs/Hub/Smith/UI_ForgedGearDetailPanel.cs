@@ -88,7 +88,10 @@ public sealed class UI_ForgedGearDetailPanel : MonoBehaviour
         ForgedGearUpgradeDataSO blueprint = forge.SelectedBlueprint;
         if (blueprint == null) return;
         if (GameManager.Instance.BaseCamp.Smith.TryStartForge(blueprint.ForgedGearId, materials.SelectedMaterials, visual.SelectedLevel))
+        {
             description.text = $"{blueprint.DisplayName} · Lv. {visual.SelectedLevel}\n제작 시작 · 3초";
+            visual.RevealPreview();
+        }
     }
 
     public void Dispose()

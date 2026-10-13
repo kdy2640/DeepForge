@@ -12,6 +12,7 @@ public sealed class UI_EquipmentUpgradeCard : MonoBehaviour
     public void SetData(EquipmentUpgradeDataSO equipment, int currentLevel, Action select)
     {
         icon.sprite = equipment.DisplayIcon;
+        if (equipment.EquipmentId == (int)EquipmentType.Pickaxe) currentLevel++;
         nameText.text = $"{equipment.DisplayName}\nLv. {currentLevel}";
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => select.Invoke());

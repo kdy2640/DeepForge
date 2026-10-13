@@ -5,6 +5,7 @@ using UnityEngine;
 public sealed class SmithManager : MonoBehaviour
 {
     private const float ForgeDuration = 3f;
+    [SerializeField] private ForgedGearIconBaker iconBaker;
     private readonly SmithSlot[] slots = { new(), new(), new(), new() };
 
     public IReadOnlyList<SmithSlot> Slots => slots;
@@ -35,6 +36,7 @@ public sealed class SmithManager : MonoBehaviour
         slot.workType = SmithWorkType.Product;
         slot.product = new ForgedGear(id, data, level);
         slot.remainingSeconds = ForgeDuration;
+        iconBaker.Request(slot.product);
         GameManager.Instance.StockManager.TryConsumeOre(costs);
         SlotsChanged?.Invoke();
         return true;
@@ -121,6 +123,7 @@ public sealed class SmithManager : MonoBehaviour
         for (int i = 0; i < slots.Length; i++)
         {
             SmithSlot saved = saveData.slots[i];
+            if (slots[i].product != null) slots[i].product.ReleaseIcon();
             // 레벨 필드가 없던 저장 데이터의 제품은 1레벨로 불러온다.
             slots[i].workType = saved.workType;
             slots[i].equipmentId = saved.equipmentId;
@@ -136,6 +139,7 @@ public sealed class SmithManager : MonoBehaviour
     {
         foreach (SmithSlot slot in slots)
         {
+            if (slot.product != null) slot.product.ReleaseIcon();
             slot.product = null;
             slot.workType = SmithWorkType.Product;
             slot.equipmentId = 0;
@@ -143,5 +147,11 @@ public sealed class SmithManager : MonoBehaviour
             slot.remainingSeconds = 0f;
         }
         SlotsChanged?.Invoke();
+    }
+
+    private void OnDestroy()
+    {
+        foreach (SmithSlot slot in slots)
+            if (slot.product != null) slot.product.ReleaseIcon();
     }
 }

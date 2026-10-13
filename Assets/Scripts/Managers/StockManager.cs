@@ -241,6 +241,7 @@ public class StockManager : MonoBehaviour
         stockData.currency = (int)Math.Min(
             (long)stockData.currency + gearData.SellPrice, int.MaxValue);
         NotifyStockDataChanged();
+        forgedGear.ReleaseIcon();
         return true;
     }
 
@@ -268,6 +269,7 @@ public class StockManager : MonoBehaviour
         stockData.currency = (int)Math.Min(
             (long)stockData.currency + rewardCurrency, int.MaxValue);
         NotifyStockDataChanged();
+        foreach (ForgedGear forgedGear in uniqueGears) forgedGear.ReleaseIcon();
         return true;
     }
 
@@ -277,6 +279,7 @@ public class StockManager : MonoBehaviour
             return false;
 
         NotifyStockDataChanged();
+        forgedGear.ReleaseIcon();
         return true;
     }
 
@@ -314,6 +317,7 @@ public class StockManager : MonoBehaviour
 
     public void LoadStockSaveData(StockSaveData saveData)
     {
+        List<ForgedGear> previousGears = stockData.forgedGears;
         stockData = new StockData();
 
         if (saveData != null)
@@ -347,12 +351,20 @@ public class StockManager : MonoBehaviour
         }
 
         NotifyStockDataChanged();
+        foreach (ForgedGear gear in previousGears) gear.ReleaseIcon();
     }
 
     public void ResetStockSaveData()
     {
+        List<ForgedGear> previousGears = stockData.forgedGears;
         stockData = new StockData();
         NotifyStockDataChanged();
+        foreach (ForgedGear gear in previousGears) gear.ReleaseIcon();
+    }
+
+    private void OnDestroy()
+    {
+        foreach (ForgedGear gear in stockData.forgedGears) gear.ReleaseIcon();
     }
 
     #endregion

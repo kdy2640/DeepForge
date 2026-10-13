@@ -40,7 +40,7 @@ public sealed class UI_Smith_Forge : UI_Base
         UI_MaterialSelectPanel materials = GetGameObject((int)UIs.UI_MaterialSelectPanel).GetComponent<UI_MaterialSelectPanel>();
         materials.Init();
         UI_ForgedGearVisualPanel visual = GetGameObject((int)UIs.UI_ForgedGearVisualPanel).GetComponent<UI_ForgedGearVisualPanel>();
-        visual.Init(this);
+        visual.Init(this, materials);
         GetGameObject((int)UIs.UI_ForgedGearDetailPanel).GetComponent<UI_ForgedGearDetailPanel>().Init(this, materials, visual);
         GetGameObject((int)UIs.UI_BluePrintListPanel).GetComponent<UI_BluePrintListPanel>().Init(this);
         GetGameObject((int)UIs.UI_SmithInfoPanel).GetComponent<UI_SmithInfoPanel>().Init();
@@ -55,12 +55,14 @@ public sealed class UI_Smith_Forge : UI_Base
     protected override IEnumerator OnShow()
     {
         GetGameObject((int)UIs.UI_BluePrintListPanel).GetComponent<UI_BluePrintListPanel>().Refresh();
+        GetGameObject((int)UIs.UI_ForgedGearVisualPanel).GetComponent<UI_ForgedGearVisualPanel>().ShowPreview();
         yield return GetUI<PanelAnimator>((int)PanelAnimators.Panel).Show();
     }
 
     protected override IEnumerator OnHide()
     {
         yield return GetUI<PanelAnimator>((int)PanelAnimators.Panel).Hide();
+        GetGameObject((int)UIs.UI_ForgedGearVisualPanel).GetComponent<UI_ForgedGearVisualPanel>().HidePreview();
     }
 
     private void OnDestroy()

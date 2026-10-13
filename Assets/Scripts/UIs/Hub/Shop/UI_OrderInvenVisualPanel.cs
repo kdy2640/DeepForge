@@ -42,7 +42,7 @@ public sealed class UI_OrderInvenVisualPanel : MonoBehaviour
         foreach (ForgedGear gear in GameManager.Instance.StockManager.StockData.ForgedGears)
         {
             UI_InvenVisualCard card = Instantiate(gearCardPrefab, weaponContent, false);
-            card.SetData(ForgedGearDB.GetData(gear.id), () => items.AddGear(gear));
+            card.SetData(gear, () => items.AddGear(gear));
             gearCards.Add(gear, card);
         }
         RefreshSelection();

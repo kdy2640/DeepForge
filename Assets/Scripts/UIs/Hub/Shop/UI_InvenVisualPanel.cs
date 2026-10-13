@@ -46,7 +46,7 @@ public sealed class UI_InvenVisualPanel : MonoBehaviour
         foreach (ForgedGear gear in GameManager.Instance.StockManager.StockData.ForgedGears)
         {
             UI_InvenVisualCard card = Instantiate(gearCardPrefab, weaponContent, false);
-            card.SetData(ForgedGearDB.GetData(gear.id), () => deal.AddGear(gear));
+            card.SetData(gear, () => deal.AddGear(gear));
             card.SetSelected(deal.IsSelected(gear));
             gearCards.Add(gear, card);
         }

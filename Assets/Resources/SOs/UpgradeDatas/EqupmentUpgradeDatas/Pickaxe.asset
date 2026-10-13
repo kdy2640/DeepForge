@@ -21,12 +21,12 @@ MonoBehaviour:
     amount: 10
   - oreId: 2
     amount: 1
-  maxLevel: 5
+  maxLevel: 8
   equipmentId: 0
   statModifiers:
   - statType: 0
     modifierType: 0
-    value: 0.4
+    value: 0.25
   - statType: 1
     modifierType: 1
-    value: 0.2
+    value: 0.125

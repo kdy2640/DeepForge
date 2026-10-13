@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 using UnityEngine.Serialization;
 
 public enum ForgedGearType
@@ -41,10 +42,35 @@ public class ForgedGear
     public int level = 1;
     public ForgedGearData data;
 
+    [NonSerialized] private Sprite icon;
+    [NonSerialized] private bool iconReleased;
+
+    public Sprite Icon => icon;
+    internal bool IconReleased => iconReleased;
+    [field: NonSerialized] public event Action IconChanged;
+
     public ForgedGear(int id, ForgedGearData data, int level = 1)
     {
         this.id = id;
         this.level = level;
         this.data = data;
+    }
+
+    internal void SetIcon(Sprite value)
+    {
+        icon = value;
+        IconChanged?.Invoke();
+    }
+
+    public void ReleaseIcon()
+    {
+        iconReleased = true;
+        if (icon == null) return;
+
+        Sprite releasedIcon = icon;
+        icon = null;
+        IconChanged?.Invoke();
+        UnityEngine.Object.Destroy(releasedIcon.texture);
+        UnityEngine.Object.Destroy(releasedIcon);
     }
 }
