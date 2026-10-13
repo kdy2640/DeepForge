@@ -9,6 +9,7 @@ public enum EquipmentStatType
     BackpackCapacity,
     MoveSpeed,
     LightRange,
+    ReturnCableLength,
     Count
 }
 
@@ -38,6 +39,7 @@ public sealed class EquipmentStat
         values[(int)EquipmentStatType.BackpackCapacity] = 50f;
         values[(int)EquipmentStatType.MoveSpeed] = 8f;
         values[(int)EquipmentStatType.LightRange] = 18f;
+        values[(int)EquipmentStatType.ReturnCableLength] = 50f;
     }
 
     public float Get(EquipmentStatType statType)

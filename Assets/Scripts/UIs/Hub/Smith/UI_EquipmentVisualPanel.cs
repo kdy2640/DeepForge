@@ -38,7 +38,8 @@ public sealed class UI_EquipmentVisualPanel : MonoBehaviour
         int previousLevel = SelectedLevel;
         SelectedLevel = Mathf.Clamp(level, 1, Mathf.Max(1, maxLevel));
         int displayLevel = SelectedLevel + (data != null
-            && (data.EquipmentId == (int)EquipmentType.Pickaxe || data.EquipmentId == (int)EquipmentType.Boots) ? 1 : 0);
+            && (data.EquipmentId == (int)EquipmentType.Pickaxe || data.EquipmentId == (int)EquipmentType.Boots
+                || data.EquipmentId == (int)EquipmentType.ReturnRope) ? 1 : 0);
         levelText.text = maxLevel > 0 ? $"Lv. {displayLevel}" : "—";
         levelUpButton.interactable = SelectedLevel < maxLevel;
         levelDownButton.interactable = maxLevel > 0 && SelectedLevel > 1;

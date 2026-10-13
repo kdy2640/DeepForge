@@ -23,7 +23,8 @@ public sealed class UI_QueueSlotCard : MonoBehaviour
                 icon.sprite = equipment.DisplayIcon;
                 icon.color = Color.white;
                 int displayLevel = slot.equipmentLevel + (equipment.EquipmentId == (int)EquipmentType.Pickaxe
-                    || equipment.EquipmentId == (int)EquipmentType.Boots ? 1 : 0);
+                    || equipment.EquipmentId == (int)EquipmentType.Boots
+                    || equipment.EquipmentId == (int)EquipmentType.ReturnRope ? 1 : 0);
                 productName.text = $"{equipment.DisplayName} · Lv. {displayLevel}";
             }
             else

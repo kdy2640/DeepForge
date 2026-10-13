@@ -43,7 +43,8 @@ public sealed class UI_EquipmentDetailPanel : MonoBehaviour
         UpgradeState state = GameManager.Instance.Upgrade.GetState(data);
         bool working = GameManager.Instance.BaseCamp.Smith.IsEquipmentUpgradeInProgress(data.EquipmentId);
         equipmentName.text = data.DisplayName;
-        int levelOffset = data.EquipmentId == (int)EquipmentType.Pickaxe || data.EquipmentId == (int)EquipmentType.Boots ? 1 : 0;
+        int levelOffset = data.EquipmentId == (int)EquipmentType.Pickaxe || data.EquipmentId == (int)EquipmentType.Boots
+            || data.EquipmentId == (int)EquipmentType.ReturnRope ? 1 : 0;
         description.text = $"현재 Lv. {state.level + levelOffset} → 목표 Lv. {visual.SelectedLevel + levelOffset}\n"
             + (working ? "제작 중" : visual.SelectedLevel <= state.level ? "현재보다 높은 레벨을 선택하세요." : "제작 시간 · 3초");
         if (data.EquipmentId == (int)EquipmentType.Boots)
@@ -57,6 +58,13 @@ public sealed class UI_EquipmentDetailPanel : MonoBehaviour
             };
             description.text += $"\n{ability}";
             if (visual.SelectedLevel >= 3) description.text += "\nShift 대시 · 1회당 1.5초 충전";
+        }
+        if (data.EquipmentId == (int)EquipmentType.ReturnRope)
+        {
+            float currentLength = GameManager.Instance.Upgrade.RuntimeStat.Equipment.Get(EquipmentStatType.ReturnCableLength);
+            float lengthPerLevel = data.StatModifiers.First(modifier => modifier.statType == EquipmentStatType.ReturnCableLength).value;
+            float targetLength = currentLength + lengthPerLevel * (visual.SelectedLevel - state.level);
+            description.text += $"\n최대 줄 길이 {currentLength:0}m → {targetLength:0}m";
         }
         var costs = data.RequiredOres.GroupBy(cost => cost.oreId)
             .Select(group => new OreAmount(group.Key, group.Sum(cost => cost.amount))).ToList();

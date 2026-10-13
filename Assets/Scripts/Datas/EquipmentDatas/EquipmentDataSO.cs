@@ -6,6 +6,7 @@ public enum EquipmentType
     Backpack = 1,
     Boots = 2,
     Lantern = 3,
+    ReturnRope = 4,
     Count
 }
 

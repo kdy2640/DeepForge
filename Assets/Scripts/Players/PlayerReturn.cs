@@ -42,6 +42,27 @@ public sealed class PlayerReturn : MonoBehaviour
     private bool moverWasEnabled;
     private bool minerWasEnabled;
     private bool subscribed;
+    private bool cablePullback;
+    private bool cableLimitNotified;
+    private float cablePullbackElapsed;
+    private float cablePullbackTravelled;
+    private float cableLimitFlashUntil;
+    private const float CablePullbackDistance = 1f;
+    private const float CablePullbackDuration = 0.3f;
+
+    public float MaximumCableLength => GameManager.Instance.Upgrade.RuntimeStat.Equipment.Get(EquipmentStatType.ReturnCableLength);
+    public float CableLimitFeedback => Mathf.Clamp01((cableLimitFlashUntil - Time.time) / 0.2f);
+
+    // 표시용 줄의 처짐을 제외하고 복귀 경로와 아직 기록되지 않은 마지막 구간을 합한다.
+    public float GetReturnDistance()
+    {
+        if (path.Count == 0) return 0f;
+
+        float distance = 0f;
+        for (int i = 1; i < path.Count; i++)
+            distance += Vector3.Distance(path[i - 1], path[i]);
+        return distance + Vector3.Distance(path[path.Count - 1], body.position);
+    }
 
     private void Awake()
     {
@@ -76,6 +97,8 @@ public sealed class PlayerReturn : MonoBehaviour
             return;
 
         tracking = true;
+        cableLimitNotified = false;
+        cableLimitFlashUntil = 0f;
         path.Clear();
         path.Add(body.position);
         previousPosition = body.position;
@@ -93,6 +116,8 @@ public sealed class PlayerReturn : MonoBehaviour
 
         bool wasTracking = tracking;
         tracking = false;
+        cableLimitNotified = false;
+        cableLimitFlashUntil = 0f;
         path.Clear();
         raisedCablePoints.Clear();
         looseCablePoints.Clear();
@@ -112,6 +137,14 @@ public sealed class PlayerReturn : MonoBehaviour
 
     private void BeginReturn()
     {
+        // 짧은 견인 중 G를 누르면 제어권을 유지한 채 캠프까지 복귀한다.
+        if (cablePullback)
+        {
+            cablePullback = false;
+            stopRequested = false;
+            nextReturnMiningTime = 0f;
+            return;
+        }
         if (!tracking || returning || path.Count == 0)
             return;
 
@@ -125,6 +158,20 @@ public sealed class PlayerReturn : MonoBehaviour
         body.linearVelocity = Vector3.zero;
         body.angularVelocity = Vector3.zero;
         body.isKinematic = true;
+    }
+
+    private void BeginCablePullback()
+    {
+        BeginReturn();
+        cablePullback = true;
+        cablePullbackElapsed = 0f;
+        cablePullbackTravelled = 0f;
+        cableLimitFlashUntil = Time.time + 0.55f;
+        if (!cableLimitNotified)
+        {
+            cableLimitNotified = true;
+            GameManager.Instance.Utility.Toast.Show("로프가 끝까지 풀렸습니다. G 키로 복귀할 수 있습니다.");
+        }
     }
 
     private void FixedUpdate()
@@ -163,6 +210,12 @@ public sealed class PlayerReturn : MonoBehaviour
         }
 
         previousPosition = position;
+        float distance = GetReturnDistance();
+        // 자동 견인 1m만으로는 알림을 재허용하지 않는다.
+        if (distance <= MaximumCableLength - 2f)
+            cableLimitNotified = false;
+        if (distance >= MaximumCableLength)
+            BeginCablePullback();
     }
 
     private void PullPathTail(Vector3 position)
@@ -202,7 +255,7 @@ public sealed class PlayerReturn : MonoBehaviour
         // Let the previous MovePosition finish before restoring dynamic movement.
         if (stopRequested || path.Count == 0)
         {
-            bool arrived = path.Count == 0;
+            bool arrived = path.Count == 0 && !cablePullback;
             StopReturn();
             if (arrived)
             {
@@ -217,8 +270,16 @@ public sealed class PlayerReturn : MonoBehaviour
         }
 
         Vector3 position = body.position;
-        PullPathTail(position);
+        if (!cablePullback) PullPathTail(position);
         float remainingDistance = returnSpeed * Time.fixedDeltaTime;
+        if (cablePullback)
+        {
+            cablePullbackElapsed = Mathf.Min(CablePullbackDuration, cablePullbackElapsed + Time.fixedDeltaTime);
+            float t = cablePullbackElapsed / CablePullbackDuration;
+            // 누적 이동량을 기준으로 처음에는 강하게 당기고 끝에서 감속한다.
+            float easedDistance = CablePullbackDistance * (1f - Mathf.Pow(1f - t, 3f));
+            remainingDistance = Mathf.Max(0f, easedDistance - cablePullbackTravelled);
+        }
         while (remainingDistance > 0f && path.Count > 0)
         {
             Vector3 target = path[path.Count - 1];
@@ -256,9 +317,10 @@ public sealed class PlayerReturn : MonoBehaviour
             }
 
             position += direction * allowedStep;
+            if (cablePullback) cablePullbackTravelled += allowedStep;
             if (allowedStep < step)
             {
-                stopRequested = !TryClearReturnObstacle(obstacle, radius);
+                stopRequested = cablePullback || !TryClearReturnObstacle(obstacle, radius);
                 break;
             }
 
@@ -268,6 +330,8 @@ public sealed class PlayerReturn : MonoBehaviour
         }
 
         body.MovePosition(position);
+        if (cablePullback && cablePullbackElapsed >= CablePullbackDuration)
+            stopRequested = true;
     }
 
     private bool TryClearReturnObstacle(RaycastHit obstacle, float playerRadius)
@@ -303,6 +367,7 @@ public sealed class PlayerReturn : MonoBehaviour
     private void StopReturn()
     {
         returning = false;
+        cablePullback = false;
         stopRequested = false;
         cableReleaseTime = Time.time;
         nextGroundUpdateTime = 0f;
