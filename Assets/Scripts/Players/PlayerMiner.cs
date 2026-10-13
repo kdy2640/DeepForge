@@ -21,7 +21,7 @@ public sealed class PlayerMiner : MonoBehaviour
     [Header("채굴 타격 효과")]
     [SerializeField] private ParticleSystem miningChips;
     [SerializeField] private AudioSource miningAudio;
-    [SerializeField] private Transform miningTool;
+    [SerializeField, FormerlySerializedAs("miningTool")] private Transform miningToolAnchor;
     [Header("곡괭이 외형 · 나무부터 다이아몬드까지")]
     [SerializeField] private Renderer pickaxeRenderer;
     [SerializeField] private Material[] pickaxeMaterials;
@@ -90,7 +90,8 @@ public sealed class PlayerMiner : MonoBehaviour
     private void SetMiningMode(bool enabled)
     {
         cameraController.SetMiningMode(enabled);
-        miningTool.gameObject.SetActive(enabled);
+        miningToolAnchor.DOKill(complete: true);
+        miningToolAnchor.gameObject.SetActive(enabled);
         RefreshCursor();
 
         if (enabled && !isUIInputBlocked)
@@ -112,6 +113,7 @@ public sealed class PlayerMiner : MonoBehaviour
         cameraController.SetUIInputBlocked(isUIInputBlocked);
         if (isUIInputBlocked)
         {
+            miningToolAnchor.DOKill(complete: true);
             isLeftMouseHolding = false;
             hasErosionStart = false;
             erosionElapsedTime = 0f;
@@ -184,7 +186,7 @@ public sealed class PlayerMiner : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeInputEvents();
-        miningTool.DOKill(complete: true);
+        miningToolAnchor.DOKill(complete: true);
         isLeftMouseHolding = false;
         hasErosionStart = false;
         erosionElapsedTime = 0f;
@@ -312,8 +314,9 @@ public sealed class PlayerMiner : MonoBehaviour
         miningAudio.pitch = Random.Range(0.94f, 1.06f);
         miningAudio.PlayOneShot(miningAudio.clip);
 
-        miningTool.DOKill(complete: true);
-        miningTool.DOPunchRotation(new Vector3(-12f, 0f, 5f), 0.13f, 1, 0.25f);
+        miningToolAnchor.DOKill(complete: true);
+        miningToolAnchor.DOPunchPosition(new Vector3(-0.035f, -0.04f, 0.055f), 0.13f, 1, 0.25f);
+        miningToolAnchor.DOPunchRotation(new Vector3(-12f, 0f, 5f), 0.13f, 1, 0.25f);
     }
 
 }
