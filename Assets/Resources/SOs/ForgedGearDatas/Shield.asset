@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearSO
   id: 14
   type: 14
-  baseSellPrice: 50
-  materialValueMultiplier: 0
-  levelPriceBonus: 0
+  baseSellPrice: 24
+  materialValueMultiplier: 1.5
+  levelPriceBonus: 0.25
   handleOreCost: 2
-  metalOreCost: 1
+  metalOreCost: 5
   gemOreCost: 1
   iconModel: {fileID: 6025492138493711420, guid: cc30bc4ec22d2ce4794162069fd42ad4, type: 3}
   iconRotation: {x: 0, y: 25, z: -35}

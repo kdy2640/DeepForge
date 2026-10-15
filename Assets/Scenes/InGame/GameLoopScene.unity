@@ -18,8 +18,8 @@ RenderSettings:
   m_FogColor: {r: 0.42, g: 0.39, b: 0.35, a: 1}
   m_FogMode: 1
   m_FogDensity: 0.01
-  m_LinearFogStart: 12
-  m_LinearFogEnd: 24
+  m_LinearFogStart: 16
+  m_LinearFogEnd: 32
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
@@ -200,7 +200,7 @@ MonoBehaviour:
       IsSmoothShading: 0
     Stones:
       Seed: 12345
-      CountPerChunk: 1
+      CountPerChunk: 2
       Prefab: {fileID: 7971657989837151028, guid: 60cd29e7a060f1a4080fb3af63739717, type: 3}
       PrewarmCount: 256
       PrewarmPerFrame: 16
@@ -426,7 +426,7 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.1
-  far clip plane: 32
+  far clip plane: 40
   field of view: 60
   orthographic: 0
   orthographic size: 5
@@ -753,7 +753,7 @@ MonoBehaviour:
   headlight: {fileID: 1522916909}
   startDepth: 2
   fullDepth: 7
-  undergroundAmbientScale: 0.072
+  undergroundAmbientScale: 0.09
   undergroundReflectionScale: 0.05
   undergroundFogColor: {r: 0.048, g: 0.06, b: 0.078, a: 1}
 --- !u!1001 &567996287
@@ -1132,29 +1132,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMiner
   anchor: {fileID: 1855205486}
   settings:
-    AnchorRadius: 2.5
+    AnchorRadius: 1
     EditPower: 0.35
     EditInterval: 0.05
-    HitInterval: 0.25
+    HitInterval: 0.3
     HitPower: 0.4
     HitPassCount: 5
     HitEdgeWidth: 0.35
     HitDepthLayers: 3
     HitCorrectionWidth: 1
-    ErosionDirectionBlendTime: 0.5
+    ErosionDirectionBlendTime: 0.45
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1
   appliedMiningSettings:
     AnchorRadius: 1
-    EditPower: 0.3
-    EditInterval: 0.1
-    HitInterval: 0.25
+    EditPower: 0.35
+    EditInterval: 0.05
+    HitInterval: 0.3
     HitPower: 0.4
     HitPassCount: 5
     HitEdgeWidth: 0.35
     HitDepthLayers: 3
     HitCorrectionWidth: 1
-    ErosionDirectionBlendTime: 0.5
+    ErosionDirectionBlendTime: 0.45
     ErosionSideStrength: 0.2
     UseErosionDistanceFalloff: 1
   terrainManager: {fileID: 134620926}
@@ -1307,9 +1307,9 @@ MonoBehaviour:
   airAcceleration: 15
   jumpVelocity: 6
   minimumGroundNormalY: 0.6
-  dashSpeed: 20
-  dashDuration: 0.15
-  dashRechargeTime: 1.5
+  dashSpeed: 16
+  dashDuration: 0.18
+  dashRechargeTime: 2
 --- !u!114 &1026908067
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1343,7 +1343,7 @@ MonoBehaviour:
   terrainManager: {fileID: 134620926}
   sampleDistance: 0.35
   turnSampleAngle: 10
-  returnSpeed: 16
+  returnSpeed: 18
   loosePointSpacing: 0.25
   groundClearance: 0.01
   cableDropDuration: 0.25
@@ -1606,8 +1606,8 @@ Light:
   serializedVersion: 12
   m_Type: 0
   m_Color: {r: 1, g: 0.96, b: 0.88, a: 1}
-  m_Intensity: 9.6
-  m_Range: 18
+  m_Intensity: 8
+  m_Range: 12
   m_SpotAngle: 65
   m_InnerSpotAngle: 40
   m_CookieSize2D: {x: 0.5, y: 0.5}

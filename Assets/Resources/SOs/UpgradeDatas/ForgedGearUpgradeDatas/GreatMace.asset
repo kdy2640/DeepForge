@@ -16,13 +16,13 @@ MonoBehaviour:
   displayName: GreatMace
   displayIcon: {fileID: 0}
   levelCosts:
-  - blueprintPrice: 30
+  - blueprintPrice: 160
     requiredOres:
     - oreId: 1
       amount: 10
     - oreId: 2
       amount: 1
-  - blueprintPrice: 30
+  - blueprintPrice: 480
     requiredOres:
     - oreId: 1
       amount: 10

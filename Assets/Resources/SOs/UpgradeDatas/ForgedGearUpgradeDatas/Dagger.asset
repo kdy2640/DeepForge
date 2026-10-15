@@ -16,13 +16,13 @@ MonoBehaviour:
   displayName: Dagger
   displayIcon: {fileID: 0}
   levelCosts:
-  - blueprintPrice: 30
+  - blueprintPrice: 35
     requiredOres:
     - oreId: 1
       amount: 10
     - oreId: 2
       amount: 1
-  - blueprintPrice: 30
+  - blueprintPrice: 105
     requiredOres:
     - oreId: 1
       amount: 10

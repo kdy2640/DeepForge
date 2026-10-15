@@ -6,7 +6,7 @@ using UnityEngine;
 public sealed class BackPack
 {
     [SerializeField] private List<OreAmount> ores = new();
-    [SerializeField] private int capacity = 50;
+    [SerializeField] private int capacity = 36;
 
     public event Action Changed;
 

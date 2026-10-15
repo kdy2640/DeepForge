@@ -13,7 +13,7 @@ public sealed class PlayerReturn : MonoBehaviour
     [FormerlySerializedAs("maximumSampleDistance")]
     [SerializeField, Min(0.05f)] private float sampleDistance = 0.35f;
     [SerializeField, Range(1f, 90f)] private float turnSampleAngle = 10f;
-    [SerializeField, Min(0.1f)] private float returnSpeed = 16f;
+    [SerializeField, Min(0.1f)] private float returnSpeed = 18f;
     [SerializeField, Min(0.05f)] private float loosePointSpacing = 0.25f;
     [SerializeField, Min(0f)] private float groundClearance = 0.01f;
     [SerializeField, Min(0.01f)] private float cableDropDuration = 0.25f;

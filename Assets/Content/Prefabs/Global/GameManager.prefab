@@ -792,6 +792,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 768c8ab976d3e884f8a837985736f555, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OrderManager
+  rewardMultiplier: 1.25
 --- !u!1 &6410720368893765115
 GameObject:
   m_ObjectHideFlags: 0
@@ -1032,7 +1033,7 @@ MonoBehaviour:
   upgradeManager: {fileID: 6817583298313445971}
   backPack:
     ores: []
-    capacity: 50
+    capacity: 36
 --- !u!1 &7869543391463356428
 GameObject:
   m_ObjectHideFlags: 0

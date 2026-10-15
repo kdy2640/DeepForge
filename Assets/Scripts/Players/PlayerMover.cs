@@ -17,9 +17,9 @@ public sealed class PlayerMover : MonoBehaviour
     private float jumpVelocity = 6f;
     [SerializeField, Range(0f, 1f)] private float minimumGroundNormalY = 0.6f;
     [Header("신발 대시")]
-    [SerializeField, Min(0f)] private float dashSpeed = 20f;
-    [SerializeField, Min(0.01f)] private float dashDuration = 0.15f;
-    [SerializeField, Min(0.01f)] private float dashRechargeTime = 1.5f;
+    [SerializeField, Min(0f)] private float dashSpeed = 16f;
+    [SerializeField, Min(0.01f)] private float dashDuration = 0.18f;
+    [SerializeField, Min(0.01f)] private float dashRechargeTime = 2f;
 
     private Rigidbody rigid;
     private Transform cameraHolder;

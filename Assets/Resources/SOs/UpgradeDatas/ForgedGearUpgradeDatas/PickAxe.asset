@@ -16,13 +16,13 @@ MonoBehaviour:
   displayName: PickAxe
   displayIcon: {fileID: 0}
   levelCosts:
-  - blueprintPrice: 30
+  - blueprintPrice: 60
     requiredOres:
     - oreId: 1
       amount: 10
     - oreId: 2
       amount: 1
-  - blueprintPrice: 30
+  - blueprintPrice: 180
     requiredOres:
     - oreId: 1
       amount: 10

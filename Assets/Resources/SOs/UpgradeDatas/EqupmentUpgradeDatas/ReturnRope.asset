@@ -16,32 +16,32 @@ MonoBehaviour:
   displayName: "\uBCF5\uADC0\uB85C\uD504"
   displayIcon: {fileID: 0}
   levelCosts:
-  - blueprintPrice: 30
+  - blueprintPrice: 40
     requiredOres:
     - oreId: 1
-      amount: 10
+      amount: 8
     - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+      amount: 2
+  - blueprintPrice: 120
     requiredOres:
-    - oreId: 1
-      amount: 10
     - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+      amount: 10
+    - oreId: 3
+      amount: 3
+  - blueprintPrice: 360
     requiredOres:
-    - oreId: 1
+    - oreId: 4
       amount: 10
-    - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+    - oreId: 5
+      amount: 6
+  - blueprintPrice: 900
     requiredOres:
-    - oreId: 1
+    - oreId: 6
       amount: 10
-    - oreId: 2
-      amount: 1
+    - oreId: 7
+      amount: 6
   equipmentId: 4
   statModifiers:
   - statType: 5
     modifierType: 0
-    value: 50
+    value: 30

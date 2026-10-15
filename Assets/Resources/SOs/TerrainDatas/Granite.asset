@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Granite
   m_EditorClassIdentifier: Assembly-CSharp::TerrainTypeSO
   layer:
-    StartDepth: 20
+    StartDepth: 14
     TypeId: 2
     Color: {r: 0.33775365, g: 0.39251858, b: 0.4339623, a: 1}
     stondataIDs: 040000000500000006000000

@@ -14,7 +14,7 @@ public sealed class MineLighting : MonoBehaviour
     [SerializeField, Min(0f)] private float startDepth = 2f;
     [SerializeField, Min(0f)] private float fullDepth = 7f;
     [Header("광산 내부 조명")]
-    [SerializeField, Range(0f, 1f)] private float undergroundAmbientScale = 0.06f;
+    [SerializeField, Range(0f, 1f)] private float undergroundAmbientScale = 0.09f;
     [SerializeField, Range(0f, 1f)] private float undergroundReflectionScale = 0.05f;
     [SerializeField] private Color undergroundFogColor = new Color(0.04f, 0.05f, 0.065f);
 

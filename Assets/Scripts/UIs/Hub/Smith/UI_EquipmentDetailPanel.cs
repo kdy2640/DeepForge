@@ -57,7 +57,7 @@ public sealed class UI_EquipmentDetailPanel : MonoBehaviour
                 _ => "트리플 점프 · 대시 2회"
             };
             description.text += $"\n{ability}";
-            if (visual.SelectedLevel >= 3) description.text += "\nShift 대시 · 1회당 1.5초 충전";
+            if (visual.SelectedLevel >= 3) description.text += "\nShift 대시 · 1회당 2초 충전";
         }
         if (data.EquipmentId == (int)EquipmentType.ReturnRope)
         {

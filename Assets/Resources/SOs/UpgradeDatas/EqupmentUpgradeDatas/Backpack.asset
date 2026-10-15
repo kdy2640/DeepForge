@@ -16,38 +16,38 @@ MonoBehaviour:
   displayName: Backpack
   displayIcon: {fileID: 0}
   levelCosts:
-  - blueprintPrice: 30
+  - blueprintPrice: 35
     requiredOres:
     - oreId: 1
-      amount: 10
+      amount: 6
     - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+      amount: 2
+  - blueprintPrice: 100
     requiredOres:
-    - oreId: 1
-      amount: 10
     - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+      amount: 8
+    - oreId: 3
+      amount: 2
+  - blueprintPrice: 260
     requiredOres:
-    - oreId: 1
-      amount: 10
-    - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+    - oreId: 4
+      amount: 8
+    - oreId: 5
+      amount: 4
+  - blueprintPrice: 600
     requiredOres:
-    - oreId: 1
-      amount: 10
-    - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+    - oreId: 6
+      amount: 8
+    - oreId: 7
+      amount: 4
+  - blueprintPrice: 1200
     requiredOres:
-    - oreId: 1
+    - oreId: 7
       amount: 10
-    - oreId: 2
-      amount: 1
+    - oreId: 8
+      amount: 4
   equipmentId: 1
   statModifiers:
   - statType: 2
     modifierType: 0
-    value: 50
+    value: 24

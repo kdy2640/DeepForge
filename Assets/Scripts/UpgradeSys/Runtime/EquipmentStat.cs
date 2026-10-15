@@ -36,10 +36,10 @@ public sealed class EquipmentStat
     {
         values[(int)EquipmentStatType.MiningRadius] = 1f;
         values[(int)EquipmentStatType.MiningPower] = 0.4f;
-        values[(int)EquipmentStatType.BackpackCapacity] = 50f;
-        values[(int)EquipmentStatType.MoveSpeed] = 8f;
-        values[(int)EquipmentStatType.LightRange] = 18f;
-        values[(int)EquipmentStatType.ReturnCableLength] = 50f;
+        values[(int)EquipmentStatType.BackpackCapacity] = 36f;
+        values[(int)EquipmentStatType.MoveSpeed] = 6f;
+        values[(int)EquipmentStatType.LightRange] = 12f;
+        values[(int)EquipmentStatType.ReturnCableLength] = 40f;
     }
 
     public float Get(EquipmentStatType statType)

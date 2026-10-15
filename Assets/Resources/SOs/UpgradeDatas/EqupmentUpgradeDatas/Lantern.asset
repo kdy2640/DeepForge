@@ -19,35 +19,35 @@ MonoBehaviour:
   - blueprintPrice: 30
     requiredOres:
     - oreId: 1
-      amount: 10
+      amount: 4
     - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+      amount: 2
+  - blueprintPrice: 90
     requiredOres:
-    - oreId: 1
-      amount: 10
     - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+      amount: 6
+    - oreId: 3
+      amount: 2
+  - blueprintPrice: 240
     requiredOres:
-    - oreId: 1
-      amount: 10
-    - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+    - oreId: 4
+      amount: 6
+    - oreId: 5
+      amount: 4
+  - blueprintPrice: 550
     requiredOres:
-    - oreId: 1
-      amount: 10
-    - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+    - oreId: 6
+      amount: 6
+    - oreId: 7
+      amount: 4
+  - blueprintPrice: 1000
     requiredOres:
-    - oreId: 1
-      amount: 10
-    - oreId: 2
-      amount: 1
+    - oreId: 7
+      amount: 8
+    - oreId: 8
+      amount: 3
   equipmentId: 3
   statModifiers:
   - statType: 4
     modifierType: 1
-    value: 0.15
+    value: 0.2

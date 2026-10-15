@@ -4,8 +4,8 @@ using UnityEngine;
 
 public sealed class OrderManager : MonoBehaviour
 {
-    private const int OrderCount = 5;
-    [SerializeField, Min(0f)] private float rewardMultiplier = 2f;
+    private const int OrderCount = 3;
+    [SerializeField, Min(0f)] private float rewardMultiplier = 1.25f;
 
     private readonly List<Order> orders = new();
     private readonly HashSet<int> completedOrderIndices = new();
@@ -94,14 +94,14 @@ public sealed class OrderManager : MonoBehaviour
         for (int index = 0; index < OrderCount; index++)
         {
             ForgedGearSO gear = gears[random.Next(gears.Length)];
-            int requiredCount = random.Next(1, 4);
+            int requiredCount = random.Next(1, 3);
             List<OrderCondition> conditions = new() { new GearOrderCondition(gear.Id) };
 
-            if (random.Next(2) == 1)
+            if (random.Next(4) == 1)
                 conditions.Add(new HandleOreOrderCondition(ores[random.Next(ores.Length)].Id));
-            if (random.Next(2) == 1)
+            if (random.Next(4) == 1)
                 conditions.Add(new MetalOreOrderCondition(ores[random.Next(ores.Length)].Id));
-            if (random.Next(2) == 1)
+            if (random.Next(5) == 1)
             {
                 bool hasGem = random.Next(2) == 1;
                 int gemOreId = hasGem ? ores[random.Next(ores.Length)].Id : 0;

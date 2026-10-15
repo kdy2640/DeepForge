@@ -16,13 +16,13 @@ MonoBehaviour:
   displayName: Hammer
   displayIcon: {fileID: 0}
   levelCosts:
-  - blueprintPrice: 30
+  - blueprintPrice: 75
     requiredOres:
     - oreId: 1
       amount: 10
     - oreId: 2
       amount: 1
-  - blueprintPrice: 30
+  - blueprintPrice: 225
     requiredOres:
     - oreId: 1
       amount: 10

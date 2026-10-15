@@ -16,59 +16,59 @@ MonoBehaviour:
   displayName: Pickaxe
   displayIcon: {fileID: 0}
   levelCosts:
-  - blueprintPrice: 30
+  - blueprintPrice: 40
     requiredOres:
     - oreId: 1
-      amount: 10
+      amount: 8
     - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+      amount: 3
+  - blueprintPrice: 90
     requiredOres:
     - oreId: 1
-      amount: 10
+      amount: 12
     - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+      amount: 6
+  - blueprintPrice: 180
     requiredOres:
-    - oreId: 1
-      amount: 10
     - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+      amount: 10
+    - oreId: 3
+      amount: 4
+  - blueprintPrice: 340
     requiredOres:
-    - oreId: 1
-      amount: 10
     - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+      amount: 12
+    - oreId: 4
+      amount: 6
+  - blueprintPrice: 600
     requiredOres:
-    - oreId: 1
+    - oreId: 4
       amount: 10
-    - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+    - oreId: 5
+      amount: 6
+  - blueprintPrice: 1000
     requiredOres:
-    - oreId: 1
+    - oreId: 5
       amount: 10
-    - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+    - oreId: 6
+      amount: 8
+  - blueprintPrice: 1600
     requiredOres:
-    - oreId: 1
-      amount: 10
-    - oreId: 2
-      amount: 1
-  - blueprintPrice: 30
+    - oreId: 6
+      amount: 12
+    - oreId: 7
+      amount: 8
+  - blueprintPrice: 2400
     requiredOres:
-    - oreId: 1
-      amount: 10
-    - oreId: 2
-      amount: 1
+    - oreId: 7
+      amount: 14
+    - oreId: 8
+      amount: 6
   equipmentId: 0
   statModifiers:
   - statType: 0
     modifierType: 0
-    value: 0.25
+    value: 0.2
   - statType: 1
     modifierType: 1
-    value: 0.125
+    value: 0.2
