@@ -13,7 +13,7 @@ public sealed class UI_DealPanel : MonoBehaviour
     [SerializeField] private Text dealButtonText;
     [SerializeField] private GameObject emptyMessage;
 
-    private readonly Dictionary<UpgradeDataSO, UI_DealVisualCard> blueprints = new();
+    private readonly Dictionary<UpgradeDataSO, (UI_DealVisualCard card, int targetLevel)> blueprints = new();
     private readonly Dictionary<OreAmount, UI_DealVisualCard> ores = new();
     private readonly Dictionary<ForgedGear, UI_DealVisualCard> gears = new();
     private UI_Shop_Deal shop;
@@ -23,9 +23,9 @@ public sealed class UI_DealPanel : MonoBehaviour
     public event Action<string> TradeCompleted;
     public int Count => blueprints.Count + ores.Count + gears.Count;
     public long TotalPrice =>
-        blueprints.Keys.Sum(data => (long)data.BlueprintPrice) +
+        blueprints.Sum(entry => (long)entry.Key.GetLevelCost(entry.Value.targetLevel).BlueprintPrice) +
         ores.Keys.Sum(amount => (long)amount.amount * OreDataDB.GetData(amount.oreId).SellPrice) +
-        gears.Keys.Sum(gear => (long)ForgedGearDB.GetData(gear.id).SellPrice);
+        gears.Keys.Sum(gear => (long)ForgedGearDB.GetData(gear.id).GetSellPrice(gear.data, gear.level));
 
     public void Init(UI_Shop_Deal owner)
     {
@@ -54,9 +54,10 @@ public sealed class UI_DealPanel : MonoBehaviour
         if (IsSelected(data)) return;
         shop.SetDealMode(UI_Shop_Deal.DealMode.Buy);
         UI_DealVisualCard card = Instantiate(cardPrefab, content, false);
+        int targetLevel = GameManager.Instance.Upgrade.GetState(data).unlockedLevel + 1;
         card.SetData(data.DisplayIcon, new Color32(185, 179, 169, 255),
-            1, data.BlueprintPrice, () => RemoveBlueprint(data));
-        blueprints.Add(data, card);
+            1, data.GetLevelCost(targetLevel).BlueprintPrice, () => RemoveBlueprint(data));
+        blueprints.Add(data, (card, targetLevel));
         card.Animate(true);
         RefreshSelection();
     }
@@ -114,7 +115,7 @@ public sealed class UI_DealPanel : MonoBehaviour
         shop.SetDealMode(UI_Shop_Deal.DealMode.Sell);
         ForgedGearSO data = ForgedGearDB.GetData(gear.id);
         UI_DealVisualCard card = Instantiate(cardPrefab, content, false);
-        card.SetData(gear, data.SellPrice, () => RemoveGear(gear));
+        card.SetData(gear, data.GetSellPrice(gear.data, gear.level), () => RemoveGear(gear));
         gears.Add(gear, card);
         card.Animate(false);
         RefreshSelection();
@@ -122,8 +123,8 @@ public sealed class UI_DealPanel : MonoBehaviour
 
     private void RemoveBlueprint(UpgradeDataSO data)
     {
-        blueprints[data].gameObject.SetActive(false);
-        Destroy(blueprints[data].gameObject);
+        blueprints[data].card.gameObject.SetActive(false);
+        Destroy(blueprints[data].card.gameObject);
         blueprints.Remove(data);
         RefreshSelection();
     }
@@ -146,7 +147,7 @@ public sealed class UI_DealPanel : MonoBehaviour
 
     private void OnDealModeChanged(UI_Shop_Deal.DealMode mode)
     {
-        foreach (UI_DealVisualCard card in blueprints.Values.Concat(ores.Values).Concat(gears.Values))
+        foreach (UI_DealVisualCard card in blueprints.Values.Select(entry => entry.card).Concat(ores.Values).Concat(gears.Values))
         {
             card.gameObject.SetActive(false);
             Destroy(card.gameObject);
@@ -182,7 +183,8 @@ public sealed class UI_DealPanel : MonoBehaviour
         if (Count == 0) return false;
         if (blueprints.Count > 0)
             return TotalPrice <= GameManager.Instance.StockManager.StockData.Currency &&
-                blueprints.Keys.All(data => GameManager.Instance.Upgrade.GetBlueprintAvailability(data) == UpgradeAvailability.Available);
+                blueprints.All(entry => entry.Value.targetLevel == GameManager.Instance.Upgrade.GetState(entry.Key).unlockedLevel + 1
+                    && GameManager.Instance.Upgrade.GetBlueprintAvailability(entry.Key) == UpgradeAvailability.Available);
         return ores.Keys.All(amount => GameManager.Instance.StockManager.CanConsumeOre(amount)) &&
             gears.Keys.All(gear => GameManager.Instance.StockManager.StockData.ForgedGears.Contains(gear));
     }

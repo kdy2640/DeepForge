@@ -239,7 +239,7 @@ public class StockManager : MonoBehaviour
             return false;
 
         stockData.currency = (int)Math.Min(
-            (long)stockData.currency + gearData.SellPrice, int.MaxValue);
+            (long)stockData.currency + gearData.GetSellPrice(forgedGear.data, forgedGear.level), int.MaxValue);
         NotifyStockDataChanged();
         forgedGear.ReleaseIcon();
         return true;

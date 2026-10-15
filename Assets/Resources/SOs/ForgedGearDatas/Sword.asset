@@ -14,7 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearSO
   id: 17
   type: 17
-  sellPrice: 50
+  baseSellPrice: 50
+  materialValueMultiplier: 0
+  levelPriceBonus: 0
   handleOreCost: 2
   metalOreCost: 1
   gemOreCost: 1

@@ -15,13 +15,31 @@ MonoBehaviour:
   id: ReturnRope
   displayName: "\uBCF5\uADC0\uB85C\uD504"
   displayIcon: {fileID: 0}
-  blueprintPrice: 30
-  requiredOres:
-  - oreId: 1
-    amount: 10
-  - oreId: 2
-    amount: 1
-  maxLevel: 4
+  levelCosts:
+  - blueprintPrice: 30
+    requiredOres:
+    - oreId: 1
+      amount: 10
+    - oreId: 2
+      amount: 1
+  - blueprintPrice: 30
+    requiredOres:
+    - oreId: 1
+      amount: 10
+    - oreId: 2
+      amount: 1
+  - blueprintPrice: 30
+    requiredOres:
+    - oreId: 1
+      amount: 10
+    - oreId: 2
+      amount: 1
+  - blueprintPrice: 30
+    requiredOres:
+    - oreId: 1
+      amount: 10
+    - oreId: 2
+      amount: 1
   equipmentId: 4
   statModifiers:
   - statType: 5

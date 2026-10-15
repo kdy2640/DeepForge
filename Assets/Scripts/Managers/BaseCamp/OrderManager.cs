@@ -5,6 +5,7 @@ using UnityEngine;
 public sealed class OrderManager : MonoBehaviour
 {
     private const int OrderCount = 5;
+    [SerializeField, Min(0f)] private float rewardMultiplier = 2f;
 
     private readonly List<Order> orders = new();
     private readonly HashSet<int> completedOrderIndices = new();
@@ -34,9 +35,10 @@ public sealed class OrderManager : MonoBehaviour
         if (!order.IsSatisfied(forgedGears))
             return false;
 
+        int rewardCurrency = order.GetRewardCurrency(forgedGears);
         // 재고 변경 구독자가 다시 납품해도 같은 주문을 두 번 완료할 수 없게 한다.
         completedOrderIndices.Add(orderIndex);
-        if (!GameManager.Instance.StockManager.TryDeliverForgedGears(forgedGears, order.RewardCurrency))
+        if (!GameManager.Instance.StockManager.TryDeliverForgedGears(forgedGears, rewardCurrency))
         {
             completedOrderIndices.Remove(orderIndex);
             return false;
@@ -106,8 +108,7 @@ public sealed class OrderManager : MonoBehaviour
                 conditions.Add(new GemOrderCondition(hasGem, gemOreId));
             }
 
-            int rewardCurrency = (int)Math.Min((long)gear.SellPrice * requiredCount * 2, int.MaxValue);
-            orders.Add(new Order(index, requiredCount, rewardCurrency, conditions));
+            orders.Add(new Order(index, requiredCount, rewardMultiplier, conditions));
         }
     }
 }

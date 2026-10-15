@@ -56,14 +56,15 @@ public sealed class SmithManager : MonoBehaviour
         EquipmentUpgradeDataSO data = UpgradeDataDB.GetEquipmentUpgrade(equipmentId);
         if (!GameManager.Instance.Upgrade.HasState(data)) return false;
         UpgradeState state = GameManager.Instance.Upgrade.GetState(data);
-        if (level <= state.level || level > state.unlockedLevel || level > data.MaxLevel) return false;
-        if (!GameManager.Instance.StockManager.CanConsumeOre(data.RequiredOres)) return false;
+        if (level != state.level + 1 || level > state.unlockedLevel || level > data.MaxLevel) return false;
+        List<OreAmount> requiredOres = data.GetLevelCost(level).RequiredOres;
+        if (!GameManager.Instance.StockManager.CanConsumeOre(requiredOres)) return false;
 
         slot.workType = SmithWorkType.EquipmentUpgrade;
         slot.equipmentId = equipmentId;
         slot.equipmentLevel = level;
         slot.remainingSeconds = ForgeDuration;
-        GameManager.Instance.StockManager.TryConsumeOre(data.RequiredOres);
+        GameManager.Instance.StockManager.TryConsumeOre(requiredOres);
         SlotsChanged?.Invoke();
         return true;
     }

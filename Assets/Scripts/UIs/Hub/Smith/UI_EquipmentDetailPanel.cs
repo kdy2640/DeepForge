@@ -46,7 +46,7 @@ public sealed class UI_EquipmentDetailPanel : MonoBehaviour
         int levelOffset = data.EquipmentId == (int)EquipmentType.Pickaxe || data.EquipmentId == (int)EquipmentType.Boots
             || data.EquipmentId == (int)EquipmentType.ReturnRope ? 1 : 0;
         description.text = $"현재 Lv. {state.level + levelOffset} → 목표 Lv. {visual.SelectedLevel + levelOffset}\n"
-            + (working ? "제작 중" : visual.SelectedLevel <= state.level ? "현재보다 높은 레벨을 선택하세요." : "제작 시간 · 3초");
+            + (working ? "제작 중" : visual.SelectedLevel != state.level + 1 ? "다음 강화 단계를 선택하세요." : "제작 시간 · 3초");
         if (data.EquipmentId == (int)EquipmentType.Boots)
         {
             string ability = visual.SelectedLevel switch
@@ -66,7 +66,7 @@ public sealed class UI_EquipmentDetailPanel : MonoBehaviour
             float targetLength = currentLength + lengthPerLevel * (visual.SelectedLevel - state.level);
             description.text += $"\n최대 줄 길이 {currentLength:0}m → {targetLength:0}m";
         }
-        var costs = data.RequiredOres.GroupBy(cost => cost.oreId)
+        var costs = data.GetLevelCost(visual.SelectedLevel).RequiredOres.GroupBy(cost => cost.oreId)
             .Select(group => new OreAmount(group.Key, group.Sum(cost => cost.amount))).ToList();
         for (int i = 0; i < costs.Count; i++)
         {
@@ -78,7 +78,7 @@ public sealed class UI_EquipmentDetailPanel : MonoBehaviour
             materialAmounts[i].text = $"{owned:N0} / {cost.amount:N0}";
             materialAmounts[i].color = owned >= cost.amount ? new Color32(61, 214, 198, 255) : new Color32(255, 138, 50, 255);
         }
-        forgeButton.interactable = visual.SelectedLevel > state.level
+        forgeButton.interactable = visual.SelectedLevel == state.level + 1
             && visual.SelectedLevel <= state.unlockedLevel
             && visual.SelectedLevel <= data.MaxLevel
             && !working && GameManager.Instance.BaseCamp.Smith.HasEmptySlot

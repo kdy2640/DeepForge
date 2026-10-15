@@ -45,7 +45,9 @@ public sealed class UI_OrderDetailPanel : MonoBehaviour
         titleText.text = $"주문서 {order.Index + 1:00}";
         int ownedCount = GameManager.Instance.StockManager.StockData.ForgedGears.Count(
             gear => order.Conditions.All(condition => condition.IsSatisfied(gear)));
-        summaryText.text = $"{ForgedGearDB.GetData(gearId).name}\n요청 수량  {order.RequiredCount}개\n보상  {order.RewardCurrency:N0} G\n"
+        string reward = completed ? "납품 완료" : order.IsSatisfied(items.SelectedGears)
+            ? $"{order.GetRewardCurrency(items.SelectedGears):N0} G" : $"판매가의 {order.RewardMultiplier:P0}";
+        summaryText.text = $"{ForgedGearDB.GetData(gearId).name}\n요청 수량  {order.RequiredCount}개\n보상  {reward}\n"
             + (completed ? "납품 완료" : $"조건에 맞는 보유품  {ownedCount}개\n납품 선택  {items.SelectedGears.Count}/{order.RequiredCount}");
 
         StringBuilder text = new();

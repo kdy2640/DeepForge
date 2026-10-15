@@ -15,11 +15,17 @@ MonoBehaviour:
   id: ForgedGear_GreatAxe
   displayName: GreatAxe
   displayIcon: {fileID: 0}
-  blueprintPrice: 30
-  requiredOres:
-  - oreId: 1
-    amount: 10
-  - oreId: 2
-    amount: 1
-  maxLevel: 2
+  levelCosts:
+  - blueprintPrice: 30
+    requiredOres:
+    - oreId: 1
+      amount: 10
+    - oreId: 2
+      amount: 1
+  - blueprintPrice: 30
+    requiredOres:
+    - oreId: 1
+      amount: 10
+    - oreId: 2
+      amount: 1
   forgedGearId: 3

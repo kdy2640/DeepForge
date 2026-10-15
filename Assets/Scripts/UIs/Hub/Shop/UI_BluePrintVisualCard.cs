@@ -19,7 +19,7 @@ public sealed class UI_BluePrintVisualCard : MonoBehaviour
             && (equipment.EquipmentId == (int)EquipmentType.Pickaxe || equipment.EquipmentId == (int)EquipmentType.Boots
                 || equipment.EquipmentId == (int)EquipmentType.ReturnRope))
             nameText.text = $"{data.DisplayName} · Lv. {unlockedLevel + 1}/{data.MaxLevel + 1}";
-        priceText.text = $"{data.BlueprintPrice:N0} G";
+        priceText.text = owned ? "보유" : $"{data.GetLevelCost(unlockedLevel + 1).BlueprintPrice:N0} G";
         icon.sprite = data.DisplayIcon;
         icon.color = new Color32(185, 179, 169, 255);
         button.interactable = availability == UpgradeAvailability.Available || availability == UpgradeAvailability.InsufficientCurrency;

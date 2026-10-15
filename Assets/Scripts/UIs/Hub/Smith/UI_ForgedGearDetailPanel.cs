@@ -52,7 +52,7 @@ public sealed class UI_ForgedGearDetailPanel : MonoBehaviour
         ForgedGearSO product = ForgedGearDB.GetData(blueprint.ForgedGearId);
         ForgedGearData data = materials.SelectedMaterials;
         gearName.text = $"{blueprint.DisplayName} · Lv. {visual.SelectedLevel}";
-        sellPrice.text = $"{product.SellPrice:N0} G";
+        sellPrice.text = $"{product.GetSellPrice(data, visual.SelectedLevel):N0} G";
         description.text = $"손잡이  {OreDataDB.GetData(data.handleOreId).DisplayName} × {product.HandleOreCost}\n"
             + $"금속  {OreDataDB.GetData(data.metalOreId).DisplayName} × {product.MetalOreCost}\n"
             + (data.hasGem ? $"보석  {OreDataDB.GetData(data.gemOreId).DisplayName} × {product.GemOreCost}" : "보석  없음");

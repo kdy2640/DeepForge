@@ -96,7 +96,9 @@ public sealed class UI_OrderItemPanel : MonoBehaviour
 
         Order order = shop.SelectedOrder;
         bool completed = order != null && GameManager.Instance.BaseCamp.Order.IsCompleted(order.Index);
-        rewardText.text = order == null ? "— G" : $"{order.RewardCurrency:N0} G";
+        rewardText.text = order == null ? "— G" : completed ? "납품 완료"
+            : order.IsSatisfied(selectedGears) ? $"{order.GetRewardCurrency(selectedGears):N0} G"
+            : $"판매가의 {order.RewardMultiplier:P0}";
         countText.text = order == null ? "주문 미선택" : completed ? "납품 완료" : $"선택 {selectedGears.Count}/{order.RequiredCount}";
         emptyMessage.gameObject.SetActive(selectedGears.Count == 0);
         emptyMessage.text = order == null ? "주문서를 선택해 주세요" : completed ? "납품을 완료한 주문입니다" : "조건에 맞는 제품을 아래에서 선택해 주세요";

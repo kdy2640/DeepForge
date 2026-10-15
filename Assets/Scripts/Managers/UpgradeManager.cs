@@ -85,7 +85,7 @@ public class UpgradeManager : MonoBehaviour
         if (state == null || state.level >= state.unlockedLevel)
             return UpgradeAvailability.MissingBlueprint;
 
-        return GameManager.Instance.StockManager.CanConsumeOre(data.RequiredOres)
+        return GameManager.Instance.StockManager.CanConsumeOre(data.GetLevelCost(level + 1).RequiredOres)
             ? UpgradeAvailability.Available
             : UpgradeAvailability.InsufficientOre;
     }
@@ -105,7 +105,8 @@ public class UpgradeManager : MonoBehaviour
                 return UpgradeAvailability.BlueprintAlreadyOwned;
         }
 
-        return GameManager.Instance.StockManager.CanConsumeCurrency(data.BlueprintPrice)
+        int targetLevel = state != null ? state.unlockedLevel + 1 : 1;
+        return GameManager.Instance.StockManager.CanConsumeCurrency(data.GetLevelCost(targetLevel).BlueprintPrice)
             ? UpgradeAvailability.Available
             : UpgradeAvailability.InsufficientCurrency;
     }
@@ -115,9 +116,11 @@ public class UpgradeManager : MonoBehaviour
         if (GetBlueprintAvailability(data) != UpgradeAvailability.Available)
             return false;
 
-        // 비용 검사 이후, 재고 변경 알림 전에 보유 상태를 반영한다.
-        GetState(data).unlockedLevel++;
-        GameManager.Instance.StockManager.TryConsumeCurrency(data.BlueprintPrice);
+        UpgradeState state = GetState(data);
+        int price = data.GetLevelCost(state.unlockedLevel + 1).BlueprintPrice;
+        // 비용을 확보한 뒤, 재고 변경 알림 전에 보유 상태를 반영한다.
+        state.unlockedLevel++;
+        GameManager.Instance.StockManager.TryConsumeCurrency(price);
         onUpgradeChanged?.Invoke();
         return true;
     }
@@ -133,9 +136,10 @@ public class UpgradeManager : MonoBehaviour
             return false;
 
         UpgradeState state = GetState(data);
+        List<OreAmount> requiredOres = data.GetLevelCost(state.level + 1).RequiredOres;
         state.level++;
         RefreshRuntimeData();
-        GameManager.Instance.StockManager.TryConsumeOre(data.RequiredOres);
+        GameManager.Instance.StockManager.TryConsumeOre(requiredOres);
         GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Upgrade);
         onUpgradeChanged?.Invoke();
         return true;
