@@ -201,7 +201,17 @@ public sealed class StoneActor : Poolable
         foreach (BoxCollider modelCollider in modelColliders)
             modelCollider.enabled = false;
 
-        GameManager.Instance.GameLoop.BackPack.Add(dataSO.RewardList);
+        BackPack backPack = GameManager.Instance.GameLoop.BackPack;
+        int requested = 0;
+        foreach (OreAmount reward in dataSO.RewardList)
+            requested += reward.amount;
+        int beforeCount = backPack.Count;
+        int added = backPack.Add(dataSO.RewardList);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Mining_OreRelease);
+        if (added > 0)
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Mining_OreCollect);
+        if (added < requested || (beforeCount < backPack.Capacity && backPack.Count >= backPack.Capacity))
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Mining_BackpackFull);
         GameManager.Instance.Utility.Save.SaveGame();
         GameManager.Instance.Utility.World.MarkStoneCollected(spawnData.ChunkCoordinate, spawnData.SpawnIndex);
         if (gameObject.activeInHierarchy)

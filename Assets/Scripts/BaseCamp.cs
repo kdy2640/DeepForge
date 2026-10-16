@@ -15,6 +15,8 @@ public sealed class BaseCamp : MonoBehaviour
     {
         if (other.attachedRigidbody == player.GetComponent<Rigidbody>())
         {
+            if (!IsPlayerInside)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Camp_Enter);
             IsPlayerInside = true;
             player.GetComponent<PlayerReturn>().ResetAtCamp();
             canvasController.RequestStateChange(CanvasController.CanvasState.BaseView);
@@ -25,6 +27,8 @@ public sealed class BaseCamp : MonoBehaviour
     {
         if (other.attachedRigidbody == player.GetComponent<Rigidbody>())
         {
+            if (IsPlayerInside)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Camp_Depart);
             IsPlayerInside = false;
             player.GetComponent<PlayerReturn>().BeginTracking();
             canvasController.RequestStateChange(CanvasController.CanvasState.MineView);

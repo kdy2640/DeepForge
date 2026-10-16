@@ -33,6 +33,7 @@ public sealed class GameLoopManager : MonoBehaviour
         List<OreAmount> ores = backPack.CreateSaveData();
         backPack.Clear();
         GameManager.Instance.StockManager.AddOre(ores);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Camp_Deposit);
         return true;
     }
 }

@@ -132,7 +132,16 @@ public sealed class PlayerReturn : MonoBehaviour
     private void OnReturn(InputAction.CallbackContext context)
     {
         if (context.performed && isActiveAndEnabled)
+        {
+            bool wasReturning = returning;
+            bool wasPullback = cablePullback;
             BeginReturn();
+            if (returning && (!wasReturning || wasPullback))
+            {
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Return_Start);
+                GameManager.Instance.Utility.Audio.PlayLoopSFX(SFXType.Return_WinchLoop);
+            }
+        }
     }
 
     private void BeginReturn()
@@ -167,10 +176,11 @@ public sealed class PlayerReturn : MonoBehaviour
         cablePullbackElapsed = 0f;
         cablePullbackTravelled = 0f;
         cableLimitFlashUntil = Time.time + 0.55f;
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Return_CablePullback);
         if (!cableLimitNotified)
         {
             cableLimitNotified = true;
-            GameManager.Instance.Utility.Toast.Show("로프가 끝까지 풀렸습니다. G 키로 복귀할 수 있습니다.");
+            GameManager.Instance.Utility.Toast.Show("로프가 끝까지 풀렸습니다. G 키로 복귀할 수 있습니다.", SFXType.Return_CableLimit);
         }
     }
 
@@ -259,6 +269,7 @@ public sealed class PlayerReturn : MonoBehaviour
             StopReturn();
             if (arrived)
             {
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Return_Arrive);
                 ResetAtCamp();
                 // The exit point is just outside the trigger. Walking away can pay out again.
                 BeginTracking();
@@ -321,6 +332,8 @@ public sealed class PlayerReturn : MonoBehaviour
             if (allowedStep < step)
             {
                 stopRequested = cablePullback || !TryClearReturnObstacle(obstacle, radius);
+                if (stopRequested && !cablePullback)
+                    GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Return_Blocked);
                 break;
             }
 
@@ -347,8 +360,11 @@ public sealed class PlayerReturn : MonoBehaviour
 
         nextReturnMiningTime = Time.time + returnMining.HitInterval;
         returnMining.AnchorRadius = playerRadius + 0.15f;
-        return terrainManager.AddDensitySphere(
+        bool cleared = terrainManager.AddDensitySphere(
             obstacle.point, returnMining, isAdding: false, worldErosionDirection: -obstacle.normal);
+        if (cleared)
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Return_ObstacleMine);
+        return cleared;
     }
 
     private async void SaveAfterReturn()
@@ -366,6 +382,7 @@ public sealed class PlayerReturn : MonoBehaviour
 
     private void StopReturn()
     {
+        GameManager.Instance.Utility.Audio.StopLoopSFX(SFXType.Return_WinchLoop);
         returning = false;
         cablePullback = false;
         stopRequested = false;

@@ -51,6 +51,7 @@ public sealed class PlayerMiner : MonoBehaviour
         { 
             isMiningMode = !isMiningMode;
             SetMiningMode(isMiningMode);
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Mining_ModeChange);
         }
     }
     private void OnChangeShadingMode(InputAction.CallbackContext context)
@@ -311,8 +312,8 @@ public sealed class PlayerMiner : MonoBehaviour
             mouseHit + mouseHitNormal * 0.05f, Quaternion.LookRotation(mouseHitNormal));
         miningChips.Emit(Random.Range(4, 8));
 
-        miningAudio.pitch = Random.Range(0.94f, 1.06f);
-        miningAudio.PlayOneShot(miningAudio.clip);
+        GameManager.Instance.Utility.Audio.PlaySFXRandomPitch(SFXType.Mining_Hit, 0.06f);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Mining_Debris);
 
         miningToolAnchor.DOKill(complete: true);
         miningToolAnchor.DOPunchPosition(new Vector3(-0.035f, -0.04f, 0.055f), 0.13f, 1, 0.25f);

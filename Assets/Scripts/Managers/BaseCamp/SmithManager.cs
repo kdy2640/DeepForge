@@ -39,6 +39,7 @@ public sealed class SmithManager : MonoBehaviour
         slot.isReady = false;
         iconBaker.Request(slot.product);
         GameManager.Instance.StockManager.TryConsumeOre(costs);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Smith_WorkStart);
         SlotsChanged?.Invoke();
         return true;
     }
@@ -67,6 +68,7 @@ public sealed class SmithManager : MonoBehaviour
         slot.remainingSeconds = ForgeDuration;
         slot.isReady = false;
         GameManager.Instance.StockManager.TryConsumeOre(requiredOres);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Smith_WorkStart);
         SlotsChanged?.Invoke();
         return true;
     }
@@ -81,6 +83,7 @@ public sealed class SmithManager : MonoBehaviour
 
             slot.remainingSeconds = 0f;
             slot.isReady = true;
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Smith_WorkReady);
             SlotsChanged?.Invoke();
         }
     }
@@ -105,7 +108,10 @@ public sealed class SmithManager : MonoBehaviour
         if (workType == SmithWorkType.EquipmentUpgrade)
             GameManager.Instance.Upgrade.CompleteEquipmentUpgrade(UpgradeDataDB.GetEquipmentUpgrade(equipmentId), equipmentLevel);
         else
+        {
             GameManager.Instance.StockManager.AddForgedGear(product);
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Smith_ProductCollect);
+        }
         SlotsChanged?.Invoke();
         GameManager.Instance.Utility.Save.SaveGame();
         return true;

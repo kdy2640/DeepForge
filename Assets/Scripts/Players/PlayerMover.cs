@@ -38,6 +38,8 @@ public sealed class PlayerMover : MonoBehaviour
     private bool dashRequested;
     private bool isDashing;
     private bool isInputSubscribed;
+    private float airborneTime;
+    private float footstepDistance;
 
     public int MaxJumps => maxJumps;
     public int RemainingJumps => Mathf.Max(0, maxJumps - jumpsUsed);
@@ -73,6 +75,8 @@ public sealed class PlayerMover : MonoBehaviour
         jumpRequested = false;
         dashRequested = false;
         groundContacts.Clear();
+        airborneTime = 0f;
+        footstepDistance = 0f;
     }
 
     private void FixedUpdate()
@@ -81,6 +85,14 @@ public sealed class PlayerMover : MonoBehaviour
 
         Vector3 up = transform.up;
         bool grounded = groundContacts.Count > 0 && Vector3.Dot(rigid.linearVelocity, up) <= 0.1f;
+        if (grounded)
+        {
+            if (airborneTime > 0.12f)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_Land);
+            airborneTime = 0f;
+        }
+        else
+            airborneTime += Time.fixedDeltaTime;
         // Walking off a ledge consumes the ground jump; rising contacts cannot refill jumps.
         jumpsUsed = grounded ? 0 : Mathf.Max(jumpsUsed, 1);
         bool dashing = TickDash(up);
@@ -89,6 +101,17 @@ public sealed class PlayerMover : MonoBehaviour
         Vector3 verticalVelocity = Vector3.Project(currentVelocity, up);
         Vector3 horizontalVelocity = currentVelocity - verticalVelocity;
         float acceleration = grounded ? groundAcceleration : airAcceleration;
+        if (grounded && !dashing && inputDirection.sqrMagnitude > 0.01f)
+        {
+            footstepDistance += horizontalVelocity.magnitude * Time.fixedDeltaTime;
+            if (footstepDistance >= 1.6f)
+            {
+                footstepDistance = 0f;
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_Footstep);
+            }
+        }
+        else
+            footstepDistance = 0f;
 
         if (!dashing)
             horizontalVelocity = Vector3.MoveTowards(
@@ -112,6 +135,7 @@ public sealed class PlayerMover : MonoBehaviour
         float currentVerticalSpeed = Vector3.Dot(rigid.linearVelocity, up);
         rigid.linearVelocity += up * (jumpVelocity - currentVerticalSpeed);
         jumpsUsed++;
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_Jump);
         groundContacts.Clear();
     }
 
@@ -131,6 +155,7 @@ public sealed class PlayerMover : MonoBehaviour
         dashCharges--;
         dashTimeRemaining = dashDuration;
         isDashing = true;
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_Dash);
     }
 
     private bool TickDash(Vector3 up)
@@ -141,6 +166,8 @@ public sealed class PlayerMover : MonoBehaviour
             if (dashRechargeRemaining <= 0f)
             {
                 dashCharges++;
+                if (dashCharges == 1)
+                    GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_DashReady);
                 dashRechargeRemaining = dashCharges < maxDashCharges
                     ? dashRechargeRemaining + dashRechargeTime : 0f;
             }
@@ -227,6 +254,7 @@ public sealed class PlayerMover : MonoBehaviour
                 if (Vector3.Dot(normal, up) < minimumGroundNormalY && Vector3.Dot(normal, dashDirection) < -0.1f)
                 {
                     EndDash();
+                    GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_DashCollision);
                     break;
                 }
             }
