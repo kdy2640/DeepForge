@@ -6,16 +6,30 @@ public sealed class UI_QueueSlotCard : MonoBehaviour
     [SerializeField] private Image icon;
     [SerializeField] private Text productName;
     [SerializeField] private Text remainingTime;
+    [SerializeField] private Button collectButton;
+    private int slotIndex;
     private SmithSlot slot;
     private ForgedGear displayedGear;
+
+    public void Init(int index)
+    {
+        slotIndex = index;
+        collectButton.onClick.AddListener(Collect);
+    }
+
+    private void Collect()
+    {
+        GameManager.Instance.BaseCamp.Smith.TryCollect(slotIndex);
+    }
 
     public void SetData(SmithSlot smithSlot)
     {
         if (displayedGear != null) displayedGear.IconChanged -= RefreshIcon;
         displayedGear = null;
         slot = smithSlot;
-        icon.gameObject.SetActive(slot.IsWorking);
-        if (slot.IsWorking)
+        collectButton.gameObject.SetActive(slot.isReady);
+        icon.gameObject.SetActive(slot.IsOccupied);
+        if (slot.IsOccupied)
         {
             if (slot.workType == SmithWorkType.EquipmentUpgrade)
             {
@@ -36,7 +50,7 @@ public sealed class UI_QueueSlotCard : MonoBehaviour
                 GameManager.Instance.GetComponentInChildren<ForgedGearIconBaker>().Request(displayedGear);
                 productName.text = blueprint.DisplayName;
             }
-            remainingTime.text = $"{slot.remainingSeconds:F1}초";
+            remainingTime.text = slot.isReady ? "완료" : $"{slot.remainingSeconds:F1}초";
         }
         else
         {

@@ -6,6 +6,8 @@ public sealed class UI_SmithInfoPanel : MonoBehaviour
 
     public void Init()
     {
+        for (int i = 0; i < cards.Length; i++)
+            cards[i].Init(i);
         GameManager.Instance.BaseCamp.Smith.SlotsChanged += Refresh;
         Refresh();
     }

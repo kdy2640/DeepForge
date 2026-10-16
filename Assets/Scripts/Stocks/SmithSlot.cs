@@ -10,6 +10,8 @@ public sealed class SmithSlot
     public int equipmentId;
     public int equipmentLevel;
     public float remainingSeconds;
+    public bool isReady;
 
     public bool IsWorking => remainingSeconds > 0f;
+    public bool IsOccupied => IsWorking || isReady;
 }

@@ -9,12 +9,12 @@ public sealed class SmithManager : MonoBehaviour
     private readonly SmithSlot[] slots = { new(), new(), new(), new() };
 
     public IReadOnlyList<SmithSlot> Slots => slots;
-    public bool HasEmptySlot => Array.Exists(slots, slot => !slot.IsWorking);
+    public bool HasEmptySlot => Array.Exists(slots, slot => !slot.IsOccupied);
     public event Action SlotsChanged;
 
     public bool TryStartForge(int id, ForgedGearData data, int level)
     {
-        SmithSlot slot = Array.Find(slots, entry => !entry.IsWorking);
+        SmithSlot slot = Array.Find(slots, entry => !entry.IsOccupied);
         if (slot == null) return false;
 
         ForgedGearUpgradeDataSO blueprint = UpgradeDataDB.GetForgedGearUpgrade(id);
@@ -36,22 +36,23 @@ public sealed class SmithManager : MonoBehaviour
         slot.workType = SmithWorkType.Product;
         slot.product = new ForgedGear(id, data, level);
         slot.remainingSeconds = ForgeDuration;
+        slot.isReady = false;
         iconBaker.Request(slot.product);
         GameManager.Instance.StockManager.TryConsumeOre(costs);
         SlotsChanged?.Invoke();
         return true;
     }
 
-    public bool IsEquipmentUpgradeInProgress(int equipmentId)
+    public SmithSlot GetEquipmentUpgradeSlot(int equipmentId)
     {
-        return Array.Exists(slots, slot => slot.IsWorking
+        return Array.Find(slots, slot => slot.IsOccupied
             && slot.workType == SmithWorkType.EquipmentUpgrade && slot.equipmentId == equipmentId);
     }
 
     public bool TryStartEquipmentUpgrade(int equipmentId, int level)
     {
-        SmithSlot slot = Array.Find(slots, entry => !entry.IsWorking);
-        if (slot == null || IsEquipmentUpgradeInProgress(equipmentId)) return false;
+        SmithSlot slot = Array.Find(slots, entry => !entry.IsOccupied);
+        if (slot == null || GetEquipmentUpgradeSlot(equipmentId) != null) return false;
 
         EquipmentUpgradeDataSO data = UpgradeDataDB.GetEquipmentUpgrade(equipmentId);
         if (!GameManager.Instance.Upgrade.HasState(data)) return false;
@@ -64,6 +65,7 @@ public sealed class SmithManager : MonoBehaviour
         slot.equipmentId = equipmentId;
         slot.equipmentLevel = level;
         slot.remainingSeconds = ForgeDuration;
+        slot.isReady = false;
         GameManager.Instance.StockManager.TryConsumeOre(requiredOres);
         SlotsChanged?.Invoke();
         return true;
@@ -77,21 +79,36 @@ public sealed class SmithManager : MonoBehaviour
             slot.remainingSeconds -= Time.deltaTime;
             if (slot.remainingSeconds > 0f) continue;
 
-            ForgedGear product = slot.product;
-            SmithWorkType workType = slot.workType;
-            int equipmentId = slot.equipmentId;
-            int equipmentLevel = slot.equipmentLevel;
-            slot.product = null;
-            slot.workType = SmithWorkType.Product;
-            slot.equipmentId = 0;
-            slot.equipmentLevel = 0;
             slot.remainingSeconds = 0f;
-            if (workType == SmithWorkType.EquipmentUpgrade)
-                GameManager.Instance.Upgrade.CompleteEquipmentUpgrade(UpgradeDataDB.GetEquipmentUpgrade(equipmentId), equipmentLevel);
-            else
-                GameManager.Instance.StockManager.AddForgedGear(product);
+            slot.isReady = true;
             SlotsChanged?.Invoke();
         }
+    }
+
+    public bool TryCollect(int slotIndex)
+    {
+        SmithSlot slot = slots[slotIndex];
+        if (!slot.isReady) return false;
+
+        ForgedGear product = slot.product;
+        SmithWorkType workType = slot.workType;
+        int equipmentId = slot.equipmentId;
+        int equipmentLevel = slot.equipmentLevel;
+        // 지급 알림 전에 슬롯을 비워 같은 작업을 다시 수령할 수 없게 한다.
+        slot.isReady = false;
+        slot.product = null;
+        slot.workType = SmithWorkType.Product;
+        slot.equipmentId = 0;
+        slot.equipmentLevel = 0;
+        slot.remainingSeconds = 0f;
+
+        if (workType == SmithWorkType.EquipmentUpgrade)
+            GameManager.Instance.Upgrade.CompleteEquipmentUpgrade(UpgradeDataDB.GetEquipmentUpgrade(equipmentId), equipmentLevel);
+        else
+            GameManager.Instance.StockManager.AddForgedGear(product);
+        SlotsChanged?.Invoke();
+        GameManager.Instance.Utility.Save.SaveGame();
+        return true;
     }
 
     public SmithSaveData CreateSmithSaveData()
@@ -105,9 +122,10 @@ public sealed class SmithManager : MonoBehaviour
                 workType = slot.workType,
                 equipmentId = slot.equipmentId,
                 equipmentLevel = slot.equipmentLevel,
-                product = slot.IsWorking && slot.workType == SmithWorkType.Product
+                product = slot.IsOccupied && slot.workType == SmithWorkType.Product
                     ? new ForgedGear(slot.product.id, slot.product.data, slot.product.level) : null,
-                remainingSeconds = slot.remainingSeconds
+                remainingSeconds = slot.remainingSeconds,
+                isReady = slot.isReady
             };
         }
         return saveData;
@@ -129,9 +147,10 @@ public sealed class SmithManager : MonoBehaviour
             slots[i].workType = saved.workType;
             slots[i].equipmentId = saved.equipmentId;
             slots[i].equipmentLevel = saved.equipmentLevel;
-            slots[i].product = saved.IsWorking && saved.workType == SmithWorkType.Product
+            slots[i].product = saved.IsOccupied && saved.workType == SmithWorkType.Product
                 ? new ForgedGear(saved.product.id, saved.product.data, Mathf.Max(1, saved.product.level)) : null;
             slots[i].remainingSeconds = saved.remainingSeconds;
+            slots[i].isReady = saved.isReady;
         }
         SlotsChanged?.Invoke();
     }
@@ -146,6 +165,7 @@ public sealed class SmithManager : MonoBehaviour
             slot.equipmentId = 0;
             slot.equipmentLevel = 0;
             slot.remainingSeconds = 0f;
+            slot.isReady = false;
         }
         SlotsChanged?.Invoke();
     }

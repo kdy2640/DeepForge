@@ -41,12 +41,13 @@ public sealed class UI_EquipmentDetailPanel : MonoBehaviour
             return;
         }
         UpgradeState state = GameManager.Instance.Upgrade.GetState(data);
-        bool working = GameManager.Instance.BaseCamp.Smith.IsEquipmentUpgradeInProgress(data.EquipmentId);
+        SmithSlot pendingSlot = GameManager.Instance.BaseCamp.Smith.GetEquipmentUpgradeSlot(data.EquipmentId);
         equipmentName.text = data.DisplayName;
         int levelOffset = data.EquipmentId == (int)EquipmentType.Pickaxe || data.EquipmentId == (int)EquipmentType.Boots
             || data.EquipmentId == (int)EquipmentType.ReturnRope ? 1 : 0;
         description.text = $"현재 Lv. {state.level + levelOffset} → 목표 Lv. {visual.SelectedLevel + levelOffset}\n"
-            + (working ? "제작 중" : visual.SelectedLevel != state.level + 1 ? "다음 강화 단계를 선택하세요." : "제작 시간 · 3초");
+            + (pendingSlot != null ? (pendingSlot.isReady ? "수령 대기 · 슬롯에서 수령하세요." : "제작 중")
+                : visual.SelectedLevel != state.level + 1 ? "다음 강화 단계를 선택하세요." : "제작 시간 · 3초");
         if (data.EquipmentId == (int)EquipmentType.Boots)
         {
             string ability = visual.SelectedLevel switch
@@ -81,7 +82,7 @@ public sealed class UI_EquipmentDetailPanel : MonoBehaviour
         forgeButton.interactable = visual.SelectedLevel == state.level + 1
             && visual.SelectedLevel <= state.unlockedLevel
             && visual.SelectedLevel <= data.MaxLevel
-            && !working && GameManager.Instance.BaseCamp.Smith.HasEmptySlot
+            && pendingSlot == null && GameManager.Instance.BaseCamp.Smith.HasEmptySlot
             && GameManager.Instance.StockManager.CanConsumeOre(costs);
     }
 
