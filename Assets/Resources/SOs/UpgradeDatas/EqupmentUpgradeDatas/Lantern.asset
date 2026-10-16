@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentUpgradeDataSO
   id: Lantern
   displayName: Lantern
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
   levelCosts:
   - blueprintPrice: 30
     requiredOres:
@@ -51,3 +51,10 @@ MonoBehaviour:
   - statType: 4
     modifierType: 1
     value: 0.2
+  levelIcons:
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}

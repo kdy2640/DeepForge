@@ -55,7 +55,8 @@ public sealed class UI_DealPanel : MonoBehaviour
         shop.SetDealMode(UI_Shop_Deal.DealMode.Buy);
         UI_DealVisualCard card = Instantiate(cardPrefab, content, false);
         int targetLevel = GameManager.Instance.Upgrade.GetState(data).unlockedLevel + 1;
-        card.SetData(data.DisplayIcon, new Color32(185, 179, 169, 255),
+        Sprite icon = data is EquipmentUpgradeDataSO equipment ? equipment.GetLevelIcon(targetLevel) : data.DisplayIcon;
+        card.SetData(icon, Color.white,
             1, data.GetLevelCost(targetLevel).BlueprintPrice, () => RemoveBlueprint(data));
         blueprints.Add(data, (card, targetLevel));
         card.Animate(true);

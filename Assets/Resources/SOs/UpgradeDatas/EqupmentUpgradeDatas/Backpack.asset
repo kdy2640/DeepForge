@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentUpgradeDataSO
   id: Backpack
   displayName: Backpack
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: 44b199e59be178a449dfef7e84a07c9f, type: 3}
   levelCosts:
   - blueprintPrice: 35
     requiredOres:
@@ -51,3 +51,10 @@ MonoBehaviour:
   - statType: 2
     modifierType: 0
     value: 24
+  levelIcons:
+  - {fileID: 21300000, guid: 44b199e59be178a449dfef7e84a07c9f, type: 3}
+  - {fileID: 21300000, guid: 44b199e59be178a449dfef7e84a07c9f, type: 3}
+  - {fileID: 21300000, guid: 44b199e59be178a449dfef7e84a07c9f, type: 3}
+  - {fileID: 21300000, guid: 44b199e59be178a449dfef7e84a07c9f, type: 3}
+  - {fileID: 21300000, guid: 44b199e59be178a449dfef7e84a07c9f, type: 3}
+  - {fileID: 21300000, guid: 44b199e59be178a449dfef7e84a07c9f, type: 3}

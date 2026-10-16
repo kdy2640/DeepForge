@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_Mace
   displayName: Mace
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: a012c49a5bac81e48b48193fb4ce79e0, type: 3}
   levelCosts:
   - blueprintPrice: 75
     requiredOres:

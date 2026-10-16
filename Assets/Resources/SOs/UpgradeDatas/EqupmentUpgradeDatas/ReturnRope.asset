@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EquipmentUpgradeDataSO
   id: ReturnRope
   displayName: "\uBCF5\uADC0\uB85C\uD504"
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: d884813030bf8cf45a8c01f0f7fb331a, type: 3}
   levelCosts:
   - blueprintPrice: 40
     requiredOres:
@@ -45,3 +45,9 @@ MonoBehaviour:
   - statType: 5
     modifierType: 0
     value: 30
+  levelIcons:
+  - {fileID: 21300000, guid: d884813030bf8cf45a8c01f0f7fb331a, type: 3}
+  - {fileID: 21300000, guid: d884813030bf8cf45a8c01f0f7fb331a, type: 3}
+  - {fileID: 21300000, guid: d884813030bf8cf45a8c01f0f7fb331a, type: 3}
+  - {fileID: 21300000, guid: d884813030bf8cf45a8c01f0f7fb331a, type: 3}
+  - {fileID: 21300000, guid: d884813030bf8cf45a8c01f0f7fb331a, type: 3}

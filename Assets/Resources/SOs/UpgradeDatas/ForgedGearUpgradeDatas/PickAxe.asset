@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_PickAxe
   displayName: PickAxe
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: 2b918ae0e841c4549833dfad4cf7ba1e, type: 3}
   levelCosts:
   - blueprintPrice: 60
     requiredOres:

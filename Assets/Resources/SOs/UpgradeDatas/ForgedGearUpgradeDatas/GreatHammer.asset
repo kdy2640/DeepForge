@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_GreatHammer
   displayName: GreatHammer
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: 82f495c06deb29f4f8faf3442fd47627, type: 3}
   levelCosts:
   - blueprintPrice: 180
     requiredOres:

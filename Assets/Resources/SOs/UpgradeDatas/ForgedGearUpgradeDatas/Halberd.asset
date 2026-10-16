@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_Halberd
   displayName: Halberd
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: f71ec68989b877643b63d6466228251f, type: 3}
   levelCosts:
   - blueprintPrice: 120
     requiredOres:

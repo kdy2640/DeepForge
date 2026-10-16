@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_Dagger
   displayName: Dagger
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: fe90fefb93ced6f48a3c20cc83d60437, type: 3}
   levelCosts:
   - blueprintPrice: 35
     requiredOres:

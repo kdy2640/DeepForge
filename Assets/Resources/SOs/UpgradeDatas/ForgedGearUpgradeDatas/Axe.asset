@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_Axe
   displayName: Axe
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: 5b7d7127cb1a76c4ba4c6c6b42551399, type: 3}
   levelCosts:
   - blueprintPrice: 55
     requiredOres:

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_Spear
   displayName: Spear
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: a80825730a3b15b4d8f49c47783ecdd4, type: 3}
   levelCosts:
   - blueprintPrice: 60
     requiredOres:

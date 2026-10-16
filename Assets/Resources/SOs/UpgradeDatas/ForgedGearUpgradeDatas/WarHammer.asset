@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_WarHammer
   displayName: WarHammer
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: de6fe000b97ab284fae8d34489eff42d, type: 3}
   levelCosts:
   - blueprintPrice: 120
     requiredOres:

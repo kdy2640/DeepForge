@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_Knife
   displayName: Knife
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: d864892ffa6307a499753731e932c7ff, type: 3}
   levelCosts:
   - blueprintPrice: 20
     requiredOres:

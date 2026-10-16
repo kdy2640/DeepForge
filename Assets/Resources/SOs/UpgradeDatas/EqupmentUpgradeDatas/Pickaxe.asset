@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::UpgradeDataSO
   id: Pickaxe
   displayName: Pickaxe
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: da02ea807af57d8469a0334a2c091ed2, type: 3}
   levelCosts:
   - blueprintPrice: 40
     requiredOres:
@@ -72,3 +72,13 @@ MonoBehaviour:
   - statType: 1
     modifierType: 1
     value: 0.2
+  levelIcons:
+  - {fileID: 21300000, guid: da02ea807af57d8469a0334a2c091ed2, type: 3}
+  - {fileID: 21300000, guid: 2a4804ab1fb814d4d82ddeeb72a752b2, type: 3}
+  - {fileID: 21300000, guid: a1eb1acdf2ddd31459563bb773d96eeb, type: 3}
+  - {fileID: 21300000, guid: bbf8e81a31c3a1e408b56a7d0528a9bf, type: 3}
+  - {fileID: 21300000, guid: 2f4b82684c991784c889002b446f6784, type: 3}
+  - {fileID: 21300000, guid: 9a67392b0c6643e48a35c325f3303574, type: 3}
+  - {fileID: 21300000, guid: 30c566c1e124dde4eb95ab571f8136d1, type: 3}
+  - {fileID: 21300000, guid: af9da2939947ae94ead999b8ef2a044f, type: 3}
+  - {fileID: 21300000, guid: 84b0e790f864728449c32ed987a229fc, type: 3}

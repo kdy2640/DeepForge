@@ -17,7 +17,9 @@ public sealed class UI_EquipmentUpgradeCard : MonoBehaviour, UnityEngine.EventSy
 
     public void SetData(EquipmentUpgradeDataSO equipment, int currentLevel, Action select)
     {
-        icon.sprite = equipment.DisplayIcon;
+        icon.sprite = equipment.GetLevelIcon(currentLevel);
+        icon.color = Color.white;
+        icon.preserveAspect = true;
         if (equipment.EquipmentId == (int)EquipmentType.Pickaxe || equipment.EquipmentId == (int)EquipmentType.Boots
             || equipment.EquipmentId == (int)EquipmentType.ReturnRope) currentLevel++;
         nameText.text = $"{equipment.DisplayName}\nLv. {currentLevel}";

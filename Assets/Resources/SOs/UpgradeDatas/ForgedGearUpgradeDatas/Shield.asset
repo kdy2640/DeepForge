@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_Shield
   displayName: Shield
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: 9bd58eaf43d4ede4f8eddcc0d4a7c307, type: 3}
   levelCosts:
   - blueprintPrice: 90
     requiredOres:

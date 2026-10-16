@@ -21,13 +21,18 @@ public sealed class UI_BluePrintVisualCard : MonoBehaviour, UnityEngine.EventSys
         bool owned = availability == UpgradeAvailability.BlueprintAlreadyOwned || availability == UpgradeAvailability.MaxLevel;
         nameText.text = data.MaxLevel > 1 ? $"{data.DisplayName} · {unlockedLevel}/{data.MaxLevel}"
             : owned ? $"{data.DisplayName} · 보유" : data.DisplayName;
-        if (data is EquipmentUpgradeDataSO equipment
-            && (equipment.EquipmentId == (int)EquipmentType.Pickaxe || equipment.EquipmentId == (int)EquipmentType.Boots
-                || equipment.EquipmentId == (int)EquipmentType.ReturnRope))
-            nameText.text = $"{data.DisplayName} · Lv. {unlockedLevel + 1}/{data.MaxLevel + 1}";
+        if (data is EquipmentUpgradeDataSO equipment)
+        {
+            int targetLevel = Mathf.Min(unlockedLevel + 1, equipment.MaxLevel);
+            int levelOffset = equipment.EquipmentId == (int)EquipmentType.Pickaxe || equipment.EquipmentId == (int)EquipmentType.Boots
+                || equipment.EquipmentId == (int)EquipmentType.ReturnRope ? 1 : 0;
+            nameText.text = $"{data.DisplayName} · Lv. {targetLevel + levelOffset}/{data.MaxLevel + levelOffset}";
+            icon.sprite = equipment.GetLevelIcon(targetLevel);
+        }
+        else
+            icon.sprite = data.DisplayIcon;
         priceText.text = owned ? "보유" : $"{data.GetLevelCost(unlockedLevel + 1).BlueprintPrice:N0} G";
-        icon.sprite = data.DisplayIcon;
-        icon.color = new Color32(185, 179, 169, 255);
+        icon.color = Color.white;
         button.interactable = availability == UpgradeAvailability.Available || availability == UpgradeAvailability.InsufficientCurrency;
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() => select.Invoke());

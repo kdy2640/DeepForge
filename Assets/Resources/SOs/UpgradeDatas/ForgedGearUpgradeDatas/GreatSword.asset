@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_GreatSword
   displayName: GreatSword
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: 05aa47b1dbe3e6f4baf2249eb795162e, type: 3}
   levelCosts:
   - blueprintPrice: 150
     requiredOres:

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_GreatMace
   displayName: GreatMace
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: a282a9dd08307bd4d9fca8b2fd9dded9, type: 3}
   levelCosts:
   - blueprintPrice: 160
     requiredOres:

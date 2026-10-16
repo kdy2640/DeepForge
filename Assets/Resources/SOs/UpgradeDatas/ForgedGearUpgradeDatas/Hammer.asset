@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_Hammer
   displayName: Hammer
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: 5a30818316633014ca35941a341609a9, type: 3}
   levelCosts:
   - blueprintPrice: 75
     requiredOres:

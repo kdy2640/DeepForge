@@ -7,6 +7,7 @@ public sealed class UI_EquipmentVisualPanel : MonoBehaviour
     [SerializeField] private Button levelUpButton;
     [SerializeField] private Button levelDownButton;
     [SerializeField] private Text levelText;
+    [SerializeField] private Image previewImage;
 
     private UI_Smith_Equipment equipment;
     public int SelectedLevel { get; private set; } = 1;
@@ -53,6 +54,8 @@ public sealed class UI_EquipmentVisualPanel : MonoBehaviour
             && (data.EquipmentId == (int)EquipmentType.Pickaxe || data.EquipmentId == (int)EquipmentType.Boots
                 || data.EquipmentId == (int)EquipmentType.ReturnRope) ? 1 : 0);
         levelText.text = maxLevel > 0 ? $"Lv. {displayLevel}" : "—";
+        previewImage.enabled = data != null;
+        previewImage.sprite = data != null ? data.GetLevelIcon(maxLevel > 0 ? SelectedLevel : 0) : null;
         levelUpButton.interactable = SelectedLevel < maxLevel;
         levelDownButton.interactable = maxLevel > 0 && SelectedLevel > 1;
         if (SelectedLevel != previousLevel) LevelChanged?.Invoke();

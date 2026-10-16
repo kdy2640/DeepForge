@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_KiteShield
   displayName: KiteShield
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: fd5c2a5aa08c022408487fe92f9a6dd4, type: 3}
   levelCosts:
   - blueprintPrice: 120
     requiredOres:

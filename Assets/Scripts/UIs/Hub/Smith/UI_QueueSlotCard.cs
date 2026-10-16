@@ -34,8 +34,9 @@ public sealed class UI_QueueSlotCard : MonoBehaviour
             if (slot.workType == SmithWorkType.EquipmentUpgrade)
             {
                 EquipmentUpgradeDataSO equipment = UpgradeDataDB.GetEquipmentUpgrade(slot.equipmentId);
-                icon.sprite = equipment.DisplayIcon;
+                icon.sprite = equipment.GetLevelIcon(slot.equipmentLevel);
                 icon.color = Color.white;
+                icon.preserveAspect = true;
                 int displayLevel = slot.equipmentLevel + (equipment.EquipmentId == (int)EquipmentType.Pickaxe
                     || equipment.EquipmentId == (int)EquipmentType.Boots
                     || equipment.EquipmentId == (int)EquipmentType.ReturnRope ? 1 : 0);

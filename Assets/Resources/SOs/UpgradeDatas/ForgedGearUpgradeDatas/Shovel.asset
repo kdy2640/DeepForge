@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ForgedGearUpgradeDataSO
   id: ForgedGear_Shovel
   displayName: Shovel
-  displayIcon: {fileID: 0}
+  displayIcon: {fileID: 21300000, guid: b70187b7f9b3a2c4ba7ebf25659fdfce, type: 3}
   levelCosts:
   - blueprintPrice: 45
     requiredOres:
