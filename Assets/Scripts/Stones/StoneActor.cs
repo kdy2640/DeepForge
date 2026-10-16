@@ -111,7 +111,7 @@ public sealed class StoneActor : Poolable
         maxSupportIndex = Vector3Int.zero;
     }
 
-    // SetData와 배치가 끝난 뒤 한 번 호출한다. 현재 자원 모델의 BoxCollider 부피를 사용한다.
+    // SetData와 배치가 끝난 뒤 한 번 호출한다. BoxCollider 중심을 유지하고 각 축 크기의 80%를 판정에 사용한다.
     private bool InitializeTerrainSupport(TerrainManager owner)
     {
         terrainManager = owner;
@@ -122,7 +122,7 @@ public sealed class StoneActor : Poolable
         foreach (BoxCollider modelCollider in modelColliders)
         {
             Matrix4x4 localToTerrain = owner.transform.worldToLocalMatrix * modelCollider.transform.localToWorldMatrix;
-            Vector3 size = modelCollider.size;
+            Vector3 size = modelCollider.size * 0.6f;
             Vector3 start = modelCollider.center - size * 0.5f;
             // 중심·각 면을 포함하고 지형 해상도 이하의 간격이 되도록 짝수로 나눈다.
             int countX = 2 * Mathf.Max(1, Mathf.CeilToInt(localToTerrain.MultiplyVector(Vector3.right * size.x).magnitude / (2f * resolution)));
@@ -189,7 +189,7 @@ public sealed class StoneActor : Poolable
         if (!HasTerrainSupport()) Collect();
     }
 
-    private void Collect()
+    public void Collect()
     {
         if (!IsRented || isBreaking)
             return;

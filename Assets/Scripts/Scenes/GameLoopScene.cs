@@ -11,7 +11,6 @@ public class GameLoopScene : SceneBase
     public override IEnumerator PrepareBeforeReveal()
     {
         DOTween.Init();
-        DOTween.SetTweensCapacity(500, 50);
 
         yield return null;
         player = Object.FindFirstObjectByType<PlayerController>();
@@ -55,6 +54,7 @@ public class GameLoopScene : SceneBase
 
     public override IEnumerator Enter()
     {
+        player.GetComponent<PlayerReturn>().ResetAtCamp();
         player.SetGameplayActive(true);
         yield break;
     }

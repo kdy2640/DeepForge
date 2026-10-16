@@ -7,12 +7,13 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Pickaxe_Lv9_Diamond
-  m_Shader: {fileID: 4800000, guid: 1dc28e2d732ef944eb8944ebdf79c36a, type: 3}
+  m_Name: Pickaxe_Lv02
+  m_Shader: {fileID: 4800000, guid: 53756ea42bccffc4faba276de02fdaf4, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _SMALLTEXTURE_ON
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -28,7 +29,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ColorMask:
-        m_Texture: {fileID: 2800000, guid: 2ab6b1e255f617245b7e1203668a268d, type: 3}
+        m_Texture: {fileID: 2800000, guid: d6b3869b873d50743b9a4e4f40a186f4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailAlbedoMap:
@@ -48,7 +49,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 186b102ab62c0124abc519874d8043ce, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicEmissionMap:
+        m_Texture: {fileID: 2800000, guid: 0d7169b0acaf4fe4e910c45a5892059d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicGlossMap:
@@ -56,7 +61,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MetallicMask:
-        m_Texture: {fileID: 2800000, guid: bbd3ea7d050076d4899eeb62955fa14c, type: 3}
+        m_Texture: {fileID: 2800000, guid: 0d7169b0acaf4fe4e910c45a5892059d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _OcclusionMap:
@@ -68,7 +73,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TextureAlbedo:
-        m_Texture: {fileID: 2800000, guid: bcd74a2ece0b9704aa045c742a8a6e53, type: 3}
+        m_Texture: {fileID: 2800000, guid: 555a601682b35214ab727159c8b73f69, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _texcoord:
@@ -80,18 +85,23 @@ Material:
     - _AlphaCutoff: 0.5
     - _BumpScale: 1
     - _Cutoff: 0.5
+    - _DarkValue: 0.35
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _Emission: 0
-    - _GemstoneSmoothness: 0.5
+    - _EnvironmentReflections: 1
+    - _GemstoneSmoothness: 0.6
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _MetalSmoothness: 0.75
+    - _LightValue: 0.5
+    - _MetalSmoothness: 0.6
     - _Metallic: 0.8
     - _Mode: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _ReceiveShadows: 1
+    - _SmallTexture: 1
     - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -101,13 +111,25 @@ Material:
     - __dirty: 0
     m_Colors:
     - _AlbedoColor: {r: 1, g: 1, b: 1, a: 0}
+    - _Cloth: {r: 0.5921568, g: 0.4117647, b: 0.4078431, a: 1}
+    - _ClothColor: {r: 0.5921569, g: 0.40784317, b: 0.40784317, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Color1: {r: 0.4, g: 0.9, b: 1, a: 1}
+    - _Color1: {r: 0.62352943, g: 0.6392157, b: 0.6901961, a: 1}
     - _Color2: {r: 0.35294116, g: 0.36862746, b: 0.39999998, a: 1}
-    - _Color3: {r: 0.42, g: 0.24, b: 0.11, a: 1}
+    - _Color3: {r: 0.39607847, g: 0.32941177, b: 0.3019608, a: 1}
     - _Color4: {r: 0.13725486, g: 0.36470586, b: 0.6784314, a: 1}
-    - _Color5: {r: 0.40784317, g: 0.32941175, b: 0.17254895, a: 1}
-    - _Color6: {r: 0.6117647, g: 0.50980395, b: 0.38823527, a: 1}
-    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _Color5: {r: 0.37647063, g: 0.18431373, b: 0.18039216, a: 1}
+    - _Color6: {r: 0.5921569, g: 0.40784317, b: 0.40784317, a: 1}
+    - _EmissionColor: {r: 2.212223, g: 0.3277367, b: 0.1229013, a: 1}
+    - _Gemstone: {r: 0.1411764, g: 0.3647059, b: 0.6784314, a: 1}
+    - _GemstoneColor: {r: 0.13725486, g: 0.36470586, b: 0.6784314, a: 1}
+    - _Leather: {r: 0.28, g: 0.3, b: 0.32, a: 1}
+    - _LeatherColor: {r: 0.37647063, g: 0.18431373, b: 0.18039216, a: 1}
+    - _Metal: {r: 0.28, g: 0.3, b: 0.32, a: 1}
+    - _MetalColor: {r: 0.62352943, g: 0.6392157, b: 0.6901961, a: 1}
+    - _Stone: {r: 0.3529412, g: 0.3686274, b: 0.4, a: 1}
+    - _StoneColor: {r: 0.3529412, g: 0.36862746, b: 0.40000004, a: 1}
+    - _Wood: {r: 0.28, g: 0.3, b: 0.32, a: 1}
+    - _WoodColor: {r: 0.39607847, g: 0.32941177, b: 0.3019608, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

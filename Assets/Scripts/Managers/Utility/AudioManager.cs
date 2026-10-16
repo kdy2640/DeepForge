@@ -135,24 +135,19 @@ public enum SFXType
 public class AudioManager : MonoBehaviour
 {
     [Header("AudioSource")]
-    [SerializeField] private AudioSource hubBGMSource;
-    [SerializeField] private AudioSource serviceBGMSource;
-    [SerializeField] private AudioSource harvestBGMSource;
+    [SerializeField] private AudioSource bgmSource;
     [SerializeField] private int sfxSourceCount = 20;//10에서 20으로 변경
     [SerializeField] private AudioSource[] sfxSources;
 
     // AudioSource를 순환 관리하기 위한 Queue
     private Queue<AudioSource> sfxQueue;
 
-    [Header("BGM List")]
-    [SerializeField] private BGMClipData[] bgmClips = System.Array.Empty<BGMClipData>();//인스펙터에서 등록할 BGM
-    [SerializeField, Min(0f)] private float bgmBlendDuration = 1f;
+    [Header("BGM")]
+    [SerializeField, Range(0f, 1f)] private float bgmBaseVolume = 0.3f;
     [Header("SFX List")]
     [SerializeField] private SFXClipData[] sfxClips = System.Array.Empty<SFXClipData>();//인스펙터에서 등록할 효과음 데이터
 
 
-    //예 : BGMType.Stage -> Stage BGM데이터
-    private Dictionary<BGMType, BGMClipData> bgmDictionary;
     //예 : SFXType.Jump -> Jump 효과음 데이터
     private Dictionary<SFXType, SFXClipData> sfxDictionary;
 
@@ -163,12 +158,6 @@ public class AudioManager : MonoBehaviour
     private Dictionary<SFXType, int> playingCounts;
     private Dictionary<SFXType, AudioSource> loopingSFXSources;
 
-    private BGMClipData currentBGMData;
-    private Coroutine bgmBlendCoroutine;
-    private bool areBGMPlayersStarted;
-    private float hubBGMBlendWeight;
-    private float serviceBGMBlendWeight;
-    private float harvestBGMBlendWeight;
     private float masterVolume = 1.0f;
     private float bgmVolume = 1.0f;
     private float sfxVolume = 1.0f;
@@ -187,7 +176,7 @@ public class AudioManager : MonoBehaviour
         loopingSFXSources = new Dictionary<SFXType, AudioSource>();
 
         InitializeDictionary();
-        StartSynchronizedBGM();
+        PlayBGM();
     }
    //AudioSource가 없을경우 자동으로 만들어주는 녀석
    private void CreateAudioSources()
@@ -211,31 +200,6 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    private void StartSynchronizedBGM()
-    {
-        if (bgmDictionary.Count == 0)
-            return;
-
-        double startTime = AudioSettings.dspTime + 0.1d;
-
-        hubBGMBlendWeight = 0f;
-        serviceBGMBlendWeight = 0f;
-        harvestBGMBlendWeight = 0f;
-
-        hubBGMSource.clip = bgmDictionary[BGMType.HubBGM].clip;
-        serviceBGMSource.clip = bgmDictionary[BGMType.ServiceBGM].clip;
-        harvestBGMSource.clip = bgmDictionary[BGMType.HarvestBGM].clip;
-
-        hubBGMSource.volume = 0f;
-        serviceBGMSource.volume = 0f;
-        harvestBGMSource.volume = 0f;
-
-        hubBGMSource.PlayScheduled(startTime);
-        serviceBGMSource.PlayScheduled(startTime);
-        harvestBGMSource.PlayScheduled(startTime);
-
-        areBGMPlayersStarted = true;
-    }
     private AudioSource GetSFXSource()
     {
         int count = sfxQueue.Count;
@@ -259,23 +223,7 @@ public class AudioManager : MonoBehaviour
     //배열로 등록한 오디 데이터를 딕셔너리에 저장하는 녀석
     private void InitializeDictionary()
     {
-        bgmDictionary = new Dictionary<BGMType, BGMClipData>();
         sfxDictionary = new Dictionary<SFXType, SFXClipData>();
-
-        for (int i = 0;i<bgmClips.Length;i++)
-        {
-            //배열 요소가 비어 있으면
-            if (bgmClips[i] == null) continue;
-            //BGM데이터 안에 AudioClip이 연결되어 있지 않으면
-            if (bgmClips[i].clip == null) continue;
-
-            //딕셔너리에 같은 BGMType이 아직 없으면
-            if (!bgmDictionary.ContainsKey(bgmClips[i].type))
-            {
-                //BGMType을 key, BGMClipData를 Value로 저장
-                bgmDictionary.Add(bgmClips[i].type, bgmClips[i]);
-            }
-        }
         for(int i = 0;i<sfxClips.Length;i++)
         {
             if (sfxClips[i] == null) continue;
@@ -412,109 +360,27 @@ public class AudioManager : MonoBehaviour
     }
 #endif
 
-    //BGM을 재생하는 녀석
-    //AudioManager.Instance.PlayBGM(BGMType.Stage);
-    public void PlayBGM(BGMType type)
+
+    public void PlayBGM()
     {
-        //요청한 BGMType이 딕셔너리에 없으면
-        if(!bgmDictionary.ContainsKey(type))
-        {
-            return;
-        }
-        //딕셔너리에서 해당 BGM데이터를 가져온다.
-        BGMClipData data = bgmDictionary[type];
-
-        //현재 재생중인 BGM과 요청한 BGM이 같다면
-        if(currentBGMData == data)
-        {
-            return;
-        }
-
-        if (!areBGMPlayersStarted)
-        {
-            StartSynchronizedBGM();
-        }
-
-        if (bgmBlendCoroutine != null)
-        {
-            StopCoroutine(bgmBlendCoroutine);
-        }
-
-        //현재 재생중인 BGM데이터를 저장
-        currentBGMData = data;
-        bgmBlendCoroutine = StartCoroutine(BlendBGM(data));
-    }
-
-    private IEnumerator BlendBGM(BGMClipData nextBGMData)
-    {
-        float startHubWeight = hubBGMBlendWeight;
-        float startServiceWeight = serviceBGMBlendWeight;
-        float startHarvestWeight = harvestBGMBlendWeight;
-
-        float elapsedTime = 0f;
-
-        while (elapsedTime < bgmBlendDuration)
-        {
-            elapsedTime += Time.unscaledDeltaTime;
-            float progress = Mathf.Clamp01(elapsedTime / bgmBlendDuration);
-
-            float hubTargetWeight = nextBGMData.type == BGMType.HubBGM ? 1f : 0f;
-            float serviceTargetWeight = nextBGMData.type == BGMType.ServiceBGM ? 1f : 0f;
-            float harvestTargetWeight = nextBGMData.type == BGMType.HarvestBGM ? 1f : 0f;
-
-            hubBGMBlendWeight = Mathf.Lerp(startHubWeight, hubTargetWeight, progress);
-            serviceBGMBlendWeight = Mathf.Lerp(startServiceWeight, serviceTargetWeight, progress);
-            harvestBGMBlendWeight = Mathf.Lerp(startHarvestWeight, harvestTargetWeight, progress);
-
-            UpdateBGMVolume();
-            yield return null;
-        }
-
-        hubBGMBlendWeight = nextBGMData.type == BGMType.HubBGM ? 1f : 0f;
-        serviceBGMBlendWeight = nextBGMData.type == BGMType.ServiceBGM ? 1f : 0f;
-        harvestBGMBlendWeight = nextBGMData.type == BGMType.HarvestBGM ? 1f : 0f;
         UpdateBGMVolume();
-
-        bgmBlendCoroutine = null;
+        if (!bgmSource.isPlaying)
+            bgmSource.Play();
     }
-    //BGM을 정지시키는 퓬
+
     public void StopBGM()
     {
-        if (bgmBlendCoroutine != null)
-        {
-            StopCoroutine(bgmBlendCoroutine);
-            bgmBlendCoroutine = null;
-        }
-
-        hubBGMSource.Stop();
-        serviceBGMSource.Stop();
-        harvestBGMSource.Stop();
-
-        hubBGMSource.clip = null;
-        serviceBGMSource.clip = null;
-        harvestBGMSource.clip = null;
-
-        hubBGMBlendWeight = 0f;
-        serviceBGMBlendWeight = 0f;
-        harvestBGMBlendWeight = 0f;
-
-        areBGMPlayersStarted = false;
-        //현재 재생중인 BGM데이터도 비우자.
-        currentBGMData = null;
+        bgmSource.Stop();
     }
-    //일시 정지
+
     public void PauseBGM()
     {
-        hubBGMSource.Pause();
-        serviceBGMSource.Pause();
-        harvestBGMSource.Pause();
+        bgmSource.Pause();
     }
-    //일시정지된 BGM을 다시 재생
+
     public void ResumeBGM()
     {
-        hubBGMSource.UnPause();
-        serviceBGMSource.UnPause();
-        harvestBGMSource.UnPause();
+        bgmSource.UnPause();
     }
 
     //효과음 랜덤으로 Randomratio (0~0.2) 추천
@@ -689,11 +555,6 @@ public class AudioManager : MonoBehaviour
     //현재 재생중인 BGM의 볼륨을 계산
     private void UpdateBGMVolume()
     {
-        if (bgmDictionary.Count == 0)
-            return;
-
-        hubBGMSource.volume = bgmDictionary[BGMType.HubBGM].volume * hubBGMBlendWeight * bgmVolume * masterVolume;
-        serviceBGMSource.volume = bgmDictionary[BGMType.ServiceBGM].volume * serviceBGMBlendWeight * bgmVolume * masterVolume;
-        harvestBGMSource.volume = bgmDictionary[BGMType.HarvestBGM].volume * harvestBGMBlendWeight * bgmVolume * masterVolume;
+        bgmSource.volume = bgmBaseVolume * bgmVolume * masterVolume;
     }
 }

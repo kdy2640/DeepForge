@@ -21,7 +21,6 @@ public sealed class MineLighting : MonoBehaviour
     private float outsideSunIntensity;
     private SphericalHarmonicsL2 outsideAmbientProbe;
     private float outsideReflectionIntensity;
-    private Color outsideFogColor;
     private Camera playerCamera;
     private Color outsideBackgroundColor;
     private float headlightIntensity;
@@ -32,7 +31,6 @@ public sealed class MineLighting : MonoBehaviour
         outsideSunIntensity = sunlight.intensity;
         outsideAmbientProbe = RenderSettings.ambientProbe;
         outsideReflectionIntensity = RenderSettings.reflectionIntensity;
-        outsideFogColor = RenderSettings.fogColor;
         playerCamera = headlight.GetComponentInParent<Camera>();
         outsideBackgroundColor = playerCamera.backgroundColor;
         headlightIntensity = headlight.intensity;
@@ -72,8 +70,8 @@ public sealed class MineLighting : MonoBehaviour
                 ambientProbe[channel, coefficient] *= ambientScale;
         RenderSettings.ambientProbe = ambientProbe;
         RenderSettings.reflectionIntensity = outsideReflectionIntensity * Mathf.Lerp(1f, undergroundReflectionScale, blend);
-        RenderSettings.fogColor = Color.Lerp(outsideFogColor, undergroundFogColor, blend);
-        // 원거리 지형이 그려지지 않는 곳도 안개와 같은 색으로 이어지게 한다.
+        // 지상에서는 하늘을 표시하고, 지하에서는 깊이에 맞춰 배경을 어둡게 한다.
+        playerCamera.clearFlags = blend <= 0f ? CameraClearFlags.Skybox : CameraClearFlags.SolidColor;
         playerCamera.backgroundColor = Color.Lerp(outsideBackgroundColor, undergroundFogColor, blend);
     }
 }

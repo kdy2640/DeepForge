@@ -15,6 +15,9 @@ public sealed class BaseCamp : MonoBehaviour
     {
         if (other.attachedRigidbody == player.GetComponent<Rigidbody>())
         {
+            if (!GameManager.Instance.Utility.World.IsLoaded || GameManager.Instance.SceneController.IsChangingScene)
+                return;
+
             if (!IsPlayerInside)
                 GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Camp_Enter);
             IsPlayerInside = true;
@@ -27,6 +30,9 @@ public sealed class BaseCamp : MonoBehaviour
     {
         if (other.attachedRigidbody == player.GetComponent<Rigidbody>())
         {
+            if (!GameManager.Instance.Utility.World.IsLoaded || GameManager.Instance.SceneController.IsChangingScene)
+                return;
+
             if (IsPlayerInside)
                 GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Camp_Depart);
             IsPlayerInside = false;

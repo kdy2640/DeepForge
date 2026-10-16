@@ -22,7 +22,7 @@ public sealed class PlayerMiner : MonoBehaviour
     [SerializeField] private ParticleSystem miningChips;
     [SerializeField] private AudioSource miningAudio;
     [SerializeField, FormerlySerializedAs("miningTool")] private Transform miningToolAnchor;
-    [Header("곡괭이 외형 · 나무부터 다이아몬드까지")]
+    [Header("곡괭이 외형 · 장비 아이콘과 동일한 9단계")]
     [SerializeField] private Renderer pickaxeRenderer;
     [SerializeField] private Material[] pickaxeMaterials;
     InputManager inputManager;
@@ -34,6 +34,7 @@ public sealed class PlayerMiner : MonoBehaviour
     bool isUIInputBlocked;
 
     private Vector3 mouseHit = Vector3.zero;
+    private Collider miningTargetCollider;
     private Vector3 mouseHitNormal;
     private Vector3 viewDirection;
     private Vector3 erosionStartDirection;
@@ -132,6 +133,7 @@ public sealed class PlayerMiner : MonoBehaviour
 
     private void UpdateMiningTarget()
     {
+        miningTargetCollider = null;
         Camera mainCamera = Camera.main;
         if (mainCamera == null)
         {
@@ -160,6 +162,7 @@ public sealed class PlayerMiner : MonoBehaviour
             float anchorRadius = appliedMiningSettings.AnchorRadius;
             anchor.transform.localScale = Vector3.one * (anchorRadius * 2f);
             mouseHit = hit.point;
+            miningTargetCollider = hit.collider;
             mouseHitNormal = hit.normal;
             viewDirection = ray.direction;
             return;
@@ -281,6 +284,16 @@ public sealed class PlayerMiner : MonoBehaviour
         {
             if (Time.time >= nextLeftEditTime)
             {
+                if (miningTargetCollider.gameObject.layer == LayerMask.NameToLayer("Stone"))
+                {
+                    miningTargetCollider.GetComponentInParent<StoneActor>().Collect();
+                    PlayMiningFeedback();
+                    hasErosionStart = false;
+                    erosionElapsedTime = 0f;
+                    nextLeftEditTime = Time.time + settings.HitInterval;
+                    return;
+                }
+
                 if (!hasErosionStart)
                 {
                     erosionStartDirection = -mouseHitNormal;
