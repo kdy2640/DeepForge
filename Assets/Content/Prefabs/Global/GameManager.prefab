@@ -438,7 +438,301 @@ MonoBehaviour:
   sfxSources: []
   bgmClips: []
   bgmBlendDuration: 1
-  sfxClips: []
+  sfxClips:
+  - type: 400
+    clip: {fileID: 8300000, guid: 4c64b6a776cad494086489e40ae93b28, type: 3}
+    volume: 0.25
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.2
+    maxSimultaneousCount: 2
+  - type: 401
+    clip: {fileID: 8300000, guid: 7ec2fe7e57b4b0c4794c3ce4ed20b811, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 402
+    clip: {fileID: 8300000, guid: d5cf261802eb4974bb8965b3c3c3cbea, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 403
+    clip: {fileID: 8300000, guid: 04f5adea0127a994198b79dce7df34cf, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 404
+    clip: {fileID: 8300000, guid: 5d39f4b906d0af74ea564032cc03028e, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 405
+    clip: {fileID: 8300000, guid: fbcd659f0c79c684a949c0ec2d898a73, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 500
+    clip: {fileID: 8300000, guid: 38a405d34e9ce8d459b8e0fb593d0b43, type: 3}
+    volume: 0.45
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.1
+    maxSimultaneousCount: 3
+  - type: 501
+    clip: {fileID: 8300000, guid: 7db2c8ce510c8164cb528fb5766f4f33, type: 3}
+    volume: 0.12
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.2
+    maxSimultaneousCount: 2
+  - type: 502
+    clip: {fileID: 8300000, guid: 7dc097bbbe746844bad2f9ab3db73325, type: 3}
+    volume: 0.2
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.12
+    maxSimultaneousCount: 2
+  - type: 503
+    clip: {fileID: 8300000, guid: bf8a3867694737144ac2f6d4bccd6245, type: 3}
+    volume: 0.3
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.12
+    maxSimultaneousCount: 2
+  - type: 504
+    clip: {fileID: 8300000, guid: edda66b454511b244a6043dec4e1ee1e, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 1.5
+    maxSimultaneousCount: 1
+  - type: 505
+    clip: {fileID: 8300000, guid: f23fa13e978e5534684b3c3ab86598da, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 600
+    clip: {fileID: 8300000, guid: b16baba97bf045c41a8d886f1a04445d, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 1.5
+    maxSimultaneousCount: 1
+  - type: 601
+    clip: {fileID: 8300000, guid: 0c23a6a0ef8da8e4ba076183ab3e6419, type: 3}
+    volume: 0.2
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.6
+    maxSimultaneousCount: 1
+  - type: 602
+    clip: {fileID: 8300000, guid: 78fa6e91389dad947ad03208b0398a21, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 603
+    clip: {fileID: 8300000, guid: 39450e36602b51c4c92deb400439c091, type: 3}
+    volume: 0.16
+    pitch: 1
+    isLoop: 1
+    minInterval: 0.08
+    maxSimultaneousCount: 1
+  - type: 604
+    clip: {fileID: 8300000, guid: 3d0391718e0bde84bbdea100e676729f, type: 3}
+    volume: 0.3
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.15
+    maxSimultaneousCount: 3
+  - type: 605
+    clip: {fileID: 8300000, guid: 8ae22cb7d5b1bee4ba6a8ea4968f2744, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 606
+    clip: {fileID: 8300000, guid: 9e2ee6c98820ac345a4f946b3a94c171, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 700
+    clip: {fileID: 8300000, guid: c37dfc5f5862d204899488877fb5790a, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 701
+    clip: {fileID: 8300000, guid: 917ef26955f4bf545b93169a5f69d77e, type: 3}
+    volume: 0.2
+    pitch: 1
+    isLoop: 0
+    minInterval: 1
+    maxSimultaneousCount: 1
+  - type: 702
+    clip: {fileID: 8300000, guid: 8215cec5c7f39104e91a18714c57ef8e, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 800
+    clip: {fileID: 8300000, guid: 158a12161cbeaa84fb5b92796322d9a8, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 802
+    clip: {fileID: 8300000, guid: 7046e8e59148a8840822263887d64707, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.2
+    maxSimultaneousCount: 1
+  - type: 803
+    clip: {fileID: 8300000, guid: f0adb5109a0cfb4429acef2f36f52ce7, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 100
+    clip: {fileID: 8300000, guid: 72a3a1f9385989440ace8d4b6831c1c3, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 900
+    clip: {fileID: 8300000, guid: c80aada902f0ba9459e3a39b43bda215, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 901
+    clip: {fileID: 8300000, guid: 99856db9af737754bbf5c4ccc5dd1216, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 902
+    clip: {fileID: 8300000, guid: 474b561825f1bec4ba50a520174f3e9c, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 903
+    clip: {fileID: 8300000, guid: 2a43ffc4b1f3b7c4bbeb6f5ecdd3973b, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 904
+    clip: {fileID: 8300000, guid: b6e71f1239bbe0a40a548aa075ec7511, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 905
+    clip: {fileID: 8300000, guid: 658a7bd161a49c848b78e72fc0217bf3, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 0
+    clip: {fileID: 8300000, guid: 3dc4b174391c87c4d944ab02fefb27d2, type: 3}
+    volume: 0.25
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 1
+    clip: {fileID: 8300000, guid: 65c80ce69f4c6294bbc3fb9cf8f54851, type: 3}
+    volume: 0.12
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 2
+    clip: {fileID: 8300000, guid: 305d123f7c44f06409ce53aa7d368581, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 3
+    clip: {fileID: 8300000, guid: 66fb066592f0ce245832d1ebf5c91e0a, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 4
+    clip: {fileID: 8300000, guid: 2a13bc80fb272e1489921a09597af39c, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 5
+    clip: {fileID: 8300000, guid: dfaee9a4edc7cf541b3eb27385a15b44, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 6
+    clip: {fileID: 8300000, guid: df24a6f86d11dcd4980b73a23140497b, type: 3}
+    volume: 0.25
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 7
+    clip: {fileID: 8300000, guid: 57a2cd3613798894ebae2e321c2eb134, type: 3}
+    volume: 0.25
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 8
+    clip: {fileID: 8300000, guid: 691115b33500e704990cccb79af7e281, type: 3}
+    volume: 0.35
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
+  - type: 101
+    clip: {fileID: 8300000, guid: 6108eb16a157c514d90811652470706c, type: 3}
+    volume: 0.25
+    pitch: 1
+    isLoop: 0
+    minInterval: 0.08
+    maxSimultaneousCount: 3
 --- !u!1 &3183084400546194589
 GameObject:
   m_ObjectHideFlags: 0
