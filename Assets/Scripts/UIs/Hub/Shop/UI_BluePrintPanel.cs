@@ -34,6 +34,8 @@ public sealed class UI_BluePrintPanel : MonoBehaviour
 
     private void SelectCategory(bool equipment)
     {
+        if (showEquipment != equipment)
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Select);
         showEquipment = equipment;
         Refresh();
         scrollRect.StopMovement();

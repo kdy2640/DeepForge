@@ -59,6 +59,7 @@ public sealed class UI_DealPanel : MonoBehaviour
             1, data.GetLevelCost(targetLevel).BlueprintPrice, () => RemoveBlueprint(data));
         blueprints.Add(data, (card, targetLevel));
         card.Animate(true);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Shop_ItemAdd);
         RefreshSelection();
     }
 
@@ -82,6 +83,7 @@ public sealed class UI_DealPanel : MonoBehaviour
             selected.amount += moved;
             UpdateOreCard(selected);
         }
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Shop_ItemAdd);
         RefreshSelection();
     }
 
@@ -96,6 +98,7 @@ public sealed class UI_DealPanel : MonoBehaviour
             return;
         }
         UpdateOreCard(selected);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Shop_ItemRemove);
         RefreshSelection();
     }
 
@@ -118,6 +121,7 @@ public sealed class UI_DealPanel : MonoBehaviour
         card.SetData(gear, data.GetSellPrice(gear.data, gear.level), () => RemoveGear(gear));
         gears.Add(gear, card);
         card.Animate(false);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Shop_ItemAdd);
         RefreshSelection();
     }
 
@@ -126,6 +130,7 @@ public sealed class UI_DealPanel : MonoBehaviour
         blueprints[data].card.gameObject.SetActive(false);
         Destroy(blueprints[data].card.gameObject);
         blueprints.Remove(data);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Shop_ItemRemove);
         RefreshSelection();
     }
 
@@ -134,6 +139,7 @@ public sealed class UI_DealPanel : MonoBehaviour
         ores[amount].gameObject.SetActive(false);
         Destroy(ores[amount].gameObject);
         ores.Remove(amount);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Shop_ItemRemove);
         RefreshSelection();
     }
 
@@ -142,6 +148,7 @@ public sealed class UI_DealPanel : MonoBehaviour
         gears[gear].gameObject.SetActive(false);
         Destroy(gears[gear].gameObject);
         gears.Remove(gear);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Shop_ItemRemove);
         RefreshSelection();
     }
 
@@ -200,7 +207,11 @@ public sealed class UI_DealPanel : MonoBehaviour
 
     public void ConfirmDeal()
     {
-        if (!CanTrade()) return;
+        if (!CanTrade())
+        {
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_Error);
+            return;
+        }
         int count = Count;
         bool buying = shop.CurrentDealMode == UI_Shop_Deal.DealMode.Buy;
         // 전체 목록 검사를 통과한 뒤 기존 매니저의 거래 규칙을 적용한다.
@@ -211,6 +222,7 @@ public sealed class UI_DealPanel : MonoBehaviour
         foreach (ForgedGear gear in gears.Keys)
             GameManager.Instance.StockManager.TrySellForgedGear(gear);
         Clear();
+        GameManager.Instance.Utility.Audio.PlaySFX(buying ? SFXType.Shop_BuyComplete : SFXType.Shop_SellComplete);
         TradeCompleted.Invoke(buying ? $"설계도 {count}개를\n구매했네." : $"판매 {count}건을\n마쳤네.");
     }
 

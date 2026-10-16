@@ -2,9 +2,15 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UI_EquipmentUpgradeCard : MonoBehaviour
+public sealed class UI_EquipmentUpgradeCard : MonoBehaviour, UnityEngine.EventSystems.IPointerEnterHandler
 {
     [SerializeField] private Button button;
+
+    public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData eventData)
+    {
+        if (button.IsInteractable())
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_ButtonHover);
+    }
     [SerializeField] private Image icon;
     [SerializeField] private Text nameText;
     [SerializeField] private Outline selectionOutline;
@@ -16,7 +22,12 @@ public sealed class UI_EquipmentUpgradeCard : MonoBehaviour
             || equipment.EquipmentId == (int)EquipmentType.ReturnRope) currentLevel++;
         nameText.text = $"{equipment.DisplayName}\nLv. {currentLevel}";
         button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(() => select.Invoke());
+        button.onClick.AddListener(() =>
+        {
+            if (!selectionOutline.enabled)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Select);
+            select.Invoke();
+        });
     }
 
     public void SetSelected(bool selected) => selectionOutline.enabled = selected;

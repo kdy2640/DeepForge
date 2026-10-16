@@ -45,18 +45,21 @@ public sealed class UI_MaterialSelectPanel : MonoBehaviour
     private void SelectHandle(int direction)
     {
         handleIndex = (handleIndex + direction + ores.Length) % ores.Length;
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Select);
         Refresh();
     }
 
     private void SelectMetal(int direction)
     {
         metalIndex = (metalIndex + direction + ores.Length) % ores.Length;
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Select);
         Refresh();
     }
 
     private void SelectGem(int direction)
     {
         gemIndex = (gemIndex + 1 + direction + ores.Length + 1) % (ores.Length + 1) - 1;
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Select);
         Refresh();
     }
 

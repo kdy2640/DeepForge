@@ -50,6 +50,8 @@ public class SceneController : MonoBehaviour
     private IEnumerator ChangeSceneRoutine(SceneType nextSceneType)
     {
         isChangingScene = true;
+        GameManager.Instance.Utility.Audio.StopLoopSFX(SFXType.Return_WinchLoop);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_SceneChangeStart);
         yield return currentScene.Exit();
         yield return loading.OpenLoading();
         SceneBase nextScene = scenes[nextSceneType];
@@ -59,6 +61,7 @@ public class SceneController : MonoBehaviour
         currentScene = nextScene;
         yield return currentScene.PrepareBeforeReveal();
         yield return loading.CloseLoading();
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_SceneChangeEnd);
         yield return currentScene.Enter();
         isChangingScene = false;
     }

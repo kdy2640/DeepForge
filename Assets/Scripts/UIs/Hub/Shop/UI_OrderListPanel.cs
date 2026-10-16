@@ -27,6 +27,7 @@ public sealed class UI_OrderListPanel : MonoBehaviour
     {
         shop.SelectOrder(null);
         GameManager.Instance.BaseCamp.Order.GenerateOrders(Guid.NewGuid().GetHashCode());
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Order_Refresh);
     }
 
     private void Rebuild()

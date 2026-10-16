@@ -90,7 +90,8 @@ public sealed class UI_EquipmentDetailPanel : MonoBehaviour
     {
         EquipmentUpgradeDataSO data = equipment.SelectedEquipment;
         if (data == null) return;
-        GameManager.Instance.BaseCamp.Smith.TryStartEquipmentUpgrade(data.EquipmentId, visual.SelectedLevel);
+        if (!GameManager.Instance.BaseCamp.Smith.TryStartEquipmentUpgrade(data.EquipmentId, visual.SelectedLevel))
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_Error);
     }
 
     public void Dispose()

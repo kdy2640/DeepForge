@@ -72,6 +72,8 @@ public sealed class UI_InvenVisualPanel : MonoBehaviour
 
     private void SelectQuantity(int amount)
     {
+        if (transferAmount != amount)
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Select);
         transferAmount = amount;
         Color32 selected = new(121, 115, 107, 255);
         Color32 normal = new(32, 36, 43, 255);

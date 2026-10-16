@@ -2,9 +2,15 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-public sealed class UI_BluePrintVisualCard : MonoBehaviour
+public sealed class UI_BluePrintVisualCard : MonoBehaviour, UnityEngine.EventSystems.IPointerEnterHandler
 {
     [SerializeField] private Button button;
+
+    public void OnPointerEnter(UnityEngine.EventSystems.PointerEventData eventData)
+    {
+        if (button.IsInteractable())
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_ButtonHover);
+    }
     [SerializeField] private Image icon;
     [SerializeField] private Text nameText;
     [SerializeField] private Text priceText;

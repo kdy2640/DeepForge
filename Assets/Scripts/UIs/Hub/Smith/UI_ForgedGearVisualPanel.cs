@@ -28,8 +28,20 @@ public sealed class UI_ForgedGearVisualPanel : MonoBehaviour
         forge.BlueprintSelected += OnBlueprintSelected;
         materials.MaterialChanged += OnMaterialChanged;
         GameManager.Instance.Upgrade.SubscribeUpgradeChanged(Refresh);
-        levelUpButton.onClick.AddListener(() => SelectLevel(SelectedLevel + 1));
-        levelDownButton.onClick.AddListener(() => SelectLevel(SelectedLevel - 1));
+        levelUpButton.onClick.AddListener(() =>
+        {
+            int previousLevel = SelectedLevel;
+            SelectLevel(SelectedLevel + 1);
+            if (SelectedLevel != previousLevel)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Select);
+        });
+        levelDownButton.onClick.AddListener(() =>
+        {
+            int previousLevel = SelectedLevel;
+            SelectLevel(SelectedLevel - 1);
+            if (SelectedLevel != previousLevel)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Select);
+        });
         Refresh();
     }
 

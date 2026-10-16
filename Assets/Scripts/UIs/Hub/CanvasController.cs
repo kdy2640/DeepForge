@@ -124,6 +124,7 @@ public sealed class CanvasController : MonoBehaviour
         inputManager.SetGameplayInputBlocked(true);
         playerMiner.SetViewCursorMode(ViewCursorMode.Free);
         tutorialPanel.Open(data);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_PanelPopup);
     }
 
     public void CloseTutorial()
@@ -131,6 +132,7 @@ public sealed class CanvasController : MonoBehaviour
         if (!tutorialOpen) return;
 
         tutorialPanel.Close();
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_PanelClose);
         tutorialOpen = false;
         Time.timeScale = previousTimeScale;
         inputManager.SetGameplayInputBlocked(false);
@@ -157,6 +159,7 @@ public sealed class CanvasController : MonoBehaviour
         inputManager.SetGameplayInputBlocked(true);
         playerMiner.SetViewCursorMode(ViewCursorMode.Free);
         settingsPopup.Open();
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_PanelPopup);
     }
 
     public void CloseSettings()
@@ -169,6 +172,7 @@ public sealed class CanvasController : MonoBehaviour
     public IEnumerator CloseSettingsRoutine()
     {
         settingsClosing = true;
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_PanelClose);
         yield return settingsPopup.Close();
         settingsOpen = false;
         settingsClosing = false;
@@ -220,6 +224,17 @@ public sealed class CanvasController : MonoBehaviour
     private IEnumerator ChangeState(CanvasState nextState)
     {
         ViewEntry nextEntry = viewByState[nextState];
+        if (CurrentState.HasValue)
+        {
+            bool wasView = CurrentState == CanvasState.BaseView || CurrentState == CanvasState.MineView;
+            bool nextIsView = nextState == CanvasState.BaseView || nextState == CanvasState.MineView;
+            if (wasView && !nextIsView)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_PanelPopup);
+            else if (!wasView && nextIsView)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_PanelClose);
+            else if (!wasView && !nextIsView)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Select);
+        }
 
         if (currentEntry != null)
             yield return currentEntry.Instance.Hide();

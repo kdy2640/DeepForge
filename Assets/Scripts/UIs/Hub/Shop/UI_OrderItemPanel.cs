@@ -59,12 +59,14 @@ public sealed class UI_OrderItemPanel : MonoBehaviour
     {
         if (!CanSelect(gear)) return;
         selectedGears.Add(gear);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Shop_ItemAdd);
         RefreshSelection();
     }
 
     public void RemoveGear(ForgedGear gear)
     {
         if (!selectedGears.Remove(gear)) return;
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Shop_ItemRemove);
         RefreshSelection();
     }
 
@@ -109,7 +111,12 @@ public sealed class UI_OrderItemPanel : MonoBehaviour
     public void Deliver()
     {
         Order order = shop.SelectedOrder;
-        if (order == null || !GameManager.Instance.BaseCamp.Order.TryComplete(order.Index, selectedGears)) return;
+        if (order == null || !GameManager.Instance.BaseCamp.Order.TryComplete(order.Index, selectedGears))
+        {
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_Error);
+            return;
+        }
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Order_Complete);
         DeliveryCompleted?.Invoke();
     }
 

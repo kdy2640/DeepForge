@@ -92,6 +92,8 @@ public sealed class UI_ForgedGearDetailPanel : MonoBehaviour
             description.text = $"{blueprint.DisplayName} · Lv. {visual.SelectedLevel}\n제작 시작 · 3초";
             visual.RevealPreview();
         }
+        else
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_Error);
     }
 
     public void Dispose()

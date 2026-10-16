@@ -83,6 +83,7 @@ public sealed class SettingsPopup : MonoBehaviour
     private void OnSFXChanged(float value)
     {
         audioManager.SetSFXVolume(value);
+        audioManager.PlaySFX(SFXType.Global_ButtonClick);
         RefreshVolumeText();
     }
 
@@ -97,6 +98,7 @@ public sealed class SettingsPopup : MonoBehaviour
 
     private void Toggle()
     {
+        audioManager.PlaySFX(SFXType.Global_ButtonClick);
         if (soundEnabled)
         {
             previousMaster = masterSlider.value;
@@ -115,6 +117,7 @@ public sealed class SettingsPopup : MonoBehaviour
 
     private void ExitGame()
     {
+        audioManager.PlaySFX(SFXType.Global_ButtonClick);
         Application.Quit();
     }
 
@@ -135,6 +138,7 @@ public sealed class SettingsPopup : MonoBehaviour
             yield break;
         }
         GameManager.Instance.Utility.Save.ResetSave();
+        audioManager.PlaySFX(SFXType.Global_Confirm);
         yield return owner.CloseSettingsRoutine();
         GameManager.Instance.SceneController.ChangeScene(SceneType.Main, true);
     }
