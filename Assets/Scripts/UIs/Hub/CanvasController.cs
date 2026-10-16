@@ -69,6 +69,9 @@ public sealed class CanvasController : MonoBehaviour
     public CanvasState? CurrentState { get; private set; }
     public CanvasState? PreviousState { get; private set; }
     public ViewCursorMode CurrentCursorMode { get; private set; }
+    public bool CanInteract => (CurrentState == CanvasState.BaseView || CurrentState == CanvasState.MineView)
+        && !settingsOpen && !tutorialOpen && !firstTutorialPending && transitionCoroutine == null
+        && !GameManager.Instance.SceneController.IsChangingScene;
 
     private void Awake()
     {
