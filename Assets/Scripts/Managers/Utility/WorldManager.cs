@@ -205,6 +205,38 @@ public sealed class WorldManager : MonoBehaviour
         return saveTask;
     }
 
+    public async Task<bool> ResetWorldAsync()
+    {
+        bool wasLoaded = IsLoaded;
+        IsLoaded = false;
+        await saveTask;
+        lifetime.Token.ThrowIfCancellationRequested();
+
+        string root = Path.GetFullPath(Application.persistentDataPath).TrimEnd(Path.DirectorySeparatorChar);
+        string resetPath = Path.GetFullPath(Path.Combine(root, "World"));
+        if (!string.Equals(Path.GetDirectoryName(resetPath), root, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("월드 초기화 경로가 저장 루트 밖입니다.");
+
+        try
+        {
+            if (Directory.Exists(resetPath)) Directory.Delete(resetPath, true);
+        }
+        catch (Exception error) when (error is IOException || error is UnauthorizedAccessException)
+        {
+            IsLoaded = wasLoaded;
+            Debug.LogError($"월드 초기화 실패: {resetPath}\n{error.Message}");
+            return false;
+        }
+
+        terrain = null;
+        Metadata = null;
+        changedChunks.Clear();
+        dirtyRegions.Clear();
+        pendingRegions.Clear();
+        revision = 0;
+        return true;
+    }
+
     private async Task<bool> WritePendingRegionsAsync()
     {
         bool succeeded = true;

@@ -5,6 +5,8 @@ using UnityEngine.UI;
 public sealed class UI_MineView : UI_Base
 {
     private enum UIs { UI_DepthGauge, UI_BackPackVisualizer }
+    [SerializeField] private Button settingsButton;
+    [SerializeField] private PanelAnimator commonPanel;
     [SerializeField] private Slider remainingLengthSlider;
     [SerializeField] private Image remainingLengthTrack;
     [SerializeField] private Image returnKeyBorder;
@@ -17,6 +19,7 @@ public sealed class UI_MineView : UI_Base
 
     protected override void OnInit()
     {
+        settingsButton.onClick.AddListener(Owner.OpenSettings);
         playerReturn = Object.FindFirstObjectByType<PlayerReturn>();
         remainingLengthFill = remainingLengthSlider.fillRect.GetComponent<Image>();
         ropeTrackColor = remainingLengthTrack.color;
@@ -29,8 +32,10 @@ public sealed class UI_MineView : UI_Base
 
     protected override IEnumerator OnShow()
     {
+        Coroutine commonAnimation = StartCoroutine(commonPanel.Show());
         GetGameObject((int)UIs.UI_BackPackVisualizer).GetComponent<UI_BackPackVisualizer>().Refresh();
         yield return GetGameObject((int)UIs.UI_DepthGauge).GetComponent<UI_DepthGauge>().Show();
+        yield return commonAnimation;
     }
 
     private void LateUpdate()
@@ -44,6 +49,11 @@ public sealed class UI_MineView : UI_Base
         remainingLengthFill.color = color;
         returnKeyBorder.color = color;
         remainingLengthTrack.color = Color.Lerp(ropeTrackColor, ropeLimitColor, playerReturn.CableLimitFeedback);
+    }
+
+    protected override IEnumerator OnHide()
+    {
+        yield return commonPanel.Hide();
     }
 
     private void OnDestroy()

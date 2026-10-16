@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public sealed class UI_Smith_Forge : UI_Base
 {
+    [SerializeField] private PanelAnimator commonPanel;
     private enum UIs
     {
         UI_BluePrintListPanel, UI_MaterialSelectPanel,
@@ -16,7 +17,7 @@ public sealed class UI_Smith_Forge : UI_Base
 
     private enum Buttons
     {
-        BackButton,
+        ExitButton,
         ForgeCategoryButton,
         EquipmentCategoryButton
     }
@@ -31,7 +32,7 @@ public sealed class UI_Smith_Forge : UI_Base
         Bind<Button>(typeof(Buttons));
         Bind<PanelAnimator>(typeof(PanelAnimators));
         Bind<GameObject>(typeof(UIs));
-        GetButton((int)Buttons.BackButton).onClick.AddListener(
+        GetButton((int)Buttons.ExitButton).onClick.AddListener(
             () => Owner.RequestStateChange(CanvasController.CanvasState.BaseView));
         GetButton((int)Buttons.ForgeCategoryButton).onClick.AddListener(
             () => Owner.RequestStateChange(CanvasController.CanvasState.Smith_Forge));
@@ -54,13 +55,16 @@ public sealed class UI_Smith_Forge : UI_Base
 
     protected override IEnumerator OnShow()
     {
+        Coroutine commonAnimation = StartCoroutine(commonPanel.Show());
         GetGameObject((int)UIs.UI_BluePrintListPanel).GetComponent<UI_BluePrintListPanel>().Refresh();
         GetGameObject((int)UIs.UI_ForgedGearVisualPanel).GetComponent<UI_ForgedGearVisualPanel>().ShowPreview();
         yield return GetUI<PanelAnimator>((int)PanelAnimators.Panel).Show();
+        yield return commonAnimation;
     }
 
     protected override IEnumerator OnHide()
     {
+        StartCoroutine(commonPanel.Hide());
         yield return GetUI<PanelAnimator>((int)PanelAnimators.Panel).Hide();
         GetGameObject((int)UIs.UI_ForgedGearVisualPanel).GetComponent<UI_ForgedGearVisualPanel>().HidePreview();
     }
