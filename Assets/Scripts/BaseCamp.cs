@@ -4,9 +4,44 @@ public sealed class BaseCamp : MonoBehaviour
 {
     [SerializeField] private Transform terrainContact;
     [SerializeField] private Transform spawnPoint;
+    [SerializeField] private Transform entrancePoint;
     [SerializeField] private PlayerController player;
+    [SerializeField] private CanvasController canvasController;
 
-    public void PlaceAndSpawn(TerrainManager terrain)
+    public Transform EntrancePoint => entrancePoint;
+    public bool IsPlayerInside { get; private set; } = true;
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.attachedRigidbody == player.GetComponent<Rigidbody>())
+        {
+            if (!GameManager.Instance.Utility.World.IsLoaded || GameManager.Instance.SceneController.IsChangingScene)
+                return;
+
+            if (!IsPlayerInside)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Camp_Enter);
+            IsPlayerInside = true;
+            player.GetComponent<PlayerReturn>().ResetAtCamp();
+            canvasController.RequestStateChange(CanvasController.CanvasState.BaseView);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.attachedRigidbody == player.GetComponent<Rigidbody>())
+        {
+            if (!GameManager.Instance.Utility.World.IsLoaded || GameManager.Instance.SceneController.IsChangingScene)
+                return;
+
+            if (IsPlayerInside)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Camp_Depart);
+            IsPlayerInside = false;
+            player.GetComponent<PlayerReturn>().BeginTracking();
+            canvasController.RequestStateChange(CanvasController.CanvasState.MineView);
+        }
+    }
+
+    public void Place(TerrainManager terrain)
     {
         TerrainData data = terrain.Data;
         float centerX = data.Width * 0.5f;
@@ -32,18 +67,23 @@ public sealed class BaseCamp : MonoBehaviour
             transform.rotation = terrain.transform.rotation;
             transform.position += contactPosition - terrainContact.position;
 
-            Rigidbody body = player.GetComponent<Rigidbody>();
-            if (!body.isKinematic)
-            {
-                body.linearVelocity = Vector3.zero;
-                body.angularVelocity = Vector3.zero;
-            }
-            player.transform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
-            body.position = spawnPoint.position;
-            body.rotation = spawnPoint.rotation;
             return;
         }
 
         throw new System.InvalidOperationException("기지 접점인 지형 +Z 끝 중앙에 표면이 없습니다.");
+    }
+
+    public void SpawnPlayer()
+    {
+        IsPlayerInside = true;
+        Rigidbody body = player.GetComponent<Rigidbody>();
+        if (!body.isKinematic)
+        {
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+        }
+        player.transform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
+        body.position = spawnPoint.position;
+        body.rotation = spawnPoint.rotation;
     }
 }

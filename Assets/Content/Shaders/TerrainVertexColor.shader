@@ -2,6 +2,11 @@ Shader "Deep Forge/Terrain Vertex Color"
 {
     Properties
     {
+        _BaseMap ("Rock Color", 2D) = "white" {}
+        [Normal] _BumpMap ("Rock Normal", 2D) = "bump" {}
+        _TileSize ("Tile Size (World Units)", Float) = 4
+        _TextureStrength ("Texture Strength", Range(0, 1)) = 0.6
+        _NormalStrength ("Normal Strength", Range(0, 2)) = 0.5
         _Smoothness ("Smoothness", Range(0, 1)) = 0.2
     }
     SubShader
@@ -12,9 +17,46 @@ Shader "Deep Forge/Terrain Vertex Color"
 
         HLSLINCLUDE
         #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+        #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
+        TEXTURE2D(_BaseMap);
+        SAMPLER(sampler_BaseMap);
+        TEXTURE2D(_BumpMap);
+        SAMPLER(sampler_BumpMap);
         CBUFFER_START(UnityPerMaterial)
+            float _TileSize;
+            half _TextureStrength;
+            half _NormalStrength;
             half _Smoothness;
         CBUFFER_END
+
+        half3 SampleTriplanarAlbedo(float3 positionWS, float3 normalWS)
+        {
+            float3 uv = GetAbsolutePositionWS(positionWS) / max(_TileSize, 0.01);
+            float3 weights = normalWS * normalWS;
+            weights *= weights;
+            weights /= weights.x + weights.y + weights.z;
+            half3 x = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv.zy).rgb;
+            half3 y = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv.xz).rgb;
+            half3 z = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv.xy).rgb;
+            return x * weights.x + y * weights.y + z * weights.z;
+        }
+
+        float3 SampleTriplanarNormal(float3 positionWS, float3 normalWS)
+        {
+            float3 uv = GetAbsolutePositionWS(positionWS) / max(_TileSize, 0.01);
+            float3 weights = normalWS * normalWS;
+            weights *= weights;
+            weights /= weights.x + weights.y + weights.z;
+            float3 x = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, uv.zy), _NormalStrength);
+            float3 y = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, uv.xz), _NormalStrength);
+            float3 z = UnpackNormalScale(SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap, uv.xy), _NormalStrength);
+            // Reorient each projection onto the surface, including inward-facing cave walls.
+            // A flat normal map (or zero strength) preserves the original mesh normal.
+            x = float3(x.xy + normalWS.zy, abs(x.z) * normalWS.x);
+            y = float3(y.xy + normalWS.xz, abs(y.z) * normalWS.y);
+            z = float3(z.xy + normalWS.xy, abs(z.z) * normalWS.z);
+            return normalize(x.zyx * weights.x + y.xzy * weights.y + z.xyz * weights.z);
+        }
         ENDHLSL
 
         Pass
@@ -64,10 +106,11 @@ Shader "Deep Forge/Terrain Vertex Color"
 
             half4 TerrainFragment(Varyings input) : SV_Target
             {
+                float3 surfaceNormalWS = NormalizeNormalPerPixel(input.normalWS);
                 InputData lighting = (InputData)0;
                 lighting.positionWS = input.positionWS;
                 lighting.positionCS = input.positionCS;
-                lighting.normalWS = NormalizeNormalPerPixel(input.normalWS);
+                lighting.normalWS = SampleTriplanarNormal(input.positionWS, surfaceNormalWS);
                 lighting.viewDirectionWS = GetWorldSpaceNormalizeViewDir(input.positionWS);
                 #if defined(_MAIN_LIGHT_SHADOWS_SCREEN)
                     lighting.shadowCoord = float4(GetNormalizedScreenSpaceUV(input.positionCS), 0, 1);
@@ -81,7 +124,8 @@ Shader "Deep Forge/Terrain Vertex Color"
                 lighting.shadowMask = half4(1, 1, 1, 1);
 
                 SurfaceData surface = (SurfaceData)0;
-                surface.albedo = input.color.rgb;
+                surface.albedo = input.color.rgb * lerp(half3(1, 1, 1),
+                    SampleTriplanarAlbedo(input.positionWS, surfaceNormalWS), _TextureStrength);
                 surface.smoothness = _Smoothness;
                 surface.normalTS = half3(0, 0, 1);
                 surface.occlusion = 1;
@@ -137,22 +181,23 @@ Shader "Deep Forge/Terrain Vertex Color"
             #pragma vertex NormalVertex
             #pragma fragment NormalFragment
             #pragma multi_compile_fragment _ _GBUFFER_NORMALS_OCT
-            #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl"
             struct NormalVaryings
             {
                 float4 positionCS : SV_POSITION;
                 float3 normalWS : TEXCOORD0;
+                float3 positionWS : TEXCOORD1;
             };
             NormalVaryings NormalVertex(float4 positionOS : POSITION, float3 normalOS : NORMAL)
             {
                 NormalVaryings output;
                 output.positionCS = TransformObjectToHClip(positionOS.xyz);
                 output.normalWS = TransformObjectToWorldNormal(normalOS);
+                output.positionWS = TransformObjectToWorld(positionOS.xyz);
                 return output;
             }
             half4 NormalFragment(NormalVaryings input) : SV_Target
             {
-                float3 normal = NormalizeNormalPerPixel(input.normalWS);
+                float3 normal = SampleTriplanarNormal(input.positionWS, NormalizeNormalPerPixel(input.normalWS));
                 #if defined(_GBUFFER_NORMALS_OCT)
                     float2 octNormal = PackNormalOctQuadEncode(normal);
                     return half4(PackFloat2To888(saturate(octNormal * 0.5 + 0.5)), 0);

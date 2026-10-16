@@ -16,6 +16,7 @@ TagManager:
   - 
   - Plane
   - Stone
+  - MineBoundary
   - 
   - 
   - 
@@ -36,8 +37,7 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
+  - ForgedGearIcon
   m_SortingLayers:
   - name: Default
     uniqueID: 0

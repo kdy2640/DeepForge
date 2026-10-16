@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb0bd8adbeedffc46a1a468453bf62b0, type: 3}
+  m_Name: Lantern
+  m_EditorClassIdentifier: Assembly-CSharp::EquipmentUpgradeDataSO
+  id: Lantern
+  displayName: Lantern
+  displayIcon: {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  levelCosts:
+  - blueprintPrice: 30
+    requiredOres:
+    - oreId: 1
+      amount: 4
+    - oreId: 2
+      amount: 2
+  - blueprintPrice: 90
+    requiredOres:
+    - oreId: 2
+      amount: 6
+    - oreId: 3
+      amount: 2
+  - blueprintPrice: 240
+    requiredOres:
+    - oreId: 4
+      amount: 6
+    - oreId: 5
+      amount: 4
+  - blueprintPrice: 550
+    requiredOres:
+    - oreId: 6
+      amount: 6
+    - oreId: 7
+      amount: 4
+  - blueprintPrice: 1000
+    requiredOres:
+    - oreId: 7
+      amount: 8
+    - oreId: 8
+      amount: 3
+  equipmentId: 3
+  statModifiers:
+  - statType: 4
+    modifierType: 1
+    value: 0.2
+  levelIcons:
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}
+  - {fileID: 21300000, guid: 6e9ecfca5943a0c43864aa28ac46bfdf, type: 3}

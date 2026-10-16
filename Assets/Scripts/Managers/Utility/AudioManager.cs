@@ -27,8 +27,8 @@ public enum SFXType
     Global_Confirm = 8,             // 확인, 저장, 초기화 같은 동작이 완료됐을 때
 
     // Hub
-    Hub_Upgrade = 100,              // 시설, 직원, 요리, 수확 능력, 스테이지 업그레이드 성공 시
-    Hub_Select = 101,               // 시설, 직원, 요리 카드, 수확 항목, 스테이지, 축제 항목을 탐색 선택했을 때
+    Hub_Upgrade = 100,              // 강화 장비를 수령하여 실제 레벨과 성능이 적용됐을 때
+    Hub_Select = 101,               // 제품, 장비, 재료, 레벨, 주문, 탭 등의 선택이 실제 바뀌었을 때
     Hub_MenuSelect = 103,           // 오늘의 메뉴에 요리를 추가했을 때
     Hub_MenuDeselect = 104,         // 오늘의 메뉴에서 요리를 제거했을 때
     Hub_GetReward = 105,            // 현재 마켓 미션 보상을 수령했을 때
@@ -85,29 +85,69 @@ public enum SFXType
     Harvest_GoldenPigCollected = 321,// 황금돼지를 쓰러뜨리고 희귀 보상을 획득했을 때
     Harvest_SkillActivate = 322,    // 수확 스킬이 사용 가능 검사를 통과하고 발동했을 때
     Harvest_SkillReady = 323,       // 수확 스킬 쿨다운이 끝나 다시 사용 가능해졌을 때
-    Harvest_TimeWarning = 324       // 수확 남은 시간이 경고 임계값에 처음 진입했을 때
+    Harvest_TimeWarning = 324,      // 수확 남은 시간이 경고 임계값에 처음 진입했을 때
+
+    // DeepForge · 이동
+    Player_Footstep = 400,          // 지면에서 실제 이동하는 동안 보폭마다
+    Player_Jump = 401,              // 지상 또는 공중 점프가 실제 실행됐을 때
+    Player_Land = 402,              // 공중에서 지면에 착지한 순간
+    Player_Dash = 403,              // 충전량을 소비하여 대시를 시작했을 때
+    Player_DashReady = 404,         // 대시 충전량이 0에서 1로 회복됐을 때 (선택)
+    Player_DashCollision = 405,     // 벽 충돌로 대시가 중단됐을 때 (선택)
+
+    // DeepForge · 채굴과 가방
+    Mining_Hit = 500,               // 지형 채굴이 성공한 실제 타격마다
+    Mining_Debris = 501,            // 채굴 타격으로 잔해가 흩어질 때 (선택)
+    Mining_OreRelease = 502,        // 지형 지지를 잃은 광석이 분리되어 회수 처리될 때
+    Mining_OreCollect = 503,        // 광석이 가방에 실제로 추가됐을 때
+    Mining_BackpackFull = 504,      // 가방이 가득 차거나 회수 보상을 전부 담지 못했을 때
+    Mining_ModeChange = 505,        // 사용자가 채굴 모드를 전환하여 도구를 꺼내거나 넣을 때 (선택)
+
+    // DeepForge · 로프 복귀
+    Return_CableLimit = 600,        // 로프 최대 길이에 도달해 짧은 자동 견인이 시작됐을 때
+    Return_CablePullback = 601,     // 로프 길이 제한으로 짧게 되당기는 동안
+    Return_Start = 602,             // G 키로 전체 복귀를 실제 시작했을 때
+    Return_WinchLoop = 603,         // 전체 복귀 이동 중 로프를 감는 루프음
+    Return_ObstacleMine = 604,      // 복귀 경로의 장애물 지형을 실제 제거했을 때
+    Return_Blocked = 605,           // 제거할 수 없는 장애물로 전체 복귀가 중단됐을 때
+    Return_Arrive = 606,            // 전체 복귀 경로를 끝까지 따라 도착했을 때
+    Return_CablePayoutLoop = 607,   // 탐사 경로가 늘어나 로프가 풀리는 동안의 루프음 (선택)
+
+    // DeepForge · 기지
+    Camp_Depart = 700,              // 기지 경계를 벗어나 광산으로 출발했을 때
+    Camp_Enter = 701,               // 기지 경계 안으로 다시 진입했을 때
+    Camp_Deposit = 702,             // 가방의 광석을 창고에 실제 입고했을 때
+
+    // DeepForge · 제작과 강화 작업 (강화 적용음은 Hub_Upgrade 사용)
+    Smith_WorkStart = 800,          // 제품 제작 또는 장비 강화 작업 등록과 재료 차감이 성공했을 때
+    Smith_WorkLoop = 801,           // 하나 이상의 제작 슬롯이 작업 중일 때의 루프음 (선택)
+    Smith_WorkReady = 802,          // 작업 시간이 끝나 슬롯이 수령 가능한 상태가 됐을 때
+    Smith_ProductCollect = 803,     // 완성 제품을 수령하여 재고에 추가했을 때
+
+    // DeepForge · 거래와 주문
+    Shop_ItemAdd = 900,             // 거래 또는 납품 선택 목록에 항목이나 수량을 실제 추가했을 때
+    Shop_ItemRemove = 901,          // 사용자가 거래 또는 납품 선택 목록에서 항목이나 수량을 뺐을 때
+    Shop_BuyComplete = 902,         // 설계도 전체 구매와 골드 차감이 완료됐을 때
+    Shop_SellComplete = 903,        // 광석 또는 제품 전체 판매와 골드 지급이 완료됐을 때
+    Order_Complete = 904,           // 주문 납품에 성공해 제품 차감과 보상 지급이 완료됐을 때
+    Order_Refresh = 905             // 사용자가 주문 새로고침으로 새 목록을 생성했을 때
 }
 public class AudioManager : MonoBehaviour
 {
     [Header("AudioSource")]
-    [SerializeField] private AudioSource hubBGMSource;
-    [SerializeField] private AudioSource serviceBGMSource;
-    [SerializeField] private AudioSource harvestBGMSource;
+    [SerializeField] private AudioSource bgmSource;
     [SerializeField] private int sfxSourceCount = 20;//10에서 20으로 변경
     [SerializeField] private AudioSource[] sfxSources;
 
     // AudioSource를 순환 관리하기 위한 Queue
     private Queue<AudioSource> sfxQueue;
 
-    [Header("BGM List")]
-    [SerializeField] private BGMClipData[] bgmClips = System.Array.Empty<BGMClipData>();//인스펙터에서 등록할 BGM
-    [SerializeField, Min(0f)] private float bgmBlendDuration = 1f;
+    [Header("BGM")]
+    [SerializeField, Range(0f, 1f)] private float bgmBaseVolume = 0.3f;
     [Header("SFX List")]
     [SerializeField] private SFXClipData[] sfxClips = System.Array.Empty<SFXClipData>();//인스펙터에서 등록할 효과음 데이터
 
 
-    //예 : BGMType.Stage -> Stage BGM데이터
-    private Dictionary<BGMType, BGMClipData> bgmDictionary;
     //예 : SFXType.Jump -> Jump 효과음 데이터
     private Dictionary<SFXType, SFXClipData> sfxDictionary;
 
@@ -118,12 +158,6 @@ public class AudioManager : MonoBehaviour
     private Dictionary<SFXType, int> playingCounts;
     private Dictionary<SFXType, AudioSource> loopingSFXSources;
 
-    private BGMClipData currentBGMData;
-    private Coroutine bgmBlendCoroutine;
-    private bool areBGMPlayersStarted;
-    private float hubBGMBlendWeight;
-    private float serviceBGMBlendWeight;
-    private float harvestBGMBlendWeight;
     private float masterVolume = 1.0f;
     private float bgmVolume = 1.0f;
     private float sfxVolume = 1.0f;
@@ -142,7 +176,7 @@ public class AudioManager : MonoBehaviour
         loopingSFXSources = new Dictionary<SFXType, AudioSource>();
 
         InitializeDictionary();
-        StartSynchronizedBGM();
+        PlayBGM();
     }
    //AudioSource가 없을경우 자동으로 만들어주는 녀석
    private void CreateAudioSources()
@@ -166,31 +200,6 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    private void StartSynchronizedBGM()
-    {
-        if (bgmDictionary.Count == 0)
-            return;
-
-        double startTime = AudioSettings.dspTime + 0.1d;
-
-        hubBGMBlendWeight = 0f;
-        serviceBGMBlendWeight = 0f;
-        harvestBGMBlendWeight = 0f;
-
-        hubBGMSource.clip = bgmDictionary[BGMType.HubBGM].clip;
-        serviceBGMSource.clip = bgmDictionary[BGMType.ServiceBGM].clip;
-        harvestBGMSource.clip = bgmDictionary[BGMType.HarvestBGM].clip;
-
-        hubBGMSource.volume = 0f;
-        serviceBGMSource.volume = 0f;
-        harvestBGMSource.volume = 0f;
-
-        hubBGMSource.PlayScheduled(startTime);
-        serviceBGMSource.PlayScheduled(startTime);
-        harvestBGMSource.PlayScheduled(startTime);
-
-        areBGMPlayersStarted = true;
-    }
     private AudioSource GetSFXSource()
     {
         int count = sfxQueue.Count;
@@ -214,23 +223,7 @@ public class AudioManager : MonoBehaviour
     //배열로 등록한 오디 데이터를 딕셔너리에 저장하는 녀석
     private void InitializeDictionary()
     {
-        bgmDictionary = new Dictionary<BGMType, BGMClipData>();
         sfxDictionary = new Dictionary<SFXType, SFXClipData>();
-
-        for (int i = 0;i<bgmClips.Length;i++)
-        {
-            //배열 요소가 비어 있으면
-            if (bgmClips[i] == null) continue;
-            //BGM데이터 안에 AudioClip이 연결되어 있지 않으면
-            if (bgmClips[i].clip == null) continue;
-
-            //딕셔너리에 같은 BGMType이 아직 없으면
-            if (!bgmDictionary.ContainsKey(bgmClips[i].type))
-            {
-                //BGMType을 key, BGMClipData를 Value로 저장
-                bgmDictionary.Add(bgmClips[i].type, bgmClips[i]);
-            }
-        }
         for(int i = 0;i<sfxClips.Length;i++)
         {
             if (sfxClips[i] == null) continue;
@@ -282,7 +275,7 @@ public class AudioManager : MonoBehaviour
     [ContextMenu("Refresh SFX Clips By Type")]
     private void RefreshSFXClipsByType()
     {
-        const string sfxFolderPath = "Assets/Resources/Audios/SFXs";
+        const string sfxFolderPath = "Assets/Content/Audios/SFX";
 
         UnityEditor.Undo.RecordObject(this, "Refresh SFX Clips By Type");
 
@@ -367,109 +360,27 @@ public class AudioManager : MonoBehaviour
     }
 #endif
 
-    //BGM을 재생하는 녀석
-    //AudioManager.Instance.PlayBGM(BGMType.Stage);
-    public void PlayBGM(BGMType type)
+
+    public void PlayBGM()
     {
-        //요청한 BGMType이 딕셔너리에 없으면
-        if(!bgmDictionary.ContainsKey(type))
-        {
-            return;
-        }
-        //딕셔너리에서 해당 BGM데이터를 가져온다.
-        BGMClipData data = bgmDictionary[type];
-
-        //현재 재생중인 BGM과 요청한 BGM이 같다면
-        if(currentBGMData == data)
-        {
-            return;
-        }
-
-        if (!areBGMPlayersStarted)
-        {
-            StartSynchronizedBGM();
-        }
-
-        if (bgmBlendCoroutine != null)
-        {
-            StopCoroutine(bgmBlendCoroutine);
-        }
-
-        //현재 재생중인 BGM데이터를 저장
-        currentBGMData = data;
-        bgmBlendCoroutine = StartCoroutine(BlendBGM(data));
-    }
-
-    private IEnumerator BlendBGM(BGMClipData nextBGMData)
-    {
-        float startHubWeight = hubBGMBlendWeight;
-        float startServiceWeight = serviceBGMBlendWeight;
-        float startHarvestWeight = harvestBGMBlendWeight;
-
-        float elapsedTime = 0f;
-
-        while (elapsedTime < bgmBlendDuration)
-        {
-            elapsedTime += Time.unscaledDeltaTime;
-            float progress = Mathf.Clamp01(elapsedTime / bgmBlendDuration);
-
-            float hubTargetWeight = nextBGMData.type == BGMType.HubBGM ? 1f : 0f;
-            float serviceTargetWeight = nextBGMData.type == BGMType.ServiceBGM ? 1f : 0f;
-            float harvestTargetWeight = nextBGMData.type == BGMType.HarvestBGM ? 1f : 0f;
-
-            hubBGMBlendWeight = Mathf.Lerp(startHubWeight, hubTargetWeight, progress);
-            serviceBGMBlendWeight = Mathf.Lerp(startServiceWeight, serviceTargetWeight, progress);
-            harvestBGMBlendWeight = Mathf.Lerp(startHarvestWeight, harvestTargetWeight, progress);
-
-            UpdateBGMVolume();
-            yield return null;
-        }
-
-        hubBGMBlendWeight = nextBGMData.type == BGMType.HubBGM ? 1f : 0f;
-        serviceBGMBlendWeight = nextBGMData.type == BGMType.ServiceBGM ? 1f : 0f;
-        harvestBGMBlendWeight = nextBGMData.type == BGMType.HarvestBGM ? 1f : 0f;
         UpdateBGMVolume();
-
-        bgmBlendCoroutine = null;
+        if (!bgmSource.isPlaying)
+            bgmSource.Play();
     }
-    //BGM을 정지시키는 퓬
+
     public void StopBGM()
     {
-        if (bgmBlendCoroutine != null)
-        {
-            StopCoroutine(bgmBlendCoroutine);
-            bgmBlendCoroutine = null;
-        }
-
-        hubBGMSource.Stop();
-        serviceBGMSource.Stop();
-        harvestBGMSource.Stop();
-
-        hubBGMSource.clip = null;
-        serviceBGMSource.clip = null;
-        harvestBGMSource.clip = null;
-
-        hubBGMBlendWeight = 0f;
-        serviceBGMBlendWeight = 0f;
-        harvestBGMBlendWeight = 0f;
-
-        areBGMPlayersStarted = false;
-        //현재 재생중인 BGM데이터도 비우자.
-        currentBGMData = null;
+        bgmSource.Stop();
     }
-    //일시 정지
+
     public void PauseBGM()
     {
-        hubBGMSource.Pause();
-        serviceBGMSource.Pause();
-        harvestBGMSource.Pause();
+        bgmSource.Pause();
     }
-    //일시정지된 BGM을 다시 재생
+
     public void ResumeBGM()
     {
-        hubBGMSource.UnPause();
-        serviceBGMSource.UnPause();
-        harvestBGMSource.UnPause();
+        bgmSource.UnPause();
     }
 
     //효과음 랜덤으로 Randomratio (0~0.2) 추천
@@ -518,10 +429,10 @@ public class AudioManager : MonoBehaviour
         {
             // 마지막 재생 후 아직 최소 재생 간격이 지나지 않았다면
             // 이번 재생은 무시한다.
-            if (Time.time - lastPlayTime < data.minInterval) return;
+            if (Time.unscaledTime - lastPlayTime < data.minInterval) return;
         }
         // 이번 재생 시간을 저장한다.
-        lastPlayTimes[type] = Time.time;
+        lastPlayTimes[type] = Time.unscaledTime;
 
         AudioSource source = GetSFXSource();
         if (source == null) return;
@@ -586,7 +497,7 @@ public class AudioManager : MonoBehaviour
     //효과음 종료 후 카운트 감소용 코루틴
     private IEnumerator ReleaseVoice(SFXType type, float delay)
     {
-        yield return new WaitForSeconds(delay);
+        yield return new WaitForSecondsRealtime(delay);
 
         if (playingCounts.ContainsKey(type))
         {
@@ -644,11 +555,6 @@ public class AudioManager : MonoBehaviour
     //현재 재생중인 BGM의 볼륨을 계산
     private void UpdateBGMVolume()
     {
-        if (bgmDictionary.Count == 0)
-            return;
-
-        hubBGMSource.volume = bgmDictionary[BGMType.HubBGM].volume * hubBGMBlendWeight * bgmVolume * masterVolume;
-        serviceBGMSource.volume = bgmDictionary[BGMType.ServiceBGM].volume * serviceBGMBlendWeight * bgmVolume * masterVolume;
-        harvestBGMSource.volume = bgmDictionary[BGMType.HarvestBGM].volume * harvestBGMBlendWeight * bgmVolume * masterVolume;
+        bgmSource.volume = bgmBaseVolume * bgmVolume * masterVolume;
     }
 }

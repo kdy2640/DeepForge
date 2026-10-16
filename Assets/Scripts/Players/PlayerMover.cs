@@ -9,26 +9,50 @@ using UnityEngine.Serialization;
 [RequireComponent(typeof(Collider))]
 public sealed class PlayerMover : MonoBehaviour
 {
-    [SerializeField] private float speed = 10f;
+    private float speed;
     [SerializeField, Min(0f)] private float groundAcceleration = 50f;
     [SerializeField, Min(0f)] private float airAcceleration = 15f;
     [SerializeField, Min(0f)]
     [FormerlySerializedAs("jumpHeight")]
     private float jumpVelocity = 6f;
     [SerializeField, Range(0f, 1f)] private float minimumGroundNormalY = 0.6f;
+    [Header("신발 대시")]
+    [SerializeField, Min(0f)] private float dashSpeed = 16f;
+    [SerializeField, Min(0.01f)] private float dashDuration = 0.18f;
+    [SerializeField, Min(0.01f)] private float dashRechargeTime = 2f;
 
     private Rigidbody rigid;
     private Transform cameraHolder;
     private InputManager inputManager;
+    private UpgradeManager upgradeManager;
     private Vector2 inputDirection;
     private readonly HashSet<Collider> groundContacts = new();
     private bool jumpRequested;
+    private int maxJumps = 1;
+    private int jumpsUsed;
+    private int maxDashCharges;
+    private int dashCharges;
+    private float dashRechargeRemaining;
+    private float dashTimeRemaining;
+    private Vector3 dashDirection;
+    private bool dashRequested;
+    private bool isDashing;
     private bool isInputSubscribed;
+    private float airborneTime;
+    private float footstepDistance;
+
+    public int MaxJumps => maxJumps;
+    public int RemainingJumps => Mathf.Max(0, maxJumps - jumpsUsed);
+    public int MaxDashCharges => maxDashCharges;
+    public int DashCharges => dashCharges;
+    public float DashRechargeProgress => dashCharges < maxDashCharges
+        ? Mathf.Clamp01(1f - dashRechargeRemaining / dashRechargeTime) : 0f;
 
     private void Awake()
     {
         rigid = GetComponent<Rigidbody>();
         rigid.interpolation = RigidbodyInterpolation.Interpolate;
+        rigid.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
     }
 
     private void Start()
@@ -46,9 +70,13 @@ public sealed class PlayerMover : MonoBehaviour
     private void OnDisable()
     {
         UnsubscribeInputEvents();
+        if (isDashing) EndDash();
         inputDirection = Vector2.zero;
         jumpRequested = false;
+        dashRequested = false;
         groundContacts.Clear();
+        airborneTime = 0f;
+        footstepDistance = 0f;
     }
 
     private void FixedUpdate()
@@ -56,16 +84,40 @@ public sealed class PlayerMover : MonoBehaviour
         groundContacts.RemoveWhere(collider => collider == null);
 
         Vector3 up = transform.up;
+        bool grounded = groundContacts.Count > 0 && Vector3.Dot(rigid.linearVelocity, up) <= 0.1f;
+        if (grounded)
+        {
+            if (airborneTime > 0.12f)
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_Land);
+            airborneTime = 0f;
+        }
+        else
+            airborneTime += Time.fixedDeltaTime;
+        // Walking off a ledge consumes the ground jump; rising contacts cannot refill jumps.
+        jumpsUsed = grounded ? 0 : Mathf.Max(jumpsUsed, 1);
+        bool dashing = TickDash(up);
         Vector3 targetVelocity = GetMoveDirection(up) * speed;
         Vector3 currentVelocity = rigid.linearVelocity;
         Vector3 verticalVelocity = Vector3.Project(currentVelocity, up);
         Vector3 horizontalVelocity = currentVelocity - verticalVelocity;
-        float acceleration = groundContacts.Count > 0 ? groundAcceleration : airAcceleration;
+        float acceleration = grounded ? groundAcceleration : airAcceleration;
+        if (grounded && !dashing && inputDirection.sqrMagnitude > 0.01f)
+        {
+            footstepDistance += horizontalVelocity.magnitude * Time.fixedDeltaTime;
+            if (footstepDistance >= 1.6f)
+            {
+                footstepDistance = 0f;
+                GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_Footstep);
+            }
+        }
+        else
+            footstepDistance = 0f;
 
-        horizontalVelocity = Vector3.MoveTowards(
-            horizontalVelocity,
-            targetVelocity,
-            acceleration * Time.fixedDeltaTime);
+        if (!dashing)
+            horizontalVelocity = Vector3.MoveTowards(
+                horizontalVelocity,
+                targetVelocity,
+                acceleration * Time.fixedDeltaTime);
 
         rigid.linearVelocity = horizontalVelocity + verticalVelocity;
 
@@ -75,14 +127,71 @@ public sealed class PlayerMover : MonoBehaviour
         }
 
         jumpRequested = false;
-        if (groundContacts.Count == 0)
+        if (jumpsUsed >= maxJumps)
         {
             return;
         }
 
         float currentVerticalSpeed = Vector3.Dot(rigid.linearVelocity, up);
         rigid.linearVelocity += up * (jumpVelocity - currentVerticalSpeed);
+        jumpsUsed++;
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_Jump);
         groundContacts.Clear();
+    }
+
+    private void OnDash(InputAction.CallbackContext context)
+    {
+        if (context.performed) dashRequested = true;
+    }
+
+    private void TryStartDash(Vector3 up)
+    {
+        if (isDashing || dashCharges == 0) return;
+        Vector3 direction = GetMoveDirection(up);
+        if (direction == Vector3.zero)
+            direction = Vector3.ProjectOnPlane(cameraHolder.forward, up).normalized;
+        dashDirection = direction.normalized;
+        if (dashCharges == maxDashCharges) dashRechargeRemaining = dashRechargeTime;
+        dashCharges--;
+        dashTimeRemaining = dashDuration;
+        isDashing = true;
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_Dash);
+    }
+
+    private bool TickDash(Vector3 up)
+    {
+        if (dashCharges < maxDashCharges)
+        {
+            dashRechargeRemaining -= Time.fixedDeltaTime;
+            if (dashRechargeRemaining <= 0f)
+            {
+                dashCharges++;
+                if (dashCharges == 1)
+                    GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_DashReady);
+                dashRechargeRemaining = dashCharges < maxDashCharges
+                    ? dashRechargeRemaining + dashRechargeTime : 0f;
+            }
+        }
+
+        if (isDashing && dashTimeRemaining <= 0f) EndDash();
+        if (dashRequested)
+        {
+            dashRequested = false;
+            TryStartDash(up);
+        }
+        if (!isDashing) return false;
+
+        rigid.linearVelocity = dashDirection * dashSpeed + Vector3.Project(rigid.linearVelocity, up);
+        dashTimeRemaining -= Time.fixedDeltaTime;
+        return true;
+    }
+
+    private void EndDash()
+    {
+        isDashing = false;
+        dashTimeRemaining = 0f;
+        Vector3 vertical = Vector3.Project(rigid.linearVelocity, transform.up);
+        rigid.linearVelocity = vertical + Vector3.ClampMagnitude(rigid.linearVelocity - vertical, speed);
     }
 
     private Vector3 GetMoveDirection(Vector3 up)
@@ -137,6 +246,20 @@ public sealed class PlayerMover : MonoBehaviour
     {
         Vector3 up = transform.up;
 
+        if (isDashing)
+        {
+            for (int i = 0; i < collision.contactCount; i++)
+            {
+                Vector3 normal = collision.GetContact(i).normal;
+                if (Vector3.Dot(normal, up) < minimumGroundNormalY && Vector3.Dot(normal, dashDirection) < -0.1f)
+                {
+                    EndDash();
+                    GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Player_DashCollision);
+                    break;
+                }
+            }
+        }
+
         for (int i = 0; i < collision.contactCount; i++)
         {
             if (Vector3.Dot(collision.GetContact(i).normal, up) >= minimumGroundNormalY)
@@ -164,6 +287,10 @@ public sealed class PlayerMover : MonoBehaviour
 
         inputManager.Subscribe(InputEvent.Move, OnMove);
         inputManager.Subscribe(InputEvent.Jump, OnJump);
+        inputManager.Subscribe(InputEvent.Dash, OnDash);
+        upgradeManager = GameManager.Instance.Upgrade;
+        upgradeManager.SubscribeUpgradeChanged(RefreshMovementStats);
+        RefreshMovementStats();
         isInputSubscribed = true;
     }
 
@@ -176,7 +303,21 @@ public sealed class PlayerMover : MonoBehaviour
 
         inputManager.Unsubscribe(InputEvent.Move, OnMove);
         inputManager.Unsubscribe(InputEvent.Jump, OnJump);
+        inputManager.Unsubscribe(InputEvent.Dash, OnDash);
+        upgradeManager.UnsubscribeUpgradeChanged(RefreshMovementStats);
         inputManager = null;
         isInputSubscribed = false;
+    }
+
+    private void RefreshMovementStats()
+    {
+        speed = upgradeManager.RuntimeStat.Equipment.Get(EquipmentStatType.MoveSpeed);
+        int bootsUpgrades = upgradeManager.RuntimeLevel.GetEquipment((int)EquipmentType.Boots);
+        maxJumps = Mathf.Min(bootsUpgrades + 1, 3);
+        int previousCapacity = maxDashCharges;
+        maxDashCharges = bootsUpgrades >= 4 ? 2 : bootsUpgrades >= 3 ? 1 : 0;
+        // Unrelated upgrade notifications must not refill charges that were already spent.
+        dashCharges = Mathf.Clamp(dashCharges + maxDashCharges - previousCapacity, 0, maxDashCharges);
+        if (maxDashCharges == 0 && isDashing) EndDash();
     }
 }

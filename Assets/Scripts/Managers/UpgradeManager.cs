@@ -7,12 +7,20 @@ public enum UpgradeAvailability
     Available,
     InvalidData,
     MaxLevel,
-    InsufficientCurrency
+    InsufficientCurrency,
+    MissingBlueprint,
+    BlueprintAlreadyOwned,
+    InsufficientOre
 }
 
 public class UpgradeManager : MonoBehaviour
 {
     [SerializeField] private List<UpgradeState> upgradeStates = new();
+    [SerializeField] private RuntimeLevel runtimeLevel = new();
+    [SerializeField] private RuntimeStat runtimeStat = new();
+
+    public RuntimeLevel RuntimeLevel => runtimeLevel;
+    public RuntimeStat RuntimeStat => runtimeStat;
 
     private readonly Dictionary<string, UpgradeState> upgradeStateMap = new();
     private Action onUpgradeChanged;
@@ -21,6 +29,7 @@ public class UpgradeManager : MonoBehaviour
     {
         foreach (UpgradeState state in upgradeStates)
             upgradeStateMap.Add(state.data.Id, state);
+        RefreshRuntimeData();
     }
 
     public UpgradeState GetState(UpgradeDataSO data)
@@ -73,12 +82,47 @@ public class UpgradeManager : MonoBehaviour
         if (level >= data.MaxLevel)
             return UpgradeAvailability.MaxLevel;
 
-        if (!data.TryGetRequiredCost(level + 1, out int cost))
+        if (state == null || state.level >= state.unlockedLevel)
+            return UpgradeAvailability.MissingBlueprint;
+
+        return GameManager.Instance.StockManager.CanConsumeOre(data.GetLevelCost(level + 1).RequiredOres)
+            ? UpgradeAvailability.Available
+            : UpgradeAvailability.InsufficientOre;
+    }
+
+    public UpgradeAvailability GetBlueprintAvailability(UpgradeDataSO data)
+    {
+        if (data == null || string.IsNullOrEmpty(data.Id))
             return UpgradeAvailability.InvalidData;
 
-        return GameManager.Instance.StockManager.CanConsumeCurrency(cost)
+        if (upgradeStateMap.TryGetValue(data.Id, out UpgradeState state))
+        {
+            if (state.data != data)
+                return UpgradeAvailability.InvalidData;
+            if (IsMaxLevel(state))
+                return UpgradeAvailability.MaxLevel;
+            if (state.unlockedLevel >= data.MaxLevel)
+                return UpgradeAvailability.BlueprintAlreadyOwned;
+        }
+
+        int targetLevel = state != null ? state.unlockedLevel + 1 : 1;
+        return GameManager.Instance.StockManager.CanConsumeCurrency(data.GetLevelCost(targetLevel).BlueprintPrice)
             ? UpgradeAvailability.Available
             : UpgradeAvailability.InsufficientCurrency;
+    }
+
+    public bool TryBuyBlueprint(UpgradeDataSO data)
+    {
+        if (GetBlueprintAvailability(data) != UpgradeAvailability.Available)
+            return false;
+
+        UpgradeState state = GetState(data);
+        int price = data.GetLevelCost(state.unlockedLevel + 1).BlueprintPrice;
+        // 비용을 확보한 뒤, 재고 변경 알림 전에 보유 상태를 반영한다.
+        state.unlockedLevel++;
+        GameManager.Instance.StockManager.TryConsumeCurrency(price);
+        onUpgradeChanged?.Invoke();
+        return true;
     }
 
     public bool CanUpgrade(UpgradeDataSO data)
@@ -92,14 +136,39 @@ public class UpgradeManager : MonoBehaviour
             return false;
 
         UpgradeState state = GetState(data);
-        if (!state.TryGetCurrentCost(out int cost)
-            || !GameManager.Instance.StockManager.TryConsumeCurrency(cost))
-            return false;
-
+        List<OreAmount> requiredOres = data.GetLevelCost(state.level + 1).RequiredOres;
         state.level++;
+        RefreshRuntimeData();
+        GameManager.Instance.StockManager.TryConsumeOre(requiredOres);
         GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Upgrade);
         onUpgradeChanged?.Invoke();
         return true;
+    }
+
+    public void CompleteEquipmentUpgrade(EquipmentUpgradeDataSO data, int level)
+    {
+        UpgradeState state = GetState(data);
+        if (level <= state.level) return;
+        state.level = level;
+        RefreshRuntimeData();
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Hub_Upgrade);
+        onUpgradeChanged?.Invoke();
+    }
+
+    private void RefreshRuntimeData()
+    {
+        runtimeLevel.Clear();
+        runtimeStat.Equipment.Initialize();
+        foreach (UpgradeState state in upgradeStates)
+        {
+            if (state.data is EquipmentUpgradeDataSO equipmentUpgrade)
+            {
+                runtimeLevel.SetEquipment(equipmentUpgrade.EquipmentId, state.level);
+                runtimeStat.Equipment.Apply(equipmentUpgrade.StatModifiers, state.level);
+            }
+            else if (state.data is ForgedGearUpgradeDataSO forgedGearUpgrade)
+                runtimeLevel.SetForgedGear(forgedGearUpgrade.ForgedGearId, state.level);
+        }
     }
 
     public void SubscribeUpgradeChanged(Action callback)
@@ -116,7 +185,7 @@ public class UpgradeManager : MonoBehaviour
     {
         List<UpgradeSaveData> saveData = new();
         foreach (UpgradeState state in upgradeStates)
-            saveData.Add(new UpgradeSaveData(state.data.Id, state.level));
+            saveData.Add(new UpgradeSaveData(state.data.Id, state.level, state.unlockedLevel));
 
         return saveData;
     }
@@ -137,10 +206,13 @@ public class UpgradeManager : MonoBehaviour
                 if (data == null)
                     continue;
 
-                GetState(data).level = Mathf.Clamp(savedState.level, 0, data.MaxLevel);
+                UpgradeState state = GetState(data);
+                state.level = Mathf.Clamp(savedState.level, 0, data.MaxLevel);
+                state.unlockedLevel = Mathf.Clamp(savedState.unlockedLevel, state.level, data.MaxLevel);
             }
         }
 
+        RefreshRuntimeData();
         onUpgradeChanged?.Invoke();
     }
 
@@ -148,6 +220,7 @@ public class UpgradeManager : MonoBehaviour
     {
         upgradeStates.Clear();
         upgradeStateMap.Clear();
+        RefreshRuntimeData();
         onUpgradeChanged?.Invoke();
     }
 }

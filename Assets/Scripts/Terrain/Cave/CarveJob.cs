@@ -15,7 +15,7 @@ public struct CaveCarveSegment
 [BurstCompile(FloatMode = FloatMode.Strict, FloatPrecision = FloatPrecision.High)]
 internal struct CarveJob : IJob
 {
-    public NativeArray<float> Densities;
+    public NativeArray<byte> Densities;
     public Vector3Int Origin;
     public Vector3Int SampleCount;
     public float Resolution;
@@ -72,8 +72,8 @@ internal struct CarveJob : IJob
                             DensityThreshold + (distance - effectiveRadius) / TransitionWidth);
                         int flatIndex = ((x - Origin.x) * SampleCount.y + y - Origin.y)
                             * SampleCount.z + z - Origin.z;
-                        float before = Densities[flatIndex];
-                        float after = Mathf.Min(before, carveDensity);
+                        byte before = Densities[flatIndex];
+                        byte after = (byte)Mathf.RoundToInt(Mathf.Min(before * (1f / 255f), carveDensity) * 255f);
                         if (after == before)
                         {
                             continue;

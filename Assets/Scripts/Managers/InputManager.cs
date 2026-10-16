@@ -11,7 +11,9 @@ public enum InputEvent
     ChangeEditMode,
     MoveMouse,
     Jump,
-    ChangeShadingMode
+    ChangeShadingMode,
+    ReturnToCamp,
+    Dash
 }
 
 
@@ -23,6 +25,12 @@ public sealed class InputManager : MonoBehaviour
     private readonly Dictionary<Enum, Action<InputAction.CallbackContext>> inputEvents = new();
 
     private PlayerInput playerInput;
+    private bool gameplayInputBlocked;
+
+    public void SetGameplayInputBlocked(bool blocked)
+    {
+        gameplayInputBlocked = blocked;
+    }
 
     private void Awake()
     {
@@ -71,6 +79,10 @@ public sealed class InputManager : MonoBehaviour
 
     private void ProvideInputEvent(InputAction.CallbackContext context)
     {
+        // Keep release events so held movement does not stick when settings close.
+        if (gameplayInputBlocked && !context.canceled)
+            return;
+
         if (!Enum.TryParse(context.action.name, out InputEvent inputEvent))
         {
             return;

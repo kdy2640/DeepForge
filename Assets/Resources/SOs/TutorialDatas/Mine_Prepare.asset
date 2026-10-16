@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c92169668cf18a4a8cae096622c5cf8, type: 3}
+  m_Name: Mine_Prepare
+  m_EditorClassIdentifier: Assembly-CSharp::TutorialDataSO
+  state: 5
+  title: "\uAD11\uC0B0 \uC900\uBE44"
+  content: "\uAD11\uC0B0 \uD0D0\uD5D8\uC744 \uC900\uBE44\uD558\uB294 \uD654\uBA74\uC785\uB2C8\uB2E4.
+    \uB0B4\uB824\uAC00\uAE30 \uC804\uC5D0 \uC7A5\uBE44 \uAC15\uD654 \uC0C1\uD0DC\uC640
+    \uD0D0\uD5D8 \uACC4\uD68D\uC744 \uD655\uC778\uD558\uC138\uC694.\n\n\uB354 \uAE4A\uC740
+    \uACF3\uC73C\uB85C \uD5A5\uD560\uC218\uB85D \uBC30\uB0AD \uC6A9\uB7C9, \uC870\uBA85,
+    \uADC0\uD658 \uC904\uC758 \uAE38\uC774\uB97C \uD568\uAED8 \uACE0\uB824\uD574\uC57C
+    \uD569\uB2C8\uB2E4.\n\n\uC900\uBE44\uAC00 \uBD80\uC871\uD558\uB2E4\uBA74 \uAE30\uC9C0\uB85C
+    \uB3CC\uC544\uAC00 \uC0C1\uC810\uACFC \uB300\uC7A5\uAC04\uC744 \uC774\uC6A9\uD558\uC138\uC694."

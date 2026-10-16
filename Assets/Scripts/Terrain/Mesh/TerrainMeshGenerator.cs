@@ -20,10 +20,15 @@ public class TerrainMeshGenerator : IDisposable
     private NativeArray<int> triangleTable;
     // 정점 위치와 노멀의 메시 버퍼 형식
     private NativeArray<VertexAttributeDescriptor> vertexAttributes;
+    // 균일 청크의 읽기 전용 Job 입력. 청크마다 배열을 할당하지 않는다.
+    private NativeArray<byte> constantDensities;
+    private NativeArray<byte> naturalFlags;
 
     // 마칭 큐브 조회 테이블과 정점 버퍼 형식을 네이티브 배열로 준비한다.
     public TerrainMeshGenerator()
     {
+        constantDensities = new NativeArray<byte>(new byte[] { 0, 255 }, Allocator.Persistent);
+        naturalFlags = new NativeArray<byte>(1, Allocator.Persistent);
         corners = new NativeArray<Vector3Int>(MarchingTable.Corners, Allocator.Persistent);
         edgeCornerIndexes = new NativeArray<int>(new[]
         {
@@ -71,6 +76,8 @@ public class TerrainMeshGenerator : IDisposable
         Mesh.MeshDataArray[] meshData = new Mesh.MeshDataArray[meshes.Length];
         NativeArray<Bounds>[] boundsResults = new NativeArray<Bounds>[meshes.Length];
         NativeArray<JobHandle> handles = new NativeArray<JobHandle>(meshes.Length, Allocator.Temp);
+        NativeArray<float> layerDepths = default;
+        NativeArray<Color> layerColors = default;
         int preparedBuilders = 0;
         int preparedMeshData = 0;
         int preparedBounds = 0;
@@ -78,6 +85,14 @@ public class TerrainMeshGenerator : IDisposable
         bool succeeded = false;
         try
         {
+            layerDepths = new NativeArray<float>(data.Layers.Length, Allocator.TempJob);
+            layerColors = new NativeArray<Color>(data.Layers.Length, Allocator.TempJob);
+            for (int i = 0; i < data.Layers.Length; i++)
+            {
+                layerDepths[i] = data.Layers[i].StartDepth;
+                Color color = data.Layers[i].Color;
+                layerColors[i] = linearColorSpace ? color.linear : color;
+            }
             using (PrepareMarker.Auto())
             {
                 for (int i = 0; i < meshes.Length; i++)
@@ -95,15 +110,12 @@ public class TerrainMeshGenerator : IDisposable
             {
                 for (int i = 0; i < meshes.Length; i++)
                 {
-                    ChunkMeshInput input = new ChunkMeshInput(data, chunkCoords[i]);
-                    byte layerId = data.GetChunkData(chunkCoords[i]).LayerId;
-                    Color layerColor = TerrainTypeDB.GetData(layerId).Layer.Color;
-                    if (linearColorSpace) layerColor = layerColor.linear;
+                    ChunkMeshInput input = new ChunkMeshInput(data, chunkCoords[i], constantDensities, naturalFlags);
                     BuildChunkMeshJob job = new BuildChunkMeshJob
                     {
                         Mesher = new MarchingCubesMesher(
                             input, corners, edgeCornerIndexes, triangleTable, threshold, isSmoothShading,
-                            layerColor, artificialColor),
+                            data.LayerOriginY, layerDepths, layerColors, artificialColor),
                         Builder = builders[i],
                         MeshData = meshData[i][0],
                         VertexAttributes = vertexAttributes,
@@ -136,6 +148,8 @@ public class TerrainMeshGenerator : IDisposable
             // Also finish already scheduled Jobs when preparation/scheduling/application fails.
             JobHandle.CompleteAll(handles);
             handles.Dispose();
+            if (layerDepths.IsCreated) layerDepths.Dispose();
+            if (layerColors.IsCreated) layerColors.Dispose();
             for (int i = appliedMeshes; i < preparedMeshData; i++)
             {
                 meshData[i].Dispose();
@@ -163,6 +177,8 @@ public class TerrainMeshGenerator : IDisposable
     // 메시 생성기가 소유한 조회 테이블과 정점 형식 배열을 해제한다.
     public void Dispose()
     {
+        constantDensities.Dispose();
+        naturalFlags.Dispose();
         corners.Dispose();
         edgeCornerIndexes.Dispose();
         triangleTable.Dispose();

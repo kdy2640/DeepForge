@@ -7,7 +7,7 @@ using UnityEngine;
 [BurstCompile(FloatMode = FloatMode.Strict, FloatPrecision = FloatPrecision.High)]
 internal struct CalculateErosionWeightsJob : IJobParallelFor
 {
-    [ReadOnly] public NativeArray<float> Densities;
+    [ReadOnly] public NativeArray<byte> Densities;
     public Vector3Int DensityOrigin;
     public Vector3Int DensitySampleCount;
     public Vector3Int MaxTerrainIndex;
@@ -21,6 +21,7 @@ internal struct CalculateErosionWeightsJob : IJobParallelFor
     public Matrix4x4 DensityNormalToWorld;
     public float ErosionSideStrength;
     public bool UseDistanceFalloff;
+    public float EdgeWidth;
     [WriteOnly] public NativeArray<float> Weights;
 
     public void Execute(int flatIndex)
@@ -32,7 +33,7 @@ internal struct CalculateErosionWeightsJob : IJobParallelFor
         Vector3Int localIndex = index - DensityOrigin;
         int densityIndex = (localIndex.x * DensitySampleCount.y + localIndex.y)
             * DensitySampleCount.z + localIndex.z;
-        float density = Densities[densityIndex];
+        float density = Densities[densityIndex] * (1f / 255f);
         float maxWeight = 0f;
         Vector3 ownGradient = Vector3.zero;
         bool hasOwnGradient = false;
@@ -52,7 +53,7 @@ internal struct CalculateErosionWeightsJob : IJobParallelFor
                 }
 
                 int neighborDensityIndex = densityIndex + direction * stride;
-                float neighborDensity = Densities[neighborDensityIndex];
+                float neighborDensity = Densities[neighborDensityIndex] * (1f / 255f);
                 if ((density > DensityThreshold) == (neighborDensity > DensityThreshold))
                 {
                     continue;
@@ -75,7 +76,8 @@ internal struct CalculateErosionWeightsJob : IJobParallelFor
                 float weight = 1f;
                 if (UseDistanceFalloff)
                 {
-                    float t = 1f - distance / Radius;
+                    // 중심은 고르게 깎고 가장자리에서만 주변 표면으로 이어진다.
+                    float t = Mathf.Clamp01((1f - distance / Radius) / EdgeWidth);
                     weight = t * t * (3f - 2f * t);
                 }
                 if (ErosionSideStrength < 1f)
@@ -92,7 +94,7 @@ internal struct CalculateErosionWeightsJob : IJobParallelFor
                             int upper = Mathf.Min(index[gradientAxis] + 1, limit);
                             ownGradient[gradientAxis] =
                                 (Densities[densityIndex + (upper - index[gradientAxis]) * gradientStride] -
-                                 Densities[densityIndex + (lower - index[gradientAxis]) * gradientStride]) /
+                                 Densities[densityIndex + (lower - index[gradientAxis]) * gradientStride]) * (1f / 255f) /
                                 ((upper - lower) * Resolution);
                         }
 
@@ -100,7 +102,7 @@ internal struct CalculateErosionWeightsJob : IJobParallelFor
                         int neighborUpper = Mathf.Min(neighbor[gradientAxis] + 1, limit);
                         neighborGradient[gradientAxis] =
                             (Densities[neighborDensityIndex + (neighborUpper - neighbor[gradientAxis]) * gradientStride] -
-                             Densities[neighborDensityIndex + (neighborLower - neighbor[gradientAxis]) * gradientStride]) /
+                             Densities[neighborDensityIndex + (neighborLower - neighbor[gradientAxis]) * gradientStride]) * (1f / 255f) /
                             ((neighborUpper - neighborLower) * Resolution);
                     }
                     hasOwnGradient = true;

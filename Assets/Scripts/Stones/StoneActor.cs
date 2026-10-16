@@ -111,7 +111,7 @@ public sealed class StoneActor : Poolable
         maxSupportIndex = Vector3Int.zero;
     }
 
-    // SetData와 배치가 끝난 뒤 한 번 호출한다. 현재 자원 모델의 BoxCollider 부피를 사용한다.
+    // SetData와 배치가 끝난 뒤 한 번 호출한다. BoxCollider 중심을 유지하고 각 축 크기의 80%를 판정에 사용한다.
     private bool InitializeTerrainSupport(TerrainManager owner)
     {
         terrainManager = owner;
@@ -122,7 +122,7 @@ public sealed class StoneActor : Poolable
         foreach (BoxCollider modelCollider in modelColliders)
         {
             Matrix4x4 localToTerrain = owner.transform.worldToLocalMatrix * modelCollider.transform.localToWorldMatrix;
-            Vector3 size = modelCollider.size;
+            Vector3 size = modelCollider.size * 0.6f;
             Vector3 start = modelCollider.center - size * 0.5f;
             // 중심·각 면을 포함하고 지형 해상도 이하의 간격이 되도록 짝수로 나눈다.
             int countX = 2 * Mathf.Max(1, Mathf.CeilToInt(localToTerrain.MultiplyVector(Vector3.right * size.x).magnitude / (2f * resolution)));
@@ -189,7 +189,7 @@ public sealed class StoneActor : Poolable
         if (!HasTerrainSupport()) Collect();
     }
 
-    private void Collect()
+    public void Collect()
     {
         if (!IsRented || isBreaking)
             return;
@@ -201,7 +201,19 @@ public sealed class StoneActor : Poolable
         foreach (BoxCollider modelCollider in modelColliders)
             modelCollider.enabled = false;
 
-        GameManager.Instance.StockManager.AddOre(new List<OreAmount>(dataSO.RewardList));
+        BackPack backPack = GameManager.Instance.GameLoop.BackPack;
+        int requested = 0;
+        foreach (OreAmount reward in dataSO.RewardList)
+            requested += reward.amount;
+        int beforeCount = backPack.Count;
+        int added = backPack.Add(dataSO.RewardList);
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Mining_OreRelease);
+        if (added > 0)
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Mining_OreCollect);
+        if (added < requested || (beforeCount < backPack.Capacity && backPack.Count >= backPack.Capacity))
+            GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Mining_BackpackFull);
+        GameManager.Instance.Utility.Save.SaveGame();
+        GameManager.Instance.Utility.World.MarkStoneCollected(spawnData.ChunkCoordinate, spawnData.SpawnIndex);
         if (gameObject.activeInHierarchy)
             presenter.PlayBreakTween(RequestReturn);
         else

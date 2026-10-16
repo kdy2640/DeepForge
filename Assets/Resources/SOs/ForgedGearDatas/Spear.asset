@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 221b27f4609fff348a1c1aca79acd5d7, type: 3}
+  m_Name: Spear
+  m_EditorClassIdentifier: Assembly-CSharp::ForgedGearSO
+  id: 16
+  type: 16
+  baseSellPrice: 18
+  materialValueMultiplier: 1.5
+  levelPriceBonus: 0.25
+  handleOreCost: 3
+  metalOreCost: 2
+  gemOreCost: 1
+  iconModel: {fileID: 3795681210768388840, guid: 5cfc5ad51b8a7ca4f836600a539acb18, type: 3}
+  iconRotation: {x: 0, y: 25, z: -35}

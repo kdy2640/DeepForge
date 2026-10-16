@@ -11,7 +11,9 @@ internal struct MarchingCubesMesher
     private readonly float resolution;
     private readonly float threshold;
     private readonly bool isSmoothShading;
-    private readonly Color layerColor;
+    private readonly float layerOriginY;
+    [ReadOnly] private NativeArray<float> layerDepths;
+    [ReadOnly] private NativeArray<Color> layerColors;
     private readonly Color artificialColor;
 
     // 마칭 큐브 꼭짓점·모서리·삼각형 조회 테이블
@@ -27,7 +29,9 @@ internal struct MarchingCubesMesher
         NativeArray<int> triangleTable,
         float threshold,
         bool isSmoothShading,
-        Color layerColor,
+        float layerOriginY,
+        NativeArray<float> layerDepths,
+        NativeArray<Color> layerColors,
         Color artificialColor)
     {
         this.input = input;
@@ -39,7 +43,9 @@ internal struct MarchingCubesMesher
         resolution = input.Resolution;
         this.threshold = threshold;
         this.isSmoothShading = isSmoothShading;
-        this.layerColor = layerColor;
+        this.layerOriginY = layerOriginY;
+        this.layerDepths = layerDepths;
+        this.layerColors = layerColors;
         this.artificialColor = artificialColor;
     }
 
@@ -153,8 +159,15 @@ internal struct MarchingCubesMesher
 
         Vector3 vertex = useMidpoint ? (edgeStart + edgeEnd) * 0.5f : Vector3.Lerp(edgeStart, edgeEnd, t);
         int solidCorner = startDensity > threshold ? startCornerIndex : endCornerIndex;
-        // 자연 지형은 현재 청크의 색을 사용하고 인공 지형만 별도 색으로 표시한다.
-        color = input.IsArtificial(cubeIndex + corners[solidCorner]) ? artificialColor : layerColor;
+        // 같은 청크 안에서도 정점의 실제 심도에 맞는 자연 지층 색을 사용한다.
+        float depth = layerOriginY - vertex.y;
+        int layerIndex = 0;
+        for (int i = 1; i < layerDepths.Length; i++)
+        {
+            if (depth < layerDepths[i]) break;
+            layerIndex = i;
+        }
+        color = input.IsArtificial(cubeIndex + corners[solidCorner]) ? artificialColor : layerColors[layerIndex];
         return vertex;
     }
 

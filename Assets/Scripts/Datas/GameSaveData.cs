@@ -9,6 +9,9 @@ public class GameSaveData
     public List<TutorialSaveData> tutorials = new();
     public AudioSaveData audio = new();
     public StockSaveData stock = new();
+    public List<OreAmount> backPack = new();
+    public OrderSaveData orders;
+    public SmithSaveData smith;
 }
 
 [Serializable]
@@ -16,11 +19,13 @@ public class UpgradeSaveData
 {
     public string id;
     public int level;
+    public int unlockedLevel;
 
-    public UpgradeSaveData(string id, int level)
+    public UpgradeSaveData(string id, int level, int unlockedLevel)
     {
         this.id = id;
         this.level = level;
+        this.unlockedLevel = unlockedLevel;
     }
 }
 
@@ -62,5 +67,18 @@ public class StockSaveData
     public int currency;
     public List<OreAmount> ores = new();
     public List<ForgedGear> forgedGears = new();
+}
+
+[Serializable]
+public class OrderSaveData
+{
+    public int seed;
+    public List<int> completedOrderIndices = new();
+}
+
+[Serializable]
+public class SmithSaveData
+{
+    public SmithSlot[] slots = { new(), new(), new(), new() };
 }
 

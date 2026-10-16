@@ -18,4 +18,4 @@ MonoBehaviour:
   modelPrefab: {fileID: 6989849965556470678, guid: e5c6b7fc8644cdc448953b929ad4209e, type: 3}
   rewardList:
   - oreId: 6
-    amount: 3
+    amount: 2

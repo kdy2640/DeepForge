@@ -13,9 +13,7 @@ MonoBehaviour:
   m_Name: Basalt
   m_EditorClassIdentifier: Assembly-CSharp::TerrainTypeSO
   layer:
-    YStart: 0
+    StartDepth: 32
     TypeId: 1
     Color: {r: 0.3584906, g: 0.27178693, b: 0.23504807, a: 1}
-    stondataIDs:
-    - 7
-    - 8
+    stondataIDs: 0700000008000000

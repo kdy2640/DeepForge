@@ -17,7 +17,7 @@ public static class TerrainTypeDB
         return terrainTypeMap[typeId];
     }
 
-    // 원본 SO를 유지한 채 자연 지층의 값만 복사하고 시작 높이순으로 정렬한다.
+    // 원본 SO를 유지한 채 자연 지층의 값만 복사하고 얕은 심도부터 정렬한다.
     public static TerrainLayer[] GetLayers()
     {
         List<TerrainLayer> layers = new List<TerrainLayer>();
@@ -27,7 +27,7 @@ public static class TerrainTypeDB
             if (layer.TypeId != TerrainData.ArtificialTypeId)
                 layers.Add(layer);
         }
-        layers.Sort((a, b) => a.YStart.CompareTo(b.YStart));
+        layers.Sort((a, b) => a.StartDepth.CompareTo(b.StartDepth));
         return layers.ToArray();
     }
 }

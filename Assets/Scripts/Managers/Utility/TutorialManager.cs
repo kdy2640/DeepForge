@@ -4,59 +4,35 @@ using UnityEngine;
 
 public class TutorialManager : MonoBehaviour
 {
-    public enum TutorialType
-    {
-        Hub,
-        BeforeHarvest,
-        HarvestUpgrade,
-        Facility,
-        Menu,
-        Staff,
-        ServiceSelection,
-        Sales,
-        Harvest,
-        Length
-    }
-
-    private Dictionary<TutorialType, bool> tutorialProgressionMap = new();
+    private readonly Dictionary<CanvasController.CanvasState, bool> tutorialProgressionMap = new();
 
     private void Awake()
     {
         Initialize();
     }
 
-    public bool GetTutorialProgressed(TutorialType type)
+    public bool GetTutorialProgressed(CanvasController.CanvasState state)
     {
-        if (type < 0 || type >= TutorialType.Length)
-            return false;
-
-        return tutorialProgressionMap[type];
+        return tutorialProgressionMap[state];
     }
 
-    public void ResolveTutorial(TutorialType type)
+    public void ResolveTutorial(CanvasController.CanvasState state)
     {
-        if (type < 0 || type >= TutorialType.Length)
-        {
-            Debug.LogError($"Invalid tutorial type: {type}");
-            return;
-        }
-
-        tutorialProgressionMap[type] = true;
+        tutorialProgressionMap[state] = true;
     }
 
     public void Initialize()
     {
-        tutorialProgressionMap = new Dictionary<TutorialType, bool>();
-
-        for (int i = 0; i < (int)TutorialType.Length; i++)
-            tutorialProgressionMap.Add((TutorialType)i, false);
+        tutorialProgressionMap.Clear();
+        foreach (CanvasController.CanvasState state in Enum.GetValues(typeof(CanvasController.CanvasState)))
+            tutorialProgressionMap.Add(state, false);
     }
 
     public List<TutorialSaveData> CreateTutorialSaveData()
     {
         List<TutorialSaveData> saveData = new();
 
-        foreach (KeyValuePair<TutorialType, bool> pair in tutorialProgressionMap)
+        foreach (KeyValuePair<CanvasController.CanvasState, bool> pair in tutorialProgressionMap)
             saveData.Add(new TutorialSaveData(pair.Key.ToString(), pair.Value));
 
         return saveData;
@@ -72,12 +48,11 @@ public class TutorialManager : MonoBehaviour
         foreach (TutorialSaveData savedState in saveData)
         {
             if (savedState == null
-                || !Enum.TryParse(savedState.id, out TutorialType type)
-                || (int)type < 0
-                || (int)type >= (int)TutorialType.Length)
+                || !Enum.TryParse(savedState.id, out CanvasController.CanvasState state)
+                || !tutorialProgressionMap.ContainsKey(state))
                 continue;
 
-            tutorialProgressionMap[type] = savedState.flag;
+            tutorialProgressionMap[state] = savedState.flag;
         }
     }
 
@@ -90,7 +65,7 @@ public class TutorialManager : MonoBehaviour
     [ContextMenu("Debug/Log Tutorial Progress")]
     private void LogTutorialProgress()
     {
-        foreach (KeyValuePair<TutorialType, bool> pair in tutorialProgressionMap)
+        foreach (KeyValuePair<CanvasController.CanvasState, bool> pair in tutorialProgressionMap)
             Debug.Log($"{pair.Key}: {pair.Value}");
     }
 #endif

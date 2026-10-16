@@ -50,21 +50,58 @@ public class TerrainManager : MonoBehaviour
         EnsureInitialized();
         Vector3 localPosition = transform.InverseTransformPoint(worldPosition);
 
-        bool changed = data.ModifyDensitySphere(
-            localPosition,
-            mining,
-            isAdding,
-            settings.Density.DensityThreshold,
-            worldErosionDirection.normalized,
-            transform.worldToLocalMatrix.transpose,
-            out Vector3Int minChangedIndex,
-            out Vector3Int maxChangedIndex);
+        // 한 타 안에서는 위치와 방향을 고정하고, 새로 드러난 표면을 다시 계산한다.
+        // 중간 메시와 이벤트는 내보내지 않고 전체 변경 범위를 마지막에 한 번 갱신한다.
+        int passCount = isAdding ? 1 : mining.HitPassCount;
+        Vector3 erosionDirection = worldErosionDirection.normalized;
+        Matrix4x4 normalToWorld = transform.worldToLocalMatrix.transpose;
+        Vector3Int minChangedIndex = new Vector3Int(data.Width, data.DensityFieldHeight, data.Width);
+        Vector3Int maxChangedIndex = new Vector3Int(-1, -1, -1);
+        bool changed = false;
+        for (int pass = 0; pass < passCount; pass++)
+        {
+            if (!data.ModifyDensitySphere(
+                localPosition,
+                mining,
+                isAdding,
+                settings.MiningBounds,
+                settings.Density.DensityThreshold,
+                erosionDirection,
+                normalToWorld,
+                out Vector3Int passMin,
+                out Vector3Int passMax))
+            {
+                break;
+            }
+
+            minChangedIndex = Vector3Int.Min(minChangedIndex, passMin);
+            maxChangedIndex = Vector3Int.Max(maxChangedIndex, passMax);
+            changed = true;
+        }
         if (changed)
         {
+            GameManager.Instance.Utility.World.MarkDensityChanged(minChangedIndex, maxChangedIndex);
             chunkManager.RegenerateChunksInBounds(minChangedIndex, maxChangedIndex);
             DensityChanged?.Invoke(minChangedIndex, maxChangedIndex);
         }
         return changed;
+    }
+
+    // 원기둥 제거와 주변 수축이 모두 끝난 뒤 한 번만 메시와 변경 이벤트를 갱신한다.
+    public bool MineCylinder(Vector3 worldPosition, MiningSetting mining, Vector3 worldDirection)
+    {
+        EnsureInitialized();
+        Vector3 localPosition = transform.InverseTransformPoint(worldPosition);
+        Vector3 localDirection = transform.InverseTransformVector(worldDirection).normalized;
+        if (!data.ModifyDensityCylinder(localPosition, localDirection, mining,
+            settings.MiningBounds, settings.Density.DensityThreshold,
+            out Vector3Int minChangedIndex, out Vector3Int maxChangedIndex))
+            return false;
+
+        GameManager.Instance.Utility.World.MarkDensityChanged(minChangedIndex, maxChangedIndex);
+        chunkManager.RegenerateChunksInBounds(minChangedIndex, maxChangedIndex);
+        DensityChanged?.Invoke(minChangedIndex, maxChangedIndex);
+        return true;
     }
 
     // 현재 지형을 정리하고 설정값으로 밀도와 청크 메시를 다시 생성한다.
@@ -86,24 +123,30 @@ public class TerrainManager : MonoBehaviour
         if (data != null)
         {
             data.Dispose();
+            data = null;
         }
 
+        generationRoutine = StartCoroutine(GenerateTerrainRoutine());
+    }
+
+    private IEnumerator GenerateTerrainRoutine()
+    {
+        var loading = GameManager.Instance.Utility.World.LoadOrCreateWorldAsync(settings);
+        while (!loading.IsCompleted) yield return null;
+        loading.GetAwaiter().GetResult();
         data = new TerrainData(chunkManager.Grid);
         generator = generator ?? new TerrainDensityFormer();
         generator.Generate(data, settings.Surface, settings.Density);
+        baseCamp.Place(this);
+        data.SetLayerOrigin(transform.InverseTransformPoint(baseCamp.EntrancePoint.position).y);
         GenerateCaves();
-        baseCamp.PlaceAndSpawn(this);
+        GameManager.Instance.Utility.World.ApplySavedChunks(data);
+        baseCamp.SpawnPlayer();
         if (chunkManager.Registry == null)
         {
             chunkManager.Initialize(this);
         }
         chunkManager.Registry.ClearChunks();
-        generationRoutine = StartCoroutine(GenerateTerrainRoutine());
-    }
-
-    // 초기 청크를 여러 프레임에 나눠 생성한 뒤 스트리밍을 시작한다.
-    private IEnumerator GenerateTerrainRoutine()
-    {
         yield return chunkManager.GenerateInitialChunks(settings.Streaming.Target);
         generationRoutine = null;
     }
@@ -120,12 +163,7 @@ public class TerrainManager : MonoBehaviour
     {
         chunkManager ??= new TerrainChunkManager(settings.Grid, settings.Streaming);
         if (data == null)
-        {
-            data = new TerrainData(chunkManager.Grid);
-            generator = generator ?? new TerrainDensityFormer();
-            generator.Generate(data, settings.Surface, settings.Density);
-            GenerateCaves();
-        }
+            throw new System.InvalidOperationException("월드 로드가 끝나기 전에 지형에 접근했습니다.");
 
         if (chunkManager.Registry == null)
         {
@@ -140,7 +178,9 @@ public class TerrainManager : MonoBehaviour
         if (!cave.Enabled) return;
 
         CaveCarveSegment[] segments = new CaveGenerator().GenerateWithEntrance(
-            data, cave, settings.Density.DensityThreshold);
+            cave, settings.Density.DensityThreshold,
+            transform.InverseTransformPoint(baseCamp.EntrancePoint.position),
+            transform.InverseTransformDirection(baseCamp.EntrancePoint.forward));
 
         // 최초 메시 생성 전이므로 변경 bounds를 이용한 별도 메시 갱신은 필요 없다.
         data.CarvePassages(segments, settings.Density.DensityThreshold, cave.TransitionWidth,

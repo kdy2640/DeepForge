@@ -25,9 +25,10 @@ public sealed class FloatPanelAnimator : PanelAnimator
         Sequence sequence = DOTween.Sequence()
             .SetTarget(this)
             .SetAutoKill(false)
-            .Join(Rect.DOAnchorPos(endPosition, duration).SetEase(Ease.OutExpo))
-            .Join(Rect.DOScale(endScale, duration).SetEase(Ease.OutCubic))
-            .Join(CanvasGroup.DOFade(1f, duration * 0.75f).SetEase(Ease.OutExpo));
+            .SetRecyclable(true)
+            .Join(Rect.DOAnchorPos(endPosition, duration).SetEase(Ease.OutExpo).SetRecyclable(true))
+            .Join(Rect.DOScale(endScale, duration).SetEase(Ease.OutCubic).SetRecyclable(true))
+            .Join(CanvasGroup.DOFade(1f, duration * 0.75f).SetEase(Ease.OutExpo).SetRecyclable(true));
 
         sequence.OnComplete(() => CanvasGroup.blocksRaycasts = true);
         sequence.OnKill(Restore);
@@ -59,13 +60,14 @@ public sealed class FloatPanelAnimator : PanelAnimator
         Sequence sequence = DOTween.Sequence()
             .SetTarget(this)
             .SetAutoKill(false)
+            .SetRecyclable(true)
             .Join(Rect.DOAnchorPos(
                 startPosition + startOffset * 0.5f,
-                duration * 0.3f).SetEase(Ease.InCubic))
+                duration * 0.3f).SetEase(Ease.InCubic).SetRecyclable(true))
             .Join(Rect.DOScale(
                 startScaleValue * 0.95f,
-                duration * 0.3f).SetEase(Ease.InCubic))
-            .Join(CanvasGroup.DOFade(0f, duration * 0.3f).SetEase(Ease.InQuad));
+                duration * 0.3f).SetEase(Ease.InCubic).SetRecyclable(true))
+            .Join(CanvasGroup.DOFade(0f, duration * 0.3f).SetEase(Ease.InQuad).SetRecyclable(true));
 
         sequence.OnKill(Restore);
 

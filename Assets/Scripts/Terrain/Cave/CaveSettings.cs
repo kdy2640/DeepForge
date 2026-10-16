@@ -23,7 +23,7 @@ public sealed class CaveSettings
     [Min(0f)] public float NoiseAmplitude = 0.25f;
 
     [Header("동굴 지표 출입구")]
-    [Tooltip("지형 로컬 X/Z 위치입니다. 높이는 Carve 전 기본 밀도의 지표에서 계산합니다.")]
-    public Vector2 EntrancePosition = new Vector2(24f, 24f);
+    [Tooltip("캠프 입구에서 정면으로 내려가는 구간의 수평 길이입니다.")]
+    [Min(1f)] public float EntranceLength = 12f;
     [Range(1f, 45f)] public float EntranceMaxSlope = 30f;
 }

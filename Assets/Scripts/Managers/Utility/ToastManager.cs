@@ -14,12 +14,13 @@ public sealed class ToastManager : MonoBehaviour
         EnsureCanvas();
     }
 
-    public void Show(string message)
+    public void Show(string message, SFXType sound = SFXType.Global_Notification)
     {
         if (string.IsNullOrWhiteSpace(message) || !EnsureCanvas())
             return;
 
         toastCanvas.Show(message);
+        GameManager.Instance.Utility.Audio.PlaySFX(sound);
 
         if (hideCoroutine != null)
             StopCoroutine(hideCoroutine);

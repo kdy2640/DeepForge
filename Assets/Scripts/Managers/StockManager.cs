@@ -218,10 +218,59 @@ public class StockManager : MonoBehaviour
 
     #region Forged Gear
 
+    public bool TrySellOre(OreAmount oreAmount)
+    {
+        if (oreAmount.amount <= 0 || !CanConsumeOre(oreAmount))
+            return false;
+
+        OreDataSO oreData = OreDataDB.GetData(oreAmount.oreId);
+        stockData.currency = (int)Math.Min(
+            (long)stockData.currency + (long)oreAmount.amount * oreData.SellPrice,
+            int.MaxValue);
+        // 이미 수량을 확인했으므로, 차감 알림에서 판매금까지 함께 읽을 수 있다.
+        TryConsumeOre(oreAmount);
+        return true;
+    }
+
+    public bool TrySellForgedGear(ForgedGear forgedGear)
+    {
+        ForgedGearSO gearData = ForgedGearDB.GetData(forgedGear.id);
+        if (!stockData.forgedGears.Remove(forgedGear))
+            return false;
+
+        stockData.currency = (int)Math.Min(
+            (long)stockData.currency + gearData.GetSellPrice(forgedGear.data, forgedGear.level), int.MaxValue);
+        NotifyStockDataChanged();
+        forgedGear.ReleaseIcon();
+        return true;
+    }
+
     public void AddForgedGear(ForgedGear forgedGear)
     {
         stockData.forgedGears.Add(forgedGear);
         NotifyStockDataChanged();
+    }
+
+    public bool TryDeliverForgedGears(IReadOnlyList<ForgedGear> forgedGears, int rewardCurrency)
+    {
+        if (forgedGears.Count == 0 || rewardCurrency < 0)
+            return false;
+
+        HashSet<ForgedGear> uniqueGears = new();
+        foreach (ForgedGear forgedGear in forgedGears)
+        {
+            if (!uniqueGears.Add(forgedGear) || !stockData.forgedGears.Contains(forgedGear))
+                return false;
+        }
+
+        foreach (ForgedGear forgedGear in uniqueGears)
+            stockData.forgedGears.Remove(forgedGear);
+
+        stockData.currency = (int)Math.Min(
+            (long)stockData.currency + rewardCurrency, int.MaxValue);
+        NotifyStockDataChanged();
+        foreach (ForgedGear forgedGear in uniqueGears) forgedGear.ReleaseIcon();
+        return true;
     }
 
     public bool RemoveForgedGear(ForgedGear forgedGear)
@@ -230,6 +279,7 @@ public class StockManager : MonoBehaviour
             return false;
 
         NotifyStockDataChanged();
+        forgedGear.ReleaseIcon();
         return true;
     }
 
@@ -257,8 +307,9 @@ public class StockManager : MonoBehaviour
         foreach (ForgedGear forgedGear in stockData.forgedGears)
         {
             saveData.forgedGears.Add(new ForgedGear(
-                forgedGear.type,
-                forgedGear.data));
+                forgedGear.id,
+                forgedGear.data,
+                forgedGear.level));
         }
 
         return saveData;
@@ -266,6 +317,7 @@ public class StockManager : MonoBehaviour
 
     public void LoadStockSaveData(StockSaveData saveData)
     {
+        List<ForgedGear> previousGears = stockData.forgedGears;
         stockData = new StockData();
 
         if (saveData != null)
@@ -291,19 +343,28 @@ public class StockManager : MonoBehaviour
                 foreach (ForgedGear forgedGear in saveData.forgedGears)
                 {
                     stockData.forgedGears.Add(new ForgedGear(
-                        forgedGear.type,
-                        forgedGear.data));
+                        forgedGear.id,
+                        forgedGear.data,
+                        Mathf.Max(1, forgedGear.level)));
                 }
             }
         }
 
         NotifyStockDataChanged();
+        foreach (ForgedGear gear in previousGears) gear.ReleaseIcon();
     }
 
     public void ResetStockSaveData()
     {
+        List<ForgedGear> previousGears = stockData.forgedGears;
         stockData = new StockData();
         NotifyStockDataChanged();
+        foreach (ForgedGear gear in previousGears) gear.ReleaseIcon();
+    }
+
+    private void OnDestroy()
+    {
+        foreach (ForgedGear gear in stockData.forgedGears) gear.ReleaseIcon();
     }
 
     #endregion

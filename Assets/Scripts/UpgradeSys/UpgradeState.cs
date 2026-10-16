@@ -7,14 +7,6 @@ public class UpgradeState
     public UpgradeDataSO data;
     public int level;
 
-    public bool TryGetCurrentCost(out int requiredCost)
-    {
-        if (data == null)
-        {
-            requiredCost = 0;
-            return false;
-        }
-
-        return data.TryGetRequiredCost(level + 1, out requiredCost);
-    }
+    // 설계도 구매로 해금한 최대 강화 레벨.
+    public int unlockedLevel;
 }

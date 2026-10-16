@@ -1,0 +1,15 @@
+Description :
+
+27x material lowpoly ground texture
+
+Resolution : 2048x2048 
+
+Inclued for each material :
+
+1x Diffuse
+1x height
+1x Normal
+
+Inclued : 6x normal grass, 4x sand, 5x normal ground, 4x rock, 6x frozen and snow, 2x dirt
+
+Cracked Ground, Dirt and Grass, Dirt and Gravel, Dirt, Dry Grass, Frozen Pavers and Snow, Frozen Pavers, Frozen Snow, Grass and Flowers, Grass and Leaf, Grass and Pavement, Grass and Rock, Grass, Ground and Gravel, Ground and Leaf, Ground and Pavement, Ground and Rock, Ground, Sand and Pavement, Sand and Rock, Sand, Snow and Dirt, Snow, Stone and Pavement, Stone and Snow, Stone Dark, Stone Light

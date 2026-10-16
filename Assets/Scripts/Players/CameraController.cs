@@ -13,6 +13,7 @@ public sealed class CameraController : MonoBehaviour
     private Transform cameraHolder;
     private InputManager inputManager;
     private bool isCursorMode;
+    private bool isUIInputBlocked;
     private bool isInputSubscribed;
     private float verticalAngle;
 
@@ -45,9 +46,14 @@ public sealed class CameraController : MonoBehaviour
         isCursorMode = !enabled;
     }
 
+    public void SetUIInputBlocked(bool blocked)
+    {
+        isUIInputBlocked = blocked;
+    }
+
     private void OnRotationCamera(InputAction.CallbackContext context)
     {
-        if (isCursorMode || cameraHolder == null)
+        if (isUIInputBlocked || isCursorMode || cameraHolder == null)
         {
             return;
         }

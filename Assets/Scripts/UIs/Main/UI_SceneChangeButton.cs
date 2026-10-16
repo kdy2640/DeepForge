@@ -13,6 +13,7 @@ public class UI_SceneChangeButton : MonoBehaviour
 
     public void OnButtonClicked()
     {
+        GameManager.Instance.Utility.Audio.PlaySFX(SFXType.Global_ButtonClick);
         GameManager.Instance.SceneController.ChangeScene(nextSceneType);
     }
 }
