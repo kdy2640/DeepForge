@@ -43,6 +43,7 @@ public sealed class CanvasController : MonoBehaviour
             Instance.name = prefab.name;
             Instance.gameObject.SetActive(false);
             Instance.Init(owner);
+            Instance.GetComponentInChildren<TutorialButton>(true).Init(owner);
         }
     }
 
@@ -51,6 +52,7 @@ public sealed class CanvasController : MonoBehaviour
     [SerializeField] private PlayerMiner playerMiner;
     [SerializeField] private BaseCamp baseCamp;
     [SerializeField] private SettingsPopup settingsPopup;
+    [SerializeField] private TutorialPanel tutorialPanel;
 
     private readonly Dictionary<CanvasState, ViewEntry> viewByState = new();
     private ViewEntry currentEntry;
@@ -59,6 +61,9 @@ public sealed class CanvasController : MonoBehaviour
     private InputManager inputManager;
     private bool settingsOpen;
     private bool settingsClosing;
+    private bool tutorialOpen;
+    private bool firstTutorialPending;
+    private CanvasState tutorialState;
     private float previousTimeScale;
 
     public CanvasState? CurrentState { get; private set; }
@@ -69,24 +74,76 @@ public sealed class CanvasController : MonoBehaviour
     {
         inputManager = GameManager.Instance.InputManager;
         settingsPopup.Init(this);
+        tutorialPanel.Init(this);
         BuildViewLookup();
     }
 
     private void Update()
     {
-        if (Keyboard.current == null || !Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (firstTutorialPending && transitionCoroutine == null && !settingsOpen && !tutorialOpen
+            && !GameManager.Instance.SceneController.IsChangingScene)
+        {
+            firstTutorialPending = false;
+            if (!GameManager.Instance.Utility.Tutorial.GetTutorialProgressed(CurrentState.Value))
+            {
+                OpenTutorial();
+                return;
+            }
+        }
+
+        if (Keyboard.current == null) return;
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            if (tutorialOpen)
+                CloseTutorial();
+            else if (settingsOpen)
+                CloseSettings();
+            else if (CurrentState == CanvasState.BaseView || CurrentState == CanvasState.MineView)
+                OpenSettings();
+            else if (CurrentState.HasValue && transitionCoroutine == null)
+                RequestStateChange(CanvasState.BaseView);
+        }
+        else if (Keyboard.current.pKey.wasPressedThisFrame)
+            OpenTutorial();
+    }
+
+    public void OpenTutorial()
+    {
+        if (tutorialOpen || settingsOpen || !CurrentState.HasValue || transitionCoroutine != null
+            || GameManager.Instance.SceneController.IsChangingScene)
             return;
-        if (settingsOpen)
-            CloseSettings();
-        else if (CurrentState == CanvasState.BaseView || CurrentState == CanvasState.MineView)
-            OpenSettings();
-        else if (CurrentState.HasValue && transitionCoroutine == null)
-            RequestStateChange(CanvasState.BaseView);
+
+        TutorialDataSO data = TutorialDataDB.GetData(CurrentState.Value);
+        tutorialState = CurrentState.Value;
+        tutorialOpen = true;
+        previousTimeScale = Time.timeScale;
+        Time.timeScale = 0f;
+        inputManager.SetGameplayInputBlocked(true);
+        playerMiner.SetViewCursorMode(ViewCursorMode.Free);
+        tutorialPanel.Open(data);
+    }
+
+    public void CloseTutorial()
+    {
+        if (!tutorialOpen) return;
+
+        tutorialPanel.Close();
+        tutorialOpen = false;
+        Time.timeScale = previousTimeScale;
+        inputManager.SetGameplayInputBlocked(false);
+        playerMiner.SetViewCursorMode(CurrentCursorMode);
+
+        TutorialManager tutorial = GameManager.Instance.Utility.Tutorial;
+        if (!tutorial.GetTutorialProgressed(tutorialState))
+        {
+            tutorial.ResolveTutorial(tutorialState);
+            GameManager.Instance.Utility.Save.SaveGame();
+        }
     }
 
     public void OpenSettings()
     {
-        if (settingsOpen || transitionCoroutine != null || GameManager.Instance.SceneController.IsChangingScene)
+        if (settingsOpen || tutorialOpen || transitionCoroutine != null || GameManager.Instance.SceneController.IsChangingScene)
             return;
         if (CurrentState != CanvasState.BaseView && CurrentState != CanvasState.MineView)
             return;
@@ -119,7 +176,7 @@ public sealed class CanvasController : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (!settingsOpen) return;
+        if (!settingsOpen && !tutorialOpen) return;
         Time.timeScale = previousTimeScale;
         inputManager.SetGameplayInputBlocked(false);
     }
@@ -131,7 +188,7 @@ public sealed class CanvasController : MonoBehaviour
 
     public void RequestStateChange(CanvasState nextState)
     {
-        if (settingsOpen) return;
+        if (settingsOpen || tutorialOpen) return;
 
         if (nextState == CanvasState.BaseView || nextState == CanvasState.MineView)
             nextState = baseCamp.IsPlayerInside ? CanvasState.BaseView : CanvasState.MineView;
@@ -154,6 +211,7 @@ public sealed class CanvasController : MonoBehaviour
         }
 
         transitionCoroutine = null;
+        firstTutorialPending = true;
     }
 
     private IEnumerator ChangeState(CanvasState nextState)
