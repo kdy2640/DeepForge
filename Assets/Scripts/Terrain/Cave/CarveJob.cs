@@ -25,6 +25,8 @@ internal struct CarveJob : IJob
     public int NoiseSeed;
     public float NoiseScale;
     public float NoiseAmplitude;
+    public float DetailNoiseScale;
+    public float DetailNoiseAmplitude;
     [WriteOnly] public NativeArray<Vector3Int> ChangedBounds;
 
     public void Execute()
@@ -37,7 +39,7 @@ internal struct CarveJob : IJob
         for (int i = 0; i < Segments.Length; i++)
         {
             CaveCarveSegment segment = Segments[i];
-            float extent = segment.Radius + NoiseAmplitude + outerTransition;
+            float extent = segment.Radius + NoiseAmplitude + DetailNoiseAmplitude + outerTransition;
             Vector3 boundsMin = (Vector3.Min(segment.Start, segment.End) - Vector3.one * extent) / Resolution;
             Vector3 boundsMax = (Vector3.Max(segment.Start, segment.End) + Vector3.one * extent) / Resolution;
             Vector3Int minIndex = Vector3Int.Max(Origin, new Vector3Int(
@@ -67,7 +69,11 @@ internal struct CarveJob : IJob
                         float noise = NoiseAmplitude == 0f ? 0f :
                             PerlinNoise3D.GetRandomValue(position.x * NoiseScale,
                                 position.y * NoiseScale, position.z * NoiseScale, NoiseSeed) * 2f - 1f;
-                        float effectiveRadius = segment.Radius + noise * NoiseAmplitude;
+                        float detailNoise = DetailNoiseAmplitude == 0f ? 0f :
+                            PerlinNoise3D.GetRandomValue(position.x * DetailNoiseScale,
+                                position.y * DetailNoiseScale, position.z * DetailNoiseScale,
+                                NoiseSeed ^ 0x5F356495) * 2f - 1f;
+                        float effectiveRadius = segment.Radius + noise * NoiseAmplitude + detailNoise * DetailNoiseAmplitude;
                         float carveDensity = Mathf.Clamp01(
                             DensityThreshold + (distance - effectiveRadius) / TransitionWidth);
                         int flatIndex = ((x - Origin.x) * SampleCount.y + y - Origin.y)

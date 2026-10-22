@@ -28,6 +28,8 @@ Shader "Deep Forge/Terrain Vertex Color"
             half _NormalStrength;
             half _Smoothness;
         CBUFFER_END
+        // Editor의 촬영 모드가 SceneView 카메라를 그리는 동안에만 1로 설정한다.
+        float _DeepForgeScenePhotoMode;
 
         half3 SampleTriplanarAlbedo(float3 positionWS, float3 normalWS)
         {
@@ -107,6 +109,13 @@ Shader "Deep Forge/Terrain Vertex Color"
             half4 TerrainFragment(Varyings input) : SV_Target
             {
                 float3 surfaceNormalWS = NormalizeNormalPerPixel(input.normalWS);
+                if (_DeepForgeScenePhotoMode > 0.5)
+                {
+                    float3 normalVS = mul((float3x3)UNITY_MATRIX_V, surfaceNormalWS);
+                    half shade = 0.68h + 0.32h * saturate(dot(normalVS, normalize(float3(-0.4, 0.7, 0.6))));
+                    half3 tint = lerp(half3(0.78, 0.80, 0.82), saturate(input.color.rgb), 0.25h);
+                    return half4(tint * shade, 1);
+                }
                 InputData lighting = (InputData)0;
                 lighting.positionWS = input.positionWS;
                 lighting.positionCS = input.positionCS;

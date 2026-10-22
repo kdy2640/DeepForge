@@ -1,5 +1,10 @@
 using System.Collections;
 using UnityEngine;
+#if UNITY_EDITOR
+using System.Collections.Generic;
+using UnityEditor;
+using UnityEngine.Rendering;
+#endif
 
 // 지형 밀도 생성, 청크 메시 갱신과 대상 주변 스트리밍을 관리한다.
 [DisallowMultipleComponent]
@@ -8,6 +13,123 @@ public class TerrainManager : MonoBehaviour
     [SerializeField] private TerrainSettings settings = new TerrainSettings();
     [SerializeField] private BaseCamp baseCamp;
     private TerrainChunkManager chunkManager;
+
+#if UNITY_EDITOR
+    [Header("씬 뷰 촬영")]
+    [Tooltip("씬 뷰에서 돌을 숨기고 전체 청크를 밝게 표시합니다. 플레이 일시정지 중에도 전환할 수 있습니다.")]
+    [SerializeField] private bool photoMode;
+    private static readonly int PhotoModeId = Shader.PropertyToID("_DeepForgeScenePhotoMode");
+    private readonly List<StoneActor> photoStones = new List<StoneActor>();
+    private readonly List<Renderer> photoStoneRenderers = new List<Renderer>();
+    private readonly List<MeshFilter> photoTerrainMeshes = new List<MeshFilter>();
+    private readonly HashSet<GameObject> photoHiddenObjects = new HashSet<GameObject>();
+    private readonly List<GameObject> photoVisibilityChanges = new List<GameObject>();
+    private readonly Dictionary<SceneView, (bool Lighting, bool Effects)> photoSceneViews =
+        new Dictionary<SceneView, (bool Lighting, bool Effects)>();
+
+    private void OnEnable()
+    {
+        SceneView.beforeSceneGui += ApplyPhotoMode;
+        RenderPipelineManager.beginCameraRendering += BeginPhotoModeCamera;
+        RenderPipelineManager.endCameraRendering += EndPhotoModeCamera;
+    }
+
+    private void OnDisable()
+    {
+        SceneView.beforeSceneGui -= ApplyPhotoMode;
+        RenderPipelineManager.beginCameraRendering -= BeginPhotoModeCamera;
+        RenderPipelineManager.endCameraRendering -= EndPhotoModeCamera;
+        RestorePhotoMode();
+        Shader.SetGlobalFloat(PhotoModeId, 0f);
+    }
+
+    // Update 대신 씬 뷰 repaint에서 처리하여 플레이 일시정지 중에도 적용한다.
+    private void ApplyPhotoMode(SceneView sceneView)
+    {
+        if (Event.current.type != EventType.Repaint) return;
+        if (!photoMode)
+        {
+            if (photoSceneViews.Count > 0 || photoHiddenObjects.Count > 0) RestorePhotoMode();
+            return;
+        }
+
+        if (!photoSceneViews.ContainsKey(sceneView))
+            photoSceneViews.Add(sceneView, (sceneView.sceneLighting, sceneView.sceneViewState.fxEnabled));
+        sceneView.sceneLighting = false;
+        sceneView.sceneViewState.fxEnabled = false;
+
+        // 스트리밍 밖 청크도 씬 카메라에만 그린다. 돌과 충돌체의 활성 상태는 유지한다.
+        GetComponentsInChildren(true, photoTerrainMeshes);
+        foreach (MeshFilter filter in photoTerrainMeshes)
+        {
+            if (filter.transform.parent != transform || filter.gameObject.activeInHierarchy ||
+                SceneVisibilityManager.instance.IsHidden(filter.gameObject)) continue;
+            Mesh mesh = filter.sharedMesh;
+            if (mesh == null) continue; // 균일한 청크에는 표면 메시가 없다.
+            Graphics.DrawMesh(mesh, filter.transform.localToWorldMatrix, settings.Material.Material,
+                gameObject.layer, sceneView.camera, 0, null, ShadowCastingMode.Off, false, null, LightProbeUsage.Off);
+        }
+
+        // 활성 상태와 Renderer.enabled는 바꾸지 않는다. 새로 활성화된 청크의 돌도 포함한다.
+        GetComponentsInChildren(true, photoStones);
+        SceneVisibilityManager visibility = SceneVisibilityManager.instance;
+        photoVisibilityChanges.Clear();
+        foreach (StoneActor stone in photoStones)
+        {
+            stone.GetComponentsInChildren(true, photoStoneRenderers);
+            foreach (Renderer renderer in photoStoneRenderers)
+            {
+                GameObject model = renderer.gameObject;
+                if (visibility.IsHidden(model)) continue;
+                if (photoHiddenObjects.Add(model)) photoVisibilityChanges.Add(model);
+            }
+        }
+        if (photoVisibilityChanges.Count > 0) visibility.Hide(photoVisibilityChanges.ToArray(), false);
+    }
+
+    private void RestorePhotoMode()
+    {
+        SceneVisibilityManager visibility = SceneVisibilityManager.instance;
+        photoVisibilityChanges.Clear();
+        foreach (GameObject model in photoHiddenObjects)
+        {
+            // 촬영 중 반환·파괴된 돌은 복원할 대상이 없다.
+            if (model != null) photoVisibilityChanges.Add(model);
+        }
+        if (photoVisibilityChanges.Count > 0) visibility.Show(photoVisibilityChanges.ToArray(), false);
+        photoVisibilityChanges.Clear();
+        photoHiddenObjects.Clear();
+        photoStones.Clear();
+        photoStoneRenderers.Clear();
+        photoTerrainMeshes.Clear();
+        foreach (var saved in photoSceneViews)
+        {
+            if (saved.Key == null) continue;
+            saved.Key.sceneLighting = saved.Value.Lighting;
+            saved.Key.sceneViewState.fxEnabled = saved.Value.Effects;
+            saved.Key.Repaint();
+        }
+        photoSceneViews.Clear();
+    }
+
+    private void BeginPhotoModeCamera(ScriptableRenderContext context, Camera camera)
+    {
+        if (!photoMode) return;
+        CommandBuffer commands = CommandBufferPool.Get("Terrain Scene Photo Mode");
+        commands.SetGlobalFloat(PhotoModeId, camera.cameraType == CameraType.SceneView ? 1f : 0f);
+        context.ExecuteCommandBuffer(commands);
+        CommandBufferPool.Release(commands);
+    }
+
+    private void EndPhotoModeCamera(ScriptableRenderContext context, Camera camera)
+    {
+        if (!photoMode) return;
+        CommandBuffer commands = CommandBufferPool.Get("Terrain Scene Photo Mode End");
+        commands.SetGlobalFloat(PhotoModeId, 0f);
+        context.ExecuteCommandBuffer(commands);
+        CommandBufferPool.Release(commands);
+    }
+#endif
 
     // 실행 중인 지형 데이터와 생성 작업
     private TerrainData data;
@@ -184,7 +306,8 @@ public class TerrainManager : MonoBehaviour
 
         // 최초 메시 생성 전이므로 변경 bounds를 이용한 별도 메시 갱신은 필요 없다.
         data.CarvePassages(segments, settings.Density.DensityThreshold, cave.TransitionWidth,
-            cave.Seed, cave.NoiseScale, cave.NoiseAmplitude, out _, out _);
+            cave.Seed, cave.NoiseScale, cave.NoiseAmplitude,
+            cave.DetailNoiseScale, cave.DetailNoiseAmplitude, out _, out _);
     }
 
     // 오브젝트가 파괴될 때 지형이 소유한 자원을 해제한다.

@@ -9,7 +9,7 @@ using UnityEngine;
 // 월드 생성 조건, 변경 청크와 Region 파일을 소유한다. Unity 데이터 접근은 메인 스레드에서만 한다.
 public sealed class WorldManager : MonoBehaviour
 {
-    public const int CurrentVersion = 5;
+    public const int CurrentVersion = 7;
     private const int RegionSize = 4;
     private const uint RegionMagic = 0x31574644;
     private const int HeaderSize = 40;
@@ -62,7 +62,7 @@ public sealed class WorldManager : MonoBehaviour
 
         if (meta == null || meta.Version != CurrentVersion)
         {
-            // 이전 생성 규칙의 청크가 새 입구를 덮지 않도록 원본 월드를 보존한다.
+            // 이전 생성 규칙의 청크가 새 동굴을 덮지 않도록 원본 월드를 보존한다.
             string fullWorldPath = Path.GetFullPath(worldPath);
             if (!string.Equals(Path.GetDirectoryName(fullWorldPath), Path.GetFullPath(Application.persistentDataPath).TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException("월드 백업 경로가 저장 루트 밖입니다.");

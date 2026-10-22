@@ -575,6 +575,8 @@ public class TerrainData : IDisposable
         int noiseSeed,
         float noiseScale,
         float noiseAmplitude,
+        float detailNoiseScale,
+        float detailNoiseAmplitude,
         out Vector3Int minChangedIndex,
         out Vector3Int maxChangedIndex)
     {
@@ -586,7 +588,7 @@ public class TerrainData : IDisposable
 
         foreach (CaveCarveSegment segment in segments)
         {
-            float extent = segment.Radius + noiseAmplitude + outerTransition;
+            float extent = segment.Radius + noiseAmplitude + detailNoiseAmplitude + outerTransition;
             Vector3 boundsMin = (Vector3.Min(segment.Start, segment.End) - Vector3.one * extent) / Resolution;
             Vector3 boundsMax = (Vector3.Max(segment.Start, segment.End) + Vector3.one * extent) / Resolution;
             Vector3Int minIndex = Vector3Int.Max(Vector3Int.zero, new Vector3Int(
@@ -651,6 +653,8 @@ public class TerrainData : IDisposable
                 NoiseSeed = noiseSeed,
                 NoiseScale = noiseScale,
                 NoiseAmplitude = noiseAmplitude,
+                DetailNoiseScale = detailNoiseScale,
+                DetailNoiseAmplitude = detailNoiseAmplitude,
                 ChangedBounds = changedBounds[jobIndex]
             };
             handles[jobIndex] = job.Schedule();

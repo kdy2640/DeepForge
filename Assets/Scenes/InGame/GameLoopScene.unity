@@ -185,13 +185,15 @@ MonoBehaviour:
       Seed: 15
       RegionCounts: {x: 4, y: 1, z: 4}
       NodesPerRegion: 6
-      ExtraConnectionsPerRegion: 1
       RadiusRange: {x: 1.75, y: 2.25}
       BendDistance: 4
       SegmentLength: 1
       TransitionWidth: 0.75
       NoiseScale: 0.12
-      NoiseAmplitude: 0.25
+      NoiseAmplitude: 1
+      DetailNoiseScale: 0.5
+      DetailNoiseAmplitude: 0.5
+      ChamberRadiusRange: {x: 3, y: 4.5}
       EntranceLength: 12
       EntranceMaxSlope: 30
     Material:
@@ -218,6 +220,7 @@ MonoBehaviour:
       UnloadDistance: 48
       MaxChunkActivationsPerFrame: 64
   baseCamp: {fileID: 8026041122753866803}
+  photoMode: 0
 --- !u!1001 &140851725
 PrefabInstance:
   m_ObjectHideFlags: 0

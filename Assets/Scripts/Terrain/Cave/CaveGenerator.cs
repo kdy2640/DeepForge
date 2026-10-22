@@ -10,8 +10,17 @@ public class CaveGenerator
     public CaveCarveSegment[] GenerateWithEntrance(
         CaveSettings settings, float densityThreshold, Vector3 entrancePosition, Vector3 entranceForward)
     {
-        float margin = settings.RadiusRange.y + settings.NoiseAmplitude + (1f - densityThreshold) * settings.TransitionWidth;
-        Bounds centerBounds = new Bounds(settings.Bounds.center, settings.Bounds.size - Vector3.one * (2f * margin));
+        float wallMargin = settings.NoiseAmplitude + settings.DetailNoiseAmplitude +
+            (1f - densityThreshold) * settings.TransitionWidth;
+        float margin = settings.RadiusRange.y + wallMargin;
+        // 공동은 바닥을 유지하며 위로 넓힌다. 옆으로 겹친 작은 공동의 돌출부도 포함한다.
+        float horizontalMargin = Mathf.Max(settings.RadiusRange.y, settings.ChamberRadiusRange.y * 1.35f) + wallMargin;
+        float ceilingMargin = Mathf.Max(settings.RadiusRange.y,
+            2f * settings.ChamberRadiusRange.y - settings.RadiusRange.x) + wallMargin;
+        Bounds centerBounds = new Bounds();
+        centerBounds.SetMinMax(
+            settings.Bounds.min + new Vector3(horizontalMargin, margin, horizontalMargin),
+            settings.Bounds.max - new Vector3(horizontalMargin, ceilingMargin, horizontalMargin));
         CaveCarveSegment[] segments = Generate(centerBounds, settings, out List<Vector3> nodes);
 
         Vector3 forward = new Vector3(entranceForward.x, 0f, entranceForward.z).normalized;
@@ -61,8 +70,9 @@ public class CaveGenerator
         Vector3 pathMin = Vector3.Min(centerBounds.min, entrance);
         Vector3 pathMax = Vector3.Max(centerBounds.max, entrance);
         // 접속점의 중심선뿐 아니라 통로 반지름까지 합쳐지는 도착부를 제외한다.
-        float joinDistance = 3f * (settings.RadiusRange.y + settings.NoiseAmplitude);
-        float forkDistance = 4f * (settings.RadiusRange.y + settings.NoiseAmplitude);
+        float noiseAmplitude = settings.NoiseAmplitude + settings.DetailNoiseAmplitude;
+        float joinDistance = 3f * (Mathf.Max(settings.RadiusRange.y, settings.ChamberRadiusRange.y) + noiseAmplitude);
+        float forkDistance = 4f * (settings.RadiusRange.y + noiseAmplitude);
         var paths = new List<List<CaveCarveSegment>>();
         for (int candidate = 0; candidate < candidates.Count; candidate++)
         {
@@ -151,7 +161,7 @@ public class CaveGenerator
                             if (skipped >= obstacleLength) continue;
                             obstacleStart = Vector3.Lerp(obstacle.Start, obstacle.End, skipped / obstacleLength);
                         }
-                        float clearance = leg.Radius + obstacle.Radius + 2f * settings.NoiseAmplitude;
+                        float clearance = leg.Radius + obstacle.Radius + 2f * noiseAmplitude;
                         // 멀리 떨어진 구간은 선분 거리 계산을 생략한다.
                         Vector3 min = Vector3.Min(start, end) - Vector3.one * clearance;
                         Vector3 max = Vector3.Max(start, end) + Vector3.one * clearance;
@@ -205,8 +215,9 @@ public class CaveGenerator
 
     // centerBounds는 지형 로컬 좌표의 통로 중심 허용 영역이다.
     // 호출 조건: 양수인 영역 크기와 settings.RegionCounts, settings.NodesPerRegion >= 2,
-    // settings.ExtraConnectionsPerRegion >= 0, 0 < settings.RadiusRange.x <= settings.RadiusRange.y, settings.BendDistance >= 0, settings.SegmentLength > 0.
-    // 벽면 보정과 밀도 전이를 포함한 외곽 여유, 지표 깊이는 호출 측에서 확보한다.
+    // 0 < settings.RadiusRange.x <= settings.RadiusRange.y <= settings.ChamberRadiusRange.x <= settings.ChamberRadiusRange.y,
+    // settings.BendDistance >= 0, settings.SegmentLength > 0.
+    // 공동과 두 노이즈, 밀도 전이를 포함한 외곽 여유와 지표 깊이는 호출 측에서 확보한다.
     public CaveCarveSegment[] Generate(Bounds centerBounds, CaveSettings settings, out List<Vector3> entranceNodes)
     {
         entranceNodes = new List<Vector3>();
@@ -227,12 +238,33 @@ public class CaveGenerator
                     List<Vector3> nodes = PlaceNodes(
                         settings.Seed, coordinate, settings.RegionCounts, origin, regionSize, settings.NodesPerRegion);
                     for (int i = 0; i < settings.NodesPerRegion; i++) entranceNodes.Add(nodes[i]);
-                    List<Vector2Int> connections = BuildConnections(
-                        nodes, settings.NodesPerRegion, settings.ExtraConnectionsPerRegion);
+                    List<Vector2Int> connections = BuildConnections(nodes, settings.NodesPerRegion);
                     Vector3 regionMin = origin + Vector3.Scale((Vector3)coordinate, regionSize);
                     Vector3 regionMax = origin + Vector3.Scale((Vector3)(coordinate + Vector3Int.one), regionSize);
+                    int pathStart = segments.Count;
                     BuildPaths(nodes, connections, regionSeed, regionMin, regionMax,
                         settings.RadiusRange.x, settings.RadiusRange.y, settings.BendDistance, settings.SegmentLength, segments);
+                    int pathEnd = segments.Count;
+                    // 경계 접점은 제외한다. 노드의 가장 낮은 접속 통로 바닥에 공동 바닥을 맞춘다.
+                    for (int i = 0; i < settings.NodesPerRegion; i++)
+                    {
+                        float floorRadius = settings.RadiusRange.x;
+                        for (int j = pathStart; j < pathEnd; j++)
+                        {
+                            if (segments[j].Start == nodes[i] || segments[j].End == nodes[i])
+                                floorRadius = Mathf.Max(floorRadius, segments[j].Radius);
+                        }
+                        var random = new Random(math.hash(new int4(unchecked((int)regionSeed), i, 0, 31)) | 1u);
+                        float radius = random.NextFloat(settings.ChamberRadiusRange.x, settings.ChamberRadiusRange.y);
+                        Vector3 center = nodes[i] + Vector3.up * (radius - floorRadius);
+                        segments.Add(new CaveCarveSegment { Start = center, End = center, Radius = radius });
+
+                        float angle = random.NextFloat(0f, 2f * Mathf.PI);
+                        float sideRadius = radius * 0.7f;
+                        Vector3 sideCenter = nodes[i] + new Vector3(Mathf.Cos(angle) * radius * 0.65f,
+                            sideRadius - floorRadius, Mathf.Sin(angle) * radius * 0.65f);
+                        segments.Add(new CaveCarveSegment { Start = sideCenter, End = sideCenter, Radius = sideRadius });
+                    }
                 }
             }
         }
@@ -301,9 +333,9 @@ public class CaveGenerator
         return nodes;
     }
 
-    // 내부 MST의 끝점 하나를 남기고 순환 및 경계 접점 연결을 추가한다.
+    // 내부 노드는 MST로 연결하고, 끝점 하나를 남긴 채 이웃 Region의 경계 접점을 붙인다.
     private static List<Vector2Int> BuildConnections(
-        List<Vector3> nodes, int nodeCount, int extraConnections)
+        List<Vector3> nodes, int nodeCount)
     {
         var connections = new List<Vector2Int>();
         bool[] connected = new bool[nodeCount];
@@ -345,28 +377,6 @@ public class CaveGenerator
 
         int deadEnd = 0;
         while (degrees[deadEnd] != 1) deadEnd++;
-        var candidates = new List<Vector2Int>();
-        for (int a = 0; a < nodeCount; a++)
-        {
-            for (int b = a + 1; b < nodeCount; b++)
-            {
-                Vector2Int edge = new Vector2Int(a, b);
-                if (a != deadEnd && b != deadEnd && !connections.Contains(edge)) candidates.Add(edge);
-            }
-        }
-        candidates.Sort((a, b) =>
-        {
-            int distanceOrder = (nodes[a.x] - nodes[a.y]).sqrMagnitude.CompareTo(
-                (nodes[b.x] - nodes[b.y]).sqrMagnitude);
-            if (distanceOrder != 0) return distanceOrder;
-            int startOrder = a.x.CompareTo(b.x);
-            return startOrder != 0 ? startOrder : a.y.CompareTo(b.y);
-        });
-        for (int i = 0; i < Mathf.Min(extraConnections, candidates.Count); i++)
-        {
-            connections.Add(candidates[i]);
-        }
-
         // 경계 접점은 반드시 내부 연결에 붙인다. 보존한 막다른 길은 사용하지 않는다.
         for (int portal = nodeCount; portal < nodes.Count; portal++)
         {
