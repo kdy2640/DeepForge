@@ -2,24 +2,30 @@
 <h1 align="center">DeepForge</h1>
 <p align="center"><em>땅을 파고, 재료를 모으고, 나만의 장비를 만드는 3D 채굴 · 제작 성장 게임</em></p>
 
-<!--
+
 DeepForge 플레이 영상과 스크린샷이 준비되면 아래 블록의 주석을 해제하고
 VIDEO_ID와 이미지 경로를 실제 자료로 교체하세요.
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=VIDEO_ID">
-    <img src="https://img.youtube.com/vi/VIDEO_ID/0.jpg" alt="DeepForge Gameplay Video" width="70%">
+  <a href= "https://www.youtube.com/watch?v=HmuJPvc80IY">
+    <img src="https://img.youtube.com/vi/HmuJPvc80IY/0.jpg" alt="DeepForge Gameplay Video" width="70%">
   </a>
 </p>
 
-<table>
+<table width="100%">
   <tr>
-    <td><img src="Docs/Mining.png" width="100%" alt="광산 탐험과 지형 채굴"></td>
-    <td><img src="Docs/Smith.png" width="100%" alt="대장간 재료 조합과 제작"></td>
-    <td><img src="Docs/Order.png" width="100%" alt="상점 주문과 납품"></td>
+    <td width="33.33%" align="center" valign="middle">
+      <img src="Docs/DF1.png" width="100%" alt="광산 탐험과 지형 채굴">
+    </td>
+    <td width="33.33%" align="center" valign="middle">
+      <img src="Docs/DF2.png" width="100%" alt="대장간 재료 조합과 제작">
+    </td>
+    <td width="33.33%" align="center" valign="middle">
+      <img src="Docs/DF3.png" width="100%" alt="상점 주문과 납품">
+    </td>
   </tr>
 </table>
--->
+
 
 ---
 
